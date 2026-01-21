@@ -695,6 +695,8 @@ function ChatArea({
 	onSendMessage,
 	onSimulate,
 	messagesEndRef,
+	input,
+	setInput,
 }: {
 	messages: Array<{
 		role: "user" | "assistant";
@@ -706,6 +708,8 @@ function ChatArea({
 	onSendMessage: (content?: string) => void;
 	onSimulate: () => void;
 	messagesEndRef: React.RefObject<HTMLDivElement | null>;
+	input: string;
+	setInput: (value: string) => void;
 }) {
 	return (
 		<Paper
