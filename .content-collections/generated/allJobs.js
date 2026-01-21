@@ -1,49 +1,29 @@
 
 export default [
   {
-    "jobTitle": "Senior Software Engineer",
-    "company": "Tech Corporation",
-    "location": "San Francisco, CA",
-    "startDate": "2022-01-01",
-    "endDate": "2023-12-31",
-    "summary": "Led development of cloud-native applications using React, TypeScript, and Node.js",
-    "tags": [
-      "React",
-      "TypeScript",
-      "Node.js",
-      "AWS",
-      "Leadership"
-    ],
-    "content": "As a Senior Software Engineer at Tech Corporation, I led the development of several cloud-native applications serving millions of users. I architected and implemented scalable microservices using Node.js and deployed them on AWS infrastructure. \n\nKey achievements:\n- Led a team of 5 developers to build a new customer portal\n- Reduced API response time by 40% through optimization\n- Implemented CI/CD pipelines improving deployment frequency by 200%\n- Mentored junior developers and conducted code reviews\n\nTechnologies used:\n- Frontend: React, TypeScript, Tailwind CSS\n- Backend: Node.js, Express, PostgreSQL\n- Cloud: AWS, Docker, Kubernetes\n- Tools: Git, Jenkins, Datadog",
-    "_meta": {
-      "filePath": "senior-software-engineer.md",
-      "fileName": "senior-software-engineer.md",
-      "directory": ".",
-      "extension": "md",
-      "path": "senior-software-engineer"
-    }
-  },
-  {
     "jobTitle": "Software Engineer",
-    "company": "StartupXYZ",
-    "location": "New York, NY",
-    "startDate": "2021-01-01",
-    "endDate": "2021-12-31",
-    "summary": "Full-stack development using React, Node.js, and MongoDB",
+    "company": "Replikate Labs",
+    "location": "Singapore",
+    "startDate": "2025-12-01",
+    "summary": "Built and deployed multiple SaaS products using AI-powered development tools and cloud platforms",
     "tags": [
-      "React",
-      "Node.js",
-      "MongoDB",
-      "Express",
-      "JavaScript"
+      "AWS",
+      "GCP",
+      "DigitalOcean",
+      "Cloudflare Workers",
+      "SaaS",
+      "Claude",
+      "AI-Assisted Development",
+      "Cloud Deployment",
+      "Full-Stack Development"
     ],
-    "content": "As a Software Engineer at StartupXYZ, I worked on building web applications from scratch. I was responsible for both frontend and backend development.\n\nKey achievements:\n- Built a customer-facing dashboard using React and TypeScript\n- Developed RESTful APIs using Express and Node.js\n- Implemented authentication and authorization systems\n- Optimized database queries for better performance\n- Collaborated with design team to improve user experience\n\nTechnologies used:\n- Frontend: React, Redux, JavaScript\n- Backend: Node.js, Express, MongoDB\n- Tools: Git, Docker, Jira",
+    "content": "As a Software Engineer at Replikate Labs, I play a key role in building and deploying multiple Software-as-a-Service (SaaS) products. I leverage modern AI-powered development tools to accelerate the development process and ensure high-quality code delivery.\n\nKey achievements:\n- Developed and launched multiple SaaS products from concept to production\n- Utilized AI-assisted coding tools (Claude Code) to accelerate development velocity and maintain code quality\n- Architected and deployed applications across multiple cloud platforms including AWS, Google Cloud Platform (GCP), DigitalOcean, and Cloudflare Workers\n- Implemented scalable, secure, and performant cloud architectures\n- Optimized deployment pipelines for multi-cloud environments\n\nTechnical responsibilities:\n- Design and implement full-stack web applications for SaaS products\n- Deploy and manage infrastructure on AWS, GCP, DigitalOcean, and Cloudflare Workers\n- Integrate AI-powered development workflows into the software development lifecycle\n- Ensure high availability, security, and performance of deployed applications\n- Collaborate with cross-functional teams to deliver products that meet market demands\n\nTechnologies used:\n- Cloud Platforms: AWS, Google Cloud Platform, DigitalOcean, Cloudflare Workers\n- Development Tools: Claude Code, Git, CI/CD\n- Deployment: Multi-cloud strategy, containerization, serverless functions\n- Languages/Frameworks: Modern web development stack\n- AI Tools: AI-assisted coding and development automation",
     "_meta": {
-      "filePath": "software-engineer.md",
-      "fileName": "software-engineer.md",
+      "filePath": "software-engineer-replikate-labs.md",
+      "fileName": "software-engineer-replikate-labs.md",
       "directory": ".",
       "extension": "md",
-      "path": "software-engineer"
+      "path": "software-engineer-replikate-labs"
     }
   }
 ]

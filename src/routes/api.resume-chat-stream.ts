@@ -86,17 +86,20 @@ const tools = [
 	},
 ];
 
+// Placeholder job data - replace with actual jobs when available
+const jobsData: any[] = [];
+
 // Tool implementations
 async function executeToolCall(toolName: string, args: any) {
 	switch (toolName) {
 		case "search_jobs_by_skill":
-			return allJobs.filter((job) =>
-				job.tags.some((tag) =>
+			return jobsData.filter((job) =>
+				job.tags?.some((tag: string) =>
 					tag.toLowerCase().includes(args.skill.toLowerCase()),
 				),
 			);
 		case "get_all_jobs":
-			return allJobs.map((job) => ({
+			return jobsData.map((job) => ({
 				jobTitle: job.jobTitle,
 				company: job.company,
 				location: job.location,
@@ -115,13 +118,13 @@ async function executeToolCall(toolName: string, args: any) {
 			}));
 		case "search_experience": {
 			const lowerQuery = args.query.toLowerCase();
-			return allJobs
+			return jobsData
 				.filter((job) => {
 					return (
-						job.jobTitle.toLowerCase().includes(lowerQuery) ||
-						job.company.toLowerCase().includes(lowerQuery) ||
-						job.summary.toLowerCase().includes(lowerQuery) ||
-						job.content.toLowerCase().includes(lowerQuery)
+						job.jobTitle?.toLowerCase().includes(lowerQuery) ||
+						job.company?.toLowerCase().includes(lowerQuery) ||
+						job.summary?.toLowerCase().includes(lowerQuery) ||
+						job.content?.toLowerCase().includes(lowerQuery)
 					);
 				})
 				.map((job) => ({
@@ -142,13 +145,13 @@ async function executeToolCall(toolName: string, args: any) {
 // RAG: Retrieve relevant context based on the query
 async function retrieveContext(query: string) {
 	const lowerQuery = query.toLowerCase();
-	const relevantJobs = allJobs.filter((job) => {
+	const relevantJobs = jobsData.filter((job) => {
 		return (
-			job.jobTitle.toLowerCase().includes(lowerQuery) ||
-			job.company.toLowerCase().includes(lowerQuery) ||
-			job.summary.toLowerCase().includes(lowerQuery) ||
-			job.content.toLowerCase().includes(lowerQuery) ||
-			job.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
+			job.jobTitle?.toLowerCase().includes(lowerQuery) ||
+			job.company?.toLowerCase().includes(lowerQuery) ||
+			job.summary?.toLowerCase().includes(lowerQuery) ||
+			job.content?.toLowerCase().includes(lowerQuery) ||
+			job.tags?.some((tag: string) => tag.toLowerCase().includes(lowerQuery))
 		);
 	});
 

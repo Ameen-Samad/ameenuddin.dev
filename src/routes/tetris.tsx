@@ -6,10 +6,13 @@ import {
 	Container,
 	Group,
 	Paper,
+	Select,
 	Stack,
+	Text,
 	Title,
 } from "@mantine/core";
 import {
+	IconHistory,
 	IconPlayerPlay,
 	IconRefresh,
 	IconRobot,
@@ -20,13 +23,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { Phaser } from "phaser";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { TetrisGame } from "@/services/tetris-game";
+import { TetrisGame as TetrisGameService } from "@/services/tetris-game";
 
 export const Route = createFileRoute("/tetris")({
-	component: TetrisGame,
+	component: TetrisPage,
 });
 
-function TetrisGame() {
+function TetrisPage() {
 	const [gameStarted, setGameStarted] = useState(false);
 	const [useAI, setUseAI] = useState(false);
 	const [score, setScore] = useState(0);
@@ -35,20 +38,63 @@ function TetrisGame() {
 	const [gameOver, setGameOver] = useState(false);
 	const [gameInstance, setGameInstance] = useState<Phaser.Game | null>(null);
 	const canvasRef = useRef<HTMLDivElement>(null);
-	const highScoresRef = useRef<
-		Array<{ name: string; score: number; date: string }>
+	const [highScores, setHighScores] = useState<
+		Array<{
+			id: number;
+			name: string;
+			score: number;
+			level: number;
+			lines: number;
+			date: string;
+		}>
 	>([]);
+	const [showHistory, setShowHistory] = useState(false);
+	const [historyData, setHistoryData] = useState<
+		Array<{
+			id: number;
+			name: string;
+			score: number;
+			level: number;
+			lines: number;
+			date: string;
+		}>
+	>([]);
+	const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
+	const [loading, setLoading] = useState(false);
 
-	useEffect(() => {
-		const scores = localStorage.getItem("tetris-high-scores");
-		if (scores) {
-			try {
-				highScoresRef.current = JSON.parse(scores);
-			} catch (e) {
-				console.error("Failed to parse high scores:", e);
+	const fetchLeaderboard = useCallback(async () => {
+		try {
+			const response = await fetch("/api/leaderboard");
+			if (response.ok) {
+				const data = await response.json();
+				setHighScores(data);
 			}
+		} catch (error) {
+			console.error("Error fetching leaderboard:", error);
 		}
 	}, []);
+
+	const fetchHistory = useCallback(async (playerName?: string) => {
+		setLoading(true);
+		try {
+			const url = playerName
+				? `/api/leaderboard/history?playerName=${encodeURIComponent(playerName)}`
+				: "/api/leaderboard/history";
+			const response = await fetch(url);
+			if (response.ok) {
+				const data = await response.json();
+				setHistoryData(data);
+			}
+		} catch (error) {
+			console.error("Error fetching history:", error);
+		} finally {
+			setLoading(false);
+		}
+	}, []);
+
+	useEffect(() => {
+		fetchLeaderboard();
+	}, [fetchLeaderboard]);
 
 	useEffect(() => {
 		if (!gameStarted || !canvasRef.current) return;
@@ -75,7 +121,7 @@ function TetrisGame() {
 		const game = new Phaser.Game(config);
 		setGameInstance(game);
 
-		const scene = new TetrisGame();
+		const scene = new TetrisGameService();
 		game.scene.add("TetrisGame", scene);
 
 		const handleScoreChange = (event: Event) => {
@@ -97,7 +143,7 @@ function TetrisGame() {
 				gameInstance.destroy(true);
 			}
 		};
-	}, [gameStarted, canvasRef]);
+	}, [gameStarted]);
 
 	const handleKeyPress = useCallback(
 		(e: KeyboardEvent) => {
@@ -124,6 +170,11 @@ function TetrisGame() {
 		[gameInstance, gameOver, useAI],
 	);
 
+	useEffect(() => {
+		window.addEventListener("keydown", handleKeyPress);
+		return () => window.removeEventListener("keydown", handleKeyPress);
+	}, [handleKeyPress]);
+
 	const handleStartGame = () => {
 		setGameOver(false);
 		setGameStarted(true);
@@ -143,27 +194,61 @@ function TetrisGame() {
 		}
 	};
 
-	const handleSaveScore = () => {
+	const handleSaveScore = async () => {
 		if (score === 0) return;
 
 		const name = prompt("Enter your name for the leaderboard:") || "Anonymous";
 		if (!name) return;
 
-		const newScore = {
-			name,
-			score,
-			date: new Date().toISOString(),
-		};
+		try {
+			const response = await fetch("/api/leaderboard", {
+				method: "POST",
+				headers: {
+					"Content-Type": "application/json",
+				},
+				body: JSON.stringify({
+					name,
+					score,
+					level,
+					lines,
+				}),
+			});
 
-		const scores = [...(highScoresRef.current || []), newScore];
-		scores.sort((a, b) => b.score - a.score);
-
-		highScoresRef.current = scores.slice(0, 10);
-		localStorage.setItem("tetris-high-scores", JSON.stringify(scores));
-
-		setGameOver(true);
-		setGameStarted(false);
+			if (response.ok) {
+				await fetchLeaderboard();
+				setGameOver(true);
+				setGameStarted(false);
+			} else {
+				alert("Failed to save score");
+			}
+		} catch (error) {
+			console.error("Error saving score:", error);
+			alert("Failed to save score");
+		}
 	};
+
+	const handleToggleHistory = () => {
+		if (!showHistory) {
+			fetchHistory();
+		}
+		setShowHistory(!showHistory);
+	};
+
+	const handlePlayerChange = (value: string | null) => {
+		setSelectedPlayer(value);
+		if (value) {
+			fetchHistory(value);
+		} else {
+			fetchHistory();
+		}
+	};
+
+	const playerNames = [
+		...new Set([
+			...highScores.map((s) => s.name),
+			...historyData.map((s) => s.name),
+		]),
+	];
 
 	return (
 		<div style={{ minHeight: "100vh", background: "#0a0a0a" }}>
@@ -183,7 +268,7 @@ function TetrisGame() {
 							</Button>
 						</Link>
 						<Title order={1} c="white">
-							Tetris with AI Agent
+							Tetris with AI Agent (WebAssembly Powered)
 						</Title>
 					</Group>
 
@@ -216,8 +301,15 @@ function TetrisGame() {
 						/>
 
 						<LeaderboardPanel
-							highScores={highScoresRef.current || []}
+							highScores={highScores}
 							onSaveScore={handleSaveScore}
+							onToggleHistory={handleToggleHistory}
+							showHistory={showHistory}
+							historyData={historyData}
+							loading={loading}
+							selectedPlayer={selectedPlayer}
+							onPlayerChange={handlePlayerChange}
+							playerNames={playerNames}
 						/>
 					</div>
 				</motion.div>
@@ -324,7 +416,7 @@ function GamePanel({
 										AI Agent Ready
 									</Text>
 									<Text size="sm" c="white">
-										Uses heuristic algorithms to play
+										Uses WebAssembly-compiled AI algorithms
 									</Text>
 								</>
 							) : (
@@ -462,13 +554,13 @@ function ControlsPanel({
 						{useAI ? (
 							<Stack gap="xs">
 								<Text size="sm" c="white">
-									• Agent plays automatically
+									• AI plays automatically via WebAssembly
 								</Text>
 								<Text size="sm" c="white">
-									• Heuristics: Maximize score, minimize holes
+									• Advanced heuristic algorithms compiled to WASM
 								</Text>
 								<Text size="sm" c="white">
-									• Watch it learn!
+									• Optimized for high-performance decision making
 								</Text>
 							</Stack>
 						) : (
@@ -494,9 +586,37 @@ function ControlsPanel({
 function LeaderboardPanel({
 	highScores,
 	onSaveScore,
+	onToggleHistory,
+	showHistory,
+	historyData,
+	loading,
+	selectedPlayer,
+	onPlayerChange,
+	playerNames,
 }: {
-	highScores: Array<{ name: string; score: number; date: string }>;
+	highScores: Array<{
+		id: number;
+		name: string;
+		score: number;
+		level: number;
+		lines: number;
+		date: string;
+	}>;
 	onSaveScore: () => void;
+	onToggleHistory: () => void;
+	showHistory: boolean;
+	historyData: Array<{
+		id: number;
+		name: string;
+		score: number;
+		level: number;
+		lines: number;
+		date: string;
+	}>;
+	loading: boolean;
+	selectedPlayer: string | null;
+	onPlayerChange: (value: string | null) => void;
+	playerNames: string[];
 }) {
 	return (
 		<Paper
@@ -505,56 +625,120 @@ function LeaderboardPanel({
 			p="xl"
 			style={{
 				background: "rgba(26, 26, 26, 0.8)",
-				border: "1px solid rgba(0, 243, 255, 0.1)",
+				border: "1px solid rgba(255, 215, 0, 0.1)",
 			}}
 		>
-			<Title order={3} c="white" mb="md">
-				Leaderboard
-			</Title>
-			{highScores.length > 0 && (
-				<Stack gap="sm">
-					{highScores.map((entry, idx) => (
+			<Group justify="space-between" mb="md">
+				<Title order={3} c="white">
+					{showHistory ? "📜 Leaderboard History" : "🏆 Leaderboard"}
+				</Title>
+				<ActionIcon
+					variant="light"
+					onClick={onToggleHistory}
+					style={{ color: "#ffd700" }}
+				>
+					<IconHistory size={20} />
+				</ActionIcon>
+			</Group>
+
+			{showHistory && (
+				<Stack gap="xs" mb="md">
+					<Select
+						label="Filter by Player"
+						placeholder="All Players"
+						data={[
+							{ value: "", label: "All Players" },
+							...playerNames.map((name) => ({ value: name, label: name })),
+						]}
+						value={selectedPlayer}
+						onChange={onPlayerChange}
+						styles={{
+							input: {
+								background: "rgba(0, 0, 0, 0.3)",
+								borderColor: "rgba(255, 215, 0, 0.3)",
+								color: "white",
+							},
+							label: { color: "#ffd700" },
+							dropdown: {
+								background: "#1a1a1a",
+								borderColor: "rgba(255, 215, 0, 0.3)",
+							},
+							item: {
+								color: "white",
+								"&[data-hovered]": {
+									background: "rgba(255, 215, 0, 0.1)",
+								},
+							},
+						}}
+					/>
+				</Stack>
+			)}
+
+			<Stack gap="xs">
+				{loading ? (
+					<Text c="dimmed" ta="center">
+						Loading...
+					</Text>
+				) : (showHistory ? historyData : highScores).length === 0 ? (
+					<Text c="dimmed" ta="center">
+						No scores yet
+					</Text>
+				) : (
+					(showHistory ? historyData : highScores).map((entry, idx) => (
 						<Paper
-							key={`${entry.name}-${entry.score}`}
+							key={entry.id}
 							p="sm"
-							radius="sm"
-							style={{ background: "rgba(0, 0, 0, 0.3)" }}
+							radius="md"
+							style={{
+								background: "rgba(0, 0, 0, 0.3)",
+								border:
+									idx === 0 && !showHistory ? "1px solid #ffd700" : "none",
+							}}
 						>
 							<Group justify="space-between">
-								<Group gap="sm">
-									<Text size="lg" fw={700} c={idx === 0 ? "#ffd700" : "dimmed"}>
-										#{idx + 1}
+								<Group gap="md">
+									<Text
+										size="sm"
+										fw={700}
+										c={idx === 0 && !showHistory ? "#ffd700" : "white"}
+									>
+										{!showHistory ? `#${idx + 1}` : ""}
 									</Text>
-									<Text fw={600} c="white">
+									<Text size="sm" fw={600} c="white">
 										{entry.name}
 									</Text>
 								</Group>
-								<Text fw={700} c={idx === 0 ? "#ffd700" : "white"}>
+								<Text
+									fw={700}
+									c={idx === 0 && !showHistory ? "#ffd700" : "white"}
+								>
 									{entry.score}
 								</Text>
 							</Group>
 							<Text size="xs" c="dimmed">
-								{new Date(entry.date).toLocaleDateString()}
+								{new Date(entry.date).toLocaleDateString()} • Level{" "}
+								{entry.level} • Lines {entry.lines}
 							</Text>
 						</Paper>
-					))}
-				</Stack>
-			)}
+					))
+				)}
+			</Stack>
 
-			{highScores.length > 0 && (
+			{!showHistory && highScores.length > 0 && (
 				<Button
 					fullWidth
 					size="sm"
 					variant="light"
 					onClick={onSaveScore}
 					style={{ background: "rgba(0, 243, 255, 0.1)" }}
+					mt="md"
 				>
-					Save Score
+					Save Current Score
 				</Button>
 			)}
 
-			{highScores.length === 0 && (
-				<Text c="dimmed" ta="center">
+			{!showHistory && highScores.length === 0 && (
+				<Text c="dimmed" ta="center" mt="md">
 					No scores yet. Play to get on the leaderboard!
 				</Text>
 			)}

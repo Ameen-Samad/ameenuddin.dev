@@ -1,26 +1,20 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@tanstack/react-start";
+import { createLeaderboardRepository } from "@/db";
 
 export const Route = createFileRoute("/api/leaderboard")({
 	server: {
 		handlers: {
 			GET: async ({ context }) => {
-				const db = (context.cloudflare as any).env.DB;
+				const db = context.cloudflare?.env.DB;
+
+				if (!db) {
+					return json({ error: "Database not available" }, { status: 500 });
+				}
 
 				try {
-					const result = await db
-						.prepare("SELECT * FROM leaderboard ORDER BY score DESC LIMIT 10")
-						.all();
-
-					const scores = result.results.map((row: any) => ({
-						id: row.id,
-						name: row.player_name,
-						score: row.score,
-						level: row.level,
-						lines: row.lines,
-						date: row.created_at,
-					}));
-
+					const repo = createLeaderboardRepository(db);
+					const scores = await repo.getTopScores(10);
 					return json(scores);
 				} catch (error) {
 					console.error("Error fetching leaderboard:", error);
@@ -31,7 +25,11 @@ export const Route = createFileRoute("/api/leaderboard")({
 				}
 			},
 			POST: async ({ request, context }) => {
-				const db = (context.cloudflare as any).env.DB;
+				const db = context.cloudflare?.env.DB;
+
+				if (!db) {
+					return json({ error: "Database not available" }, { status: 500 });
+				}
 
 				try {
 					const body = await request.json();
@@ -41,19 +39,14 @@ export const Route = createFileRoute("/api/leaderboard")({
 						return json({ error: "Missing required fields" }, { status: 400 });
 					}
 
-					const timestamp = new Date().toISOString();
-
-					const stmt = db.prepare(
-						"INSERT INTO leaderboard (player_name, score, level, lines, created_at) VALUES (?, ?, ?, ?, ?)",
-					);
-					await stmt.bind(name, score, level || 1, lines || 0, timestamp).run();
-
-					const historyStmt = db.prepare(
-						"INSERT INTO leaderboard_history (player_name, score, level, lines, created_at) VALUES (?, ?, ?, ?, ?)",
-					);
-					await historyStmt
-						.bind(name, score, level || 1, lines || 0, timestamp)
-						.run();
+					const repo = createLeaderboardRepository(db);
+					await repo.saveScore({
+						name,
+						score,
+						level,
+						lines,
+						date: new Date().toISOString(),
+					});
 
 					return json({ success: true });
 				} catch (error) {

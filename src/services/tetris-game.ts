@@ -411,14 +411,12 @@ export class TetrisGame extends Phaser.Scene {
 	async startAI() {
 		while (this.useAI && !this.paused) {
 			await this.makeAIMove();
-			await new Promise((resolve) => setTimeout(resolve, 200));
 		}
 	}
 
 	async makeAIMove() {
 		if (!this.currentPiece) {
 			this.spawnPiece();
-			await new Promise((resolve) => setTimeout(resolve, 100));
 		}
 
 		const bestMove = await TetrisAI.getBestMove(this.grid, this.currentPiece!);
@@ -437,8 +435,6 @@ export class TetrisGame extends Phaser.Scene {
 			} else if (bestMove.y > this.currentY) {
 				this.moveDown();
 			}
-
-			await new Promise((resolve) => setTimeout(resolve, 50));
 		}
 	}
 

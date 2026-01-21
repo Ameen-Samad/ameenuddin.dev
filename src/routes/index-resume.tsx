@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import allEducations from "content-collections";
+import { allEducations } from "content-collections";
 import { marked } from "marked";
 import ResumeAssistant from "@/components/ResumeAssistant";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";

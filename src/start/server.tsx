@@ -1,4 +1,6 @@
 import { StartServer } from "@tanstack/react-start/server";
-import { router } from "./router";
+import { getRouter } from "../router";
+
+const router = getRouter();
 
 export default new StartServer({ router });

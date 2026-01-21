@@ -1,40 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@tanstack/react-start";
+import { createLeaderboardRepository } from "@/db";
 
 export const Route = createFileRoute("/api/leaderboard/history")({
 	server: {
 		handlers: {
 			GET: async ({ request, context }) => {
-				const db = (context.cloudflare as any).env.DB;
-				const url = new URL(request.url);
-				const playerName = url.searchParams.get("playerName");
-				const limit = parseInt(url.searchParams.get("limit") || "50", 10);
+				const db = context.cloudflare?.env.DB;
+
+				if (!db) {
+					return json({ error: "Database not available" }, { status: 500 });
+				}
 
 				try {
-					let query: string;
-					const params: any[] = [];
+					const url = new URL(request.url);
+					const playerName = url.searchParams.get("playerName");
+					const limitParam = url.searchParams.get("limit");
+					const limit = limitParam ? parseInt(limitParam, 10) : 50;
 
-					if (playerName) {
-						query =
-							"SELECT * FROM leaderboard_history WHERE player_name = ? ORDER BY created_at DESC LIMIT ?";
-						params.push(playerName, limit);
-					} else {
-						query =
-							"SELECT * FROM leaderboard_history ORDER BY created_at DESC LIMIT ?";
-						params.push(limit);
-					}
-
-					const stmt = db.prepare(query);
-					const result = await stmt.bind(...params).all();
-
-					const scores = result.results.map((row: any) => ({
-						id: row.id,
-						name: row.player_name,
-						score: row.score,
-						level: row.level,
-						lines: row.lines,
-						date: row.created_at,
-					}));
+					const repo = createLeaderboardRepository(db);
+					const scores = await repo.getHistory({ playerName, limit });
 
 					return json(scores);
 				} catch (error) {
