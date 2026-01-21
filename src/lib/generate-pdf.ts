@@ -1,5 +1,5 @@
-import jsPDF from "jspdf";
 import { allEducations, allJobs } from "content-collections";
+import jsPDF from "jspdf";
 
 export interface Education {
 	school: string;
@@ -42,14 +42,26 @@ export async function generateResumePDF(): Promise<Blob> {
 	doc.setFontSize(12);
 	doc.setFont("helvetica", "normal");
 	doc.setTextColor(60, 60, 60);
-	doc.text("AI-Native Software Engineer", pageWidth / 2, yPos, { align: "center" });
+	doc.text("AI-Native Software Engineer", pageWidth / 2, yPos, {
+		align: "center",
+	});
 	yPos += 7;
 
 	doc.setFontSize(10);
-	doc.text("Singapore | +65 9649 4212 | amenddin@gmail.com", pageWidth / 2, yPos, { align: "center" });
+	doc.text(
+		"Singapore | +65 9649 4212 | amenddin@gmail.com",
+		pageWidth / 2,
+		yPos,
+		{ align: "center" },
+	);
 	yPos += 6;
 
-	doc.text("linkedin.com/in/ameenuddin-bin-abdul-samad-6b33722a0 | github.com/Ameen-Samad", pageWidth / 2, yPos, { align: "center" });
+	doc.text(
+		"linkedin.com/in/ameenuddin-bin-abdul-samad-6b33722a0 | github.com/Ameen-Samad",
+		pageWidth / 2,
+		yPos,
+		{ align: "center" },
+	);
 	yPos += 15;
 
 	doc.setDrawColor(51, 51, 51);
@@ -96,12 +108,32 @@ export async function generateResumePDF(): Promise<Blob> {
 
 	// ATS-friendly skills in grid format with clear categories
 	const techSkills = [
-		{ category: "Languages", items: ["Python", "JavaScript", "TypeScript", "SQL"] },
-		{ category: "Frameworks", items: ["React", "TanStack", "Three.js", "Mantine", "Phaser.js"] },
-		{ category: "AI & Tools", items: ["Claude Code", "MCPs", "Cursor", "Vite", "LLM Integration"] },
-		{ category: "Cloud Platforms", items: ["Cloudflare Workers", "Cloudflare Pages", "Cloudflare D1", "Netlify"] },
+		{
+			category: "Languages",
+			items: ["Python", "JavaScript", "TypeScript", "SQL"],
+		},
+		{
+			category: "Frameworks",
+			items: ["React", "TanStack", "Three.js", "Mantine", "Phaser.js"],
+		},
+		{
+			category: "AI & Tools",
+			items: ["Claude Code", "MCPs", "Cursor", "Vite", "LLM Integration"],
+		},
+		{
+			category: "Cloud Platforms",
+			items: [
+				"Cloudflare Workers",
+				"Cloudflare Pages",
+				"Cloudflare D1",
+				"Netlify",
+			],
+		},
 		{ category: "Databases", items: ["SQLite", "PostgreSQL", "MySQL", "D1"] },
-		{ category: "Dev Tools", items: ["Git", "Docker", "REST APIs", "GraphQL", "WebSocket"] },
+		{
+			category: "Dev Tools",
+			items: ["Git", "Docker", "REST APIs", "GraphQL", "WebSocket"],
+		},
 	];
 
 	techSkills.forEach((skillGroup) => {
@@ -121,8 +153,8 @@ export async function generateResumePDF(): Promise<Blob> {
 		let currentRow = 0;
 
 		skillGroup.items.forEach((item, index) => {
-			const xPos = margin + (currentCol * colWidth);
-			const itemYPos = yPos + 6 + (currentRow * 6);
+			const xPos = margin + currentCol * colWidth;
+			const itemYPos = yPos + 6 + currentRow * 6;
 
 			doc.text(`• ${item}`, xPos + 10, itemYPos);
 
@@ -135,7 +167,7 @@ export async function generateResumePDF(): Promise<Blob> {
 
 		// Move to next skill group
 		const rowsUsed = Math.ceil(skillGroup.items.length / itemsPerRow);
-		yPos += 6 + (rowsUsed * 6) + 4;
+		yPos += 6 + rowsUsed * 6 + 4;
 	});
 
 	if (yPos > pageHeight - 50) {
@@ -410,11 +442,10 @@ export async function generateResumePDF(): Promise<Blob> {
 	return pdfOutput;
 }
 
-export function downloadResumePDF() {
+export async function downloadResumePDF() {
+	const pdfBlob = await generateResumePDF();
 	const link = document.createElement("a");
-	link.href = URL.createObjectURL(
-		new Blob([generateResumePDF()], { type: "application/pdf" }),
-	);
+	link.href = URL.createObjectURL(pdfBlob);
 	link.download = "ameenuddin-resume.pdf";
 	link.click();
 }

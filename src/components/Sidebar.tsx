@@ -15,10 +15,10 @@ import {
 	IconSun,
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { AnimatePresence, motion, useReducedMotion } from "framer-motion";
 import { useState } from "react";
-import { type NavItem, navItems, socialLinks } from "../lib/navigation-data";
 import { downloadResumePDF } from "../lib/generate-pdf";
+import { type NavItem, navItems, socialLinks } from "../lib/navigation-data";
 import { cn } from "../lib/utils";
 
 interface SidebarProps {
@@ -51,9 +51,9 @@ export function Sidebar({
 		});
 	};
 
-	const handleItemClick = (item: NavItem) => {
+	const handleItemClick = async (item: NavItem) => {
 		if (item.id === "resume") {
-			downloadResumePDF();
+			await downloadResumePDF();
 		} else if (item.children) {
 			toggleExpand(item.id);
 		}
@@ -89,7 +89,7 @@ export function Sidebar({
 			<Box
 				className={cn(
 					"md:hidden fixed top-4 right-4 z-[1000]",
-					"safe-area-inset-top safe-area-inset-right"
+					"safe-area-inset-top safe-area-inset-right",
 				)}
 			>
 				<ActionIcon
@@ -114,14 +114,13 @@ export function Sidebar({
 					"z-[100] flex-col overflow-hidden",
 					"transition-all duration-300 ease-out",
 					collapsed ? "w-20" : "w-70",
-					"safe-area-inset-left"
+					"safe-area-inset-left",
 				)}
 			>
 				{/* Logo Section */}
-				<Box className={cn(
-					"border-b border-white/5",
-					collapsed ? "p-4" : "p-6"
-				)}>
+				<Box
+					className={cn("border-b border-white/5", collapsed ? "p-4" : "p-6")}
+				>
 					<Link to="/" className="no-underline">
 						<Group gap={collapsed ? 0 : "sm"} justify="center">
 							<IconCode size={28} className="text-cyan-500 flex-shrink-0" />
@@ -132,7 +131,7 @@ export function Sidebar({
 									exit={{ opacity: 0, width: 0 }}
 									transition={{
 										duration: shouldReduceMotion ? 0 : 0.2,
-										ease: "easeOut"
+										ease: "easeOut",
 									}}
 								>
 									<Text className="text-white text-xl font-bold text-balance">
@@ -149,7 +148,7 @@ export function Sidebar({
 					gap="xs"
 					className={cn(
 						"flex-1 overflow-y-auto overflow-x-hidden",
-						collapsed ? "p-2" : "p-4"
+						collapsed ? "p-2" : "p-4",
 					)}
 				>
 					{navItems.map((item) => (
@@ -168,11 +167,14 @@ export function Sidebar({
 				</Stack>
 
 				{/* Social Links & Theme Toggle */}
-				<Box className={cn(
-					"border-t border-white/5",
-					collapsed ? "p-2" : "p-4"
-				)}>
-					<Group gap="sm" justify={collapsed ? "center" : "flex-start"} className="mb-3">
+				<Box
+					className={cn("border-t border-white/5", collapsed ? "p-2" : "p-4")}
+				>
+					<Group
+						gap="sm"
+						justify={collapsed ? "center" : "flex-start"}
+						className="mb-3"
+					>
 						{socialLinks.map((social) => (
 							<Tooltip key={social.id} label={social.label} position="right">
 								<ActionIcon
@@ -185,7 +187,7 @@ export function Sidebar({
 									color="gray"
 									className={cn(
 										"transition-all duration-200 ease-out",
-										"hover:text-cyan-500 hover:-translate-y-0.5"
+										"hover:text-cyan-500 hover:-translate-y-0.5",
 									)}
 								>
 									{social.icon}
@@ -206,7 +208,7 @@ export function Sidebar({
 								"transition-all duration-200 ease-out",
 								"hover:bg-cyan-500/10",
 								"flex items-center gap-3",
-								collapsed ? "p-3 justify-center" : "px-4 py-3 justify-start"
+								collapsed ? "p-3 justify-center" : "px-4 py-3 justify-start",
 							)}
 						>
 							{isDarkMode ? (
@@ -279,7 +281,7 @@ function NavItemComponent({
 				collapsed
 					? "p-3 justify-center hover:scale-110"
 					: `px-4 py-3 hover:translate-x-1`,
-				collapsed ? "" : `pl-[${1 + paddingLeft}rem]`
+				collapsed ? "" : `pl-[${1 + paddingLeft}rem]`,
 			)}
 		>
 			<Group gap="sm" className="flex-1">
@@ -291,7 +293,7 @@ function NavItemComponent({
 						exit={{ opacity: 0 }}
 						transition={{
 							duration: shouldReduceMotion ? 0 : 0.2,
-							ease: "easeOut"
+							ease: "easeOut",
 						}}
 					>
 						<Text size="sm" className="text-white font-medium truncate">
@@ -305,7 +307,7 @@ function NavItemComponent({
 					animate={{ rotate: expanded ? 0 : -90 }}
 					transition={{
 						duration: shouldReduceMotion ? 0 : 0.2,
-						ease: "easeOut"
+						ease: "easeOut",
 					}}
 				>
 					<IconChevronDown size={16} className="text-white/50" />
@@ -347,10 +349,7 @@ function NavItemComponent({
 					disabled={!collapsed}
 					withArrow
 				>
-					<Link
-						to={item.path || "#"}
-						className="no-underline block"
-					>
+					<Link to={item.path || "#"} className="no-underline block">
 						{ItemContent}
 					</Link>
 				</Tooltip>
@@ -365,7 +364,7 @@ function NavItemComponent({
 						exit={{ height: 0, opacity: 0 }}
 						transition={{
 							duration: shouldReduceMotion ? 0 : 0.3,
-							ease: "easeOut"
+							ease: "easeOut",
 						}}
 						className="overflow-hidden"
 					>
@@ -397,7 +396,7 @@ function NavItemComponent({
 											"hover:bg-cyan-500/8 hover:translate-x-1.5",
 											"flex items-center gap-3",
 											`px-4 py-2 pl-[${2 + paddingLeft}rem]`,
-											"min-h-[44px]" // Touch target
+											"min-h-[44px]", // Touch target
 										)}
 									>
 										<Box className="text-cyan-500 flex-shrink-0">
@@ -411,12 +410,16 @@ function NavItemComponent({
 
 								if (child.id === "resume") {
 									return (
-										<div
+										<button
 											key={child.id}
+											type="button"
 											className="no-underline cursor-pointer"
+											onClick={async () => {
+												await downloadResumePDF();
+											}}
 										>
 											{ChildButton}
-										</div>
+										</button>
 									);
 								}
 
@@ -427,7 +430,7 @@ function NavItemComponent({
 											href={child.path}
 											onClick={(e) => handleAnchorClick(e, child.path!)}
 											className="no-underline"
-											style={{ display: 'block' }}
+											style={{ display: "block" }}
 										>
 											{ChildButton}
 										</a>

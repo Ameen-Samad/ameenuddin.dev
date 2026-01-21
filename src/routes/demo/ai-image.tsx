@@ -1,5 +1,4 @@
 import { type NotificationData, notifications } from "@mantine/notifications";
-import { useDebouncedCallback } from "@tanstack/react-pacer/debouncer";
 import { createFileRoute } from "@tanstack/react-router";
 import { Download, ImageIcon, Loader2 } from "lucide-react";
 import { useId, useState } from "react";
@@ -118,12 +117,6 @@ function ImagePage() {
 		}
 	};
 
-	const debouncedPromptChange = useDebouncedCallback(
-		(value: string) => {
-			setPrompt(value);
-		},
-		{ wait: 300 },
-	);
 
 	const getImageSrc = (image: GeneratedImage) => {
 		if (image.url) return image.url;
@@ -132,12 +125,27 @@ function ImagePage() {
 	};
 
 	const handleDownload = async (image: GeneratedImage, index: number) => {
-		const src = getImageSrc(image);
-		if (!src) return;
-
 		try {
-			const response = await fetch(src);
-			const blob = await response.blob();
+			let blob: Blob;
+
+			if (image.b64Json) {
+				// Convert base64 to blob
+				const base64Data = image.b64Json;
+				const byteCharacters = atob(base64Data);
+				const byteNumbers = new Array(byteCharacters.length);
+				for (let i = 0; i < byteCharacters.length; i++) {
+					byteNumbers[i] = byteCharacters.charCodeAt(i);
+				}
+				const byteArray = new Uint8Array(byteNumbers);
+				blob = new Blob([byteArray], { type: "image/png" });
+			} else if (image.url) {
+				// Fetch from URL
+				const response = await fetch(image.url);
+				blob = await response.blob();
+			} else {
+				throw new Error("No image data available");
+			}
+
 			const url = URL.createObjectURL(blob);
 			const a = document.createElement("a");
 			a.href = url;
@@ -146,12 +154,14 @@ function ImagePage() {
 			a.click();
 			document.body.removeChild(a);
 			URL.revokeObjectURL(url);
+
 			notifications.show({
 				title: "Download Started",
 				message: "Your image is being downloaded.",
 				color: "green",
 			});
 		} catch (err) {
+			console.error("Download error:", err);
 			notifications.show({
 				title: "Download Failed",
 				message: "Could not download the image.",
@@ -249,7 +259,7 @@ function ImagePage() {
 							<textarea
 								id={promptId}
 								value={prompt}
-								onChange={(e) => debouncedPromptChange(e.target.value)}
+								onChange={(e) => setPrompt(e.target.value)}
 								disabled={isLoading}
 								rows={6}
 								className="w-full rounded-lg border border-orange-500/20 bg-gray-800 px-3 py-2 text-sm text-white focus:outline-none focus:ring-2 focus:ring-orange-500/50 resize-none"

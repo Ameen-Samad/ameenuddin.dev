@@ -51,8 +51,16 @@ export const Route = createFileRoute("/demo/api/ai/image")({
 							},
 						);
 
+						// Convert Uint8Array to base64 string
+						const base64String =
+							response instanceof Uint8Array
+								? btoa(String.fromCharCode(...response))
+								: typeof response === "string"
+									? response
+									: "";
+
 						images.push({
-							b64Json: response,
+							b64Json: base64String,
 						});
 					}
 
