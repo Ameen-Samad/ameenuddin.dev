@@ -97,7 +97,7 @@ Choose one based on the job type:
 
 ## 🎓 Projects Section (Choose 2-3)
 
-### Project 1: AI-Powered Portfolio (ameenuddin.com)
+### Project 1: AI-Powered Portfolio (ameenuddin.dev)
 
 **Technologies**: TanStack Start, React, TypeScript, Cloudflare Workers, Workers AI, D1, KV
 
@@ -109,7 +109,7 @@ Choose one based on the job type:
 - Optimized performance with TanStack Pacer: 60% fewer API calls, 80% cost reduction
 - Deployed to Cloudflare Workers with D1 database and KV cache
 
-**Links**: [Live Demo](https://ameenuddin.com) · [Voice Agent](/demo/ai-voice) · [Image Generation](/demo/ai-image)
+**Links**: [Live Demo](https://ameenuddin.dev) · [Voice Agent](/demo/ai-voice) · [Image Generation](/demo/ai-image)
 
 ---
 
@@ -177,7 +177,7 @@ Instead of a skills list, show **what you've built with each skill**:
 - Production deployment on Cloudflare Workers
 - D1 database, KV cache, Workers AI bindings
 - SSR with streaming, edge computing
-- **Evidence**: Live site at [ameenuddin.com](https://ameenuddin.com)
+- **Evidence**: Live site at [ameenuddin.dev](https://ameenuddin.dev)
 
 ---
 
@@ -185,7 +185,7 @@ Instead of a skills list, show **what you've built with each skill**:
 
 ### Opening Paragraph:
 
-> I'm a fast learner who proves it through working code. My portfolio at ameenuddin.com contains 15+ live demos showing real implementations—not just toy examples. From building a real-time voice agent with WebSocket streaming to optimizing API costs by 80% with rate limiting, I learn by building production-ready features.
+> I'm a fast learner who proves it through working code. My portfolio at ameenuddin.dev contains 15+ live demos showing real implementations—not just toy examples. From building a real-time voice agent with WebSocket streaming to optimizing API costs by 80% with rate limiting, I learn by building production-ready features.
 
 ### Why This Role:
 
@@ -224,7 +224,7 @@ Full-Stack Developer | Building AI-Powered Applications | React, TypeScript, Clo
 ```
 Fast learner who builds to understand.
 
-I created ameenuddin.com—a portfolio with 15+ working demos proving hands-on experience with:
+I created ameenuddin.dev—a portfolio with 15+ working demos proving hands-on experience with:
 
 🎙️ Real-time voice agent (WebSocket + AudioContext)
 🎨 AI image generation (Stable Diffusion XL)
@@ -236,7 +236,7 @@ My git history shows the learning journey: from "Fix build error" to "Migrated t
 
 Currently pursuing Diploma in IT at Ngee Ann Polytechnic (Year 2). Open to internships and junior developer roles where I can learn from experienced engineers and contribute to production systems.
 
-Portfolio: ameenuddin.com
+Portfolio: ameenuddin.dev
 GitHub: github.com/ameenuddin
 Email: your@email.com
 ```

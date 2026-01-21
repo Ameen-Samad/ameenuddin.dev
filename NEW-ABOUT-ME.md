@@ -119,7 +119,7 @@ To prove I can learn fast and ship quality code. Every demo:
 
 I'm always excited to learn new things and work on interesting projects.
 
-- 🌐 Portfolio: [ameenuddin.com](https://ameenuddin.com)
+- 🌐 Portfolio: [ameenuddin.dev](https://ameenuddin.dev)
 - 💼 LinkedIn: [your-linkedin-url]
 - 💻 GitHub: [your-github-url]
 - 📧 Email: your@email.com
@@ -259,7 +259,7 @@ This portfolio is deployed on **Cloudflare Workers** with:
 - SSR with TanStack Start
 - 20+ routes, all working
 
-**Live at**: [ameenuddin.com](https://ameenuddin.com)
+**Live at**: [ameenuddin.dev](https://ameenuddin.dev)
 
 **What I learned**: Deployment is part of development, not an afterthought.
 
@@ -324,7 +324,7 @@ I'm excited to work on interesting problems and learn new technologies.
 
 **Try the demos** → See the working code → Check the git history → Let's talk!
 
-- 🌐 Portfolio: [ameenuddin.com](https://ameenuddin.com)
+- 🌐 Portfolio: [ameenuddin.dev](https://ameenuddin.dev)
 - 💼 LinkedIn: [your-linkedin-url]
 - 💻 GitHub: [your-github-url]
 - 📧 Email: your@email.com

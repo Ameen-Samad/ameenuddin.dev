@@ -303,7 +303,7 @@ Full-Stack Developer | Building AI-Powered Applications | React, TypeScript, Clo
 ```
 Fast learner who builds to understand.
 
-I created ameenuddin.com—a portfolio with 15+ working demos proving hands-on experience with:
+I created ameenuddin.dev—a portfolio with 15+ working demos proving hands-on experience with:
 
 🎙️ Real-time voice agent (WebSocket + AudioContext)
 🎨 AI image generation (Stable Diffusion XL)
@@ -315,17 +315,17 @@ My git history shows the learning journey: from "Fix build error" to "Migrated t
 
 Currently pursuing Diploma in IT at Ngee Ann Polytechnic (Year 2). Open to internships and junior developer roles where I can learn from experienced engineers and contribute to production systems.
 
-Portfolio: ameenuddin.com
+Portfolio: ameenuddin.dev
 Email: your@email.com
 ```
 
 ### Featured Section:
 
 Add these links:
-1. Portfolio homepage → ameenuddin.com
-2. Voice Agent demo → ameenuddin.com/demo/ai-voice
+1. Portfolio homepage → ameenuddin.dev
+2. Voice Agent demo → ameenuddin.dev/demo/ai-voice
 3. GitHub repository → github.com/yourusername
-4. "How I Built This" page → ameenuddin.com/journey
+4. "How I Built This" page → ameenuddin.dev/journey
 
 ---
 

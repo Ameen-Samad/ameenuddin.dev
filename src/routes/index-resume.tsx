@@ -41,31 +41,32 @@ function App() {
 										Career Summary
 									</Title>
 									<p className="text-gray-700 leading-relaxed mb-4">
-										<strong className="text-blue-600">
-											AI-Native Software Engineer
-										</strong>{" "}
-										who leverages Claude Code with the latest plugins and MCPs
-										(Model Context Protocols) to deliver{" "}
-										<strong className="text-purple-600">
-											100x productivity
-										</strong>
-										.
+										<strong className="text-blue-600">Fast learner who builds to understand.</strong>{" "}
+										I don't claim expertise—I show proof through working code. This portfolio contains{" "}
+										<strong className="text-purple-600">15+ live demos</strong> and a git history of{" "}
+										<strong className="text-green-600">30+ commits</strong> showing real problem-solving.
 									</p>
 									<p className="text-gray-700 leading-relaxed mb-4">
-										Building production-ready applications with Python,
-										JavaScript, and TypeScript while pursuing a Diploma in IT at
-										Ngee Ann Polytechnic (Year 2). I don't just use AI tools—I
-										<strong className="text-green-600">master them</strong> to
-										maximize efficiency without sacrificing code quality or
-										testing standards.
+										Currently pursuing a Diploma in IT at Ngee Ann Polytechnic (Year 2), I learn by implementing:
+										built 5 AI-powered demos (voice agent with WebSocket streaming, text-to-speech, image generation,
+										chat, structured output), deployed to Cloudflare Workers with D1 database and KV cache, and
+										integrated the complete TanStack ecosystem (Start, Router, Query, Table, Form, Pacer, Store).
+									</p>
+									<p className="text-gray-700 leading-relaxed mb-4">
+										My git history tells the story: <code className="bg-gray-100 px-2 py-1 rounded text-sm">8581789:
+										"Removed OpenAI, used fully Cloudflare Workers"</code> shows I migrated from external APIs
+										to Workers AI for security and performance. Multiple "Fix X" commits show I iterate until
+										it works.
 									</p>
 									<p className="text-gray-700 leading-relaxed">
-										In a competitive job market, I offer to{" "}
-										<strong className="text-blue-600">unique advantage</strong>{" "}
-										of combining strong engineering fundamentals with
-										cutting-edge AI development workflows to ship features
-										faster, solve problems more creatively, and deliver
-										exceptional results.
+										<strong className="text-blue-600">I learn fast, apply immediately, and prove it with deployments.</strong>
+										{" "}
+										<a
+											href="/#demos"
+											className="text-blue-600 hover:text-blue-800 underline font-medium"
+										>
+											See the demos →
+										</a>
 									</p>
 								</Stack>
 							</Paper>
