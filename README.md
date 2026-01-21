@@ -49,36 +49,43 @@ Am example chat application built with TanStack Start, TanStack Store, and Claud
 ## .env Updates
 
 ```env
-ANTHROPIC_API_KEY=your_anthropic_api_key
+# Cloudflare Workers/Pages configuration is handled via wrangler.toml
+# AI binding is configured in Cloudflare dashboard
 ```
 
 ## ✨ Features
 
 ### AI Capabilities
-- 🤖 Powered by Claude 3.5 Sonnet 
+- 🤖 Powered by Cloudflare AI (Llama 4 Scout 17B)
 - 📝 Rich markdown formatting with syntax highlighting
 - 🎯 Customizable system prompts for tailored AI behavior
-- 🔄 Real-time message updates and streaming responses (coming soon)
+- 🔄 Real-time streaming responses via Server-Sent Events (SSE)
+- 🔧 Tool calling support with visual feedback
+- 📚 RAG (Retrieval-Augmented Generation) for contextual responses
 
 ### User Experience
 - 🎨 Modern UI with Tailwind CSS and Lucide icons
 - 🔍 Conversation management and history
-- 🔐 Secure API key management
 - 📋 Markdown rendering with code highlighting
+- 🔴 Live tool execution indicators (Search, Database, etc.)
 
 ### Technical Features
 - 📦 Centralized state management with TanStack Store
-- 🔌 Extensible architecture for multiple AI providers
+- 🌐 Cloudflare Workers runtime
 - 🛠️ TypeScript for type safety
+- 🔄 Streaming SSE for real-time AI responses
+- 🔧 Tool calling with visual feedback
+- 📚 Context retrieval for enhanced responses
 
 ## Architecture
 
 ### Tech Stack
 - **Frontend Framework**: TanStack Start
+- **Runtime**: Cloudflare Workers/Pages
 - **Routing**: TanStack Router
 - **State Management**: TanStack Store
 - **Styling**: Tailwind CSS
-- **AI Integration**: Anthropic's Claude API
+- **AI Integration**: Cloudflare AI (@cf/meta/llama-4-scout-17b-16e-instruct)
 
 ## Shadcn
 
