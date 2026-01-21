@@ -14,15 +14,13 @@ import {
 	IconArrowDown,
 	IconBrandGithub,
 	IconBrandLinkedin,
-	IconCode,
-	IconDatabase,
-	IconDevices,
 	IconMail,
 	IconPhone,
-	IconRobot,
 } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { ContactSection } from "../components/ContactSection";
+import { ExperienceTimeline } from "../components/ExperienceTimeline";
 import { ProjectsSection } from "../components/ProjectsSection";
 import { SkillsDashboard } from "../components/SkillsDashboard";
 
@@ -36,8 +34,9 @@ function Home() {
 			<Hero />
 			<About />
 			<SkillsDashboard />
+			<ExperienceTimeline />
 			<ProjectsSection />
-			<Contact />
+			<ContactSection />
 		</>
 	);
 }

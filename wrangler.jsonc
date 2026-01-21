@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "tanstack-start-app",
+  "name": "ameenuddin-dev",
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
   "d1_databases": [
@@ -8,6 +8,15 @@
       "binding": "DB",
       "database_name": "ameenuddin-dev-db",
       "database_id": "local"
+    }
+  ],
+  "ai": {
+    "binding": "AI"
+  },
+  "kv_namespaces": [
+    {
+      "binding": "PROJECT_CACHE",
+      "id": "3b6fc452a52e4906be204952436b588b"
     }
   ]
 }
