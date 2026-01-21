@@ -141,10 +141,47 @@ class TetrisAI {
 		);
 
 		return {
-			x: move.x,
-			y: move.y,
-			rotation: move.rotation,
-			score: move.score,
+			x: move[0],
+			y: move[1],
+			rotation: move[2],
+			score: move[3],
+		};
+	}
+
+	static async getBestMoveWithLookahead(
+		grid: (number | null)[][],
+		piece: Tetromino,
+		nextPiece: Tetromino,
+	): Promise<AIMove> {
+		await initWasm();
+
+		if (!wasmAI) {
+			throw new Error("WASM AI not initialized");
+		}
+
+		const flatGrid = grid.flat();
+		const flatPiece = piece.shape.flat();
+		const flatNextPiece = nextPiece.shape.flat();
+
+		const move = wasmAI.get_best_move_with_lookahead(
+			new Int32Array(
+				flatGrid.map((cell) => (cell === null ? 0 : 1) as number),
+			),
+			grid[0].length,
+			grid.length,
+			new Int32Array(flatPiece),
+			piece.shape[0].length,
+			piece.shape.length,
+			new Int32Array(flatNextPiece),
+			nextPiece.shape[0].length,
+			nextPiece.shape.length,
+		);
+
+		return {
+			x: move[0],
+			y: move[1],
+			rotation: move[2],
+			score: move[3],
 		};
 	}
 }
@@ -1187,7 +1224,17 @@ export class TetrisGame extends Phaser.Scene {
 
 		this.isProcessingAIMove = true;
 
-		TetrisAI.getBestMove(this.grid, this.currentPiece)
+		// Use beam search with lookahead if next piece is available
+		const aiPromise =
+			this.nextPieces.length > 0
+				? TetrisAI.getBestMoveWithLookahead(
+						this.grid,
+						this.currentPiece,
+						this.nextPieces[0],
+				  )
+				: TetrisAI.getBestMove(this.grid, this.currentPiece);
+
+		aiPromise
 			.then(async (move) => {
 				if (!this.currentPiece || this.paused || this.gameOver) {
 					this.isProcessingAIMove = false;
