@@ -1,7 +1,7 @@
 /**
  * Standalone WebSocket Worker for Real-Time Text-to-Speech
  *
- * Uses Cloudflare AI Gateway with Deepgram Aura-1 for streaming TTS.
+ * Uses Cloudflare AI Gateway with Deepgram Aura-2-EN for streaming TTS.
  *
  * Deployed to: /demo/api/ai/tts-stream
  *
@@ -54,10 +54,10 @@ export default {
       return new Response(
         JSON.stringify({
           error: 'This endpoint requires a WebSocket connection',
-          info: 'Deepgram Aura-1 requires WebSocket for streaming text-to-speech',
+          info: 'Deepgram Aura-2-EN requires WebSocket for streaming text-to-speech',
           usage: 'Connect via WebSocket and send JSON messages to speak text',
           websocketUrl: wsUrl,
-          model: '@cf/deepgram/aura-1',
+          model: '@cf/deepgram/aura-2-en',
           audioFormat: {
             encoding: 'PCM',
             sampleRate: 24000,
@@ -134,8 +134,8 @@ ws.onmessage = (event) => {
       // Accept the client connection
       server.accept();
 
-      // Build AI Gateway WebSocket URL for Aura-1
-      const aiGatewayUrl = `wss://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/workers-ai?model=@cf/deepgram/aura-1`;
+      // Build AI Gateway WebSocket URL for Aura-2-EN
+      const aiGatewayUrl = `wss://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/workers-ai?model=@cf/deepgram/aura-2-en`;
 
       console.log('Connecting to AI Gateway (TTS):', aiGatewayUrl.replace(env.CLOUDFLARE_API_TOKEN, '***'));
 
@@ -156,8 +156,8 @@ ws.onmessage = (event) => {
 
         server.send(JSON.stringify({
           type: 'connected',
-          message: 'Connected to Deepgram Aura-1 TTS',
-          model: '@cf/deepgram/aura-1',
+          message: 'Connected to Deepgram Aura-2-EN TTS',
+          model: '@cf/deepgram/aura-2-en',
           config: {
             sampleRate: 24000,
             bitDepth: 16,

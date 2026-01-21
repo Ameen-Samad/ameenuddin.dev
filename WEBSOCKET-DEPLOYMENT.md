@@ -26,7 +26,7 @@ Due to TanStack Start's current limitations with WebSocket support, real-time AI
 ┌─────────────────────────────────────────┐
 │  TTS Worker (WebSocket)                 │
 │  ameenuddin.dev/demo/api/ai/tts-stream  │
-│  - Text-to-Speech (Deepgram Aura-1)     │
+│  - Text-to-Speech (Deepgram Aura-2-EN)  │
 │  - AI Gateway connection                │
 │  - Streaming audio output               │
 └─────────────────────────────────────────┘
@@ -37,7 +37,7 @@ Due to TanStack Start's current limitations with WebSocket support, real-time AI
 | File | Purpose |
 |------|---------|
 | `workers/transcription-ws.ts` | Speech-to-Text worker (Flux) |
-| `workers/tts-ws.ts` | Text-to-Speech worker (Aura-1) |
+| `workers/tts-ws.ts` | Text-to-Speech worker (Aura-2-EN) |
 | `workers/wrangler-transcription.toml` | Transcription worker config |
 | `workers/wrangler-tts.toml` | TTS worker config |
 | `AI-GATEWAY-SETUP.md` | AI Gateway setup instructions |
@@ -252,7 +252,7 @@ Client receives transcription
 - **Sample Rate:** 16kHz
 - **Channels:** 1 (mono)
 
-**TTS (Aura-1 - Text-to-Speech):**
+**TTS (Aura-2-EN - Text-to-Speech):**
 - **Output:** PCM (raw signed 16-bit)
 - **Sample Rate:** 24kHz
 - **Channels:** 1 (mono)
@@ -318,7 +318,7 @@ WebSocket connection to 'wss://ameenuddin.dev/demo/api/ai/transcription' failed
 **Fix:**
 1. Verify model name is correct:
    - Transcription: `@cf/deepgram/flux`
-   - TTS: `@cf/deepgram/aura-1`
+   - TTS: `@cf/deepgram/aura-2-en`
 2. Check your account has access to Workers AI models
 3. Try in Cloudflare Dashboard: AI → Workers AI → Models
 
