@@ -9,8 +9,8 @@ Your portfolio uses **Cloudflare Workers AI** for AI-powered features:
 | Feature | Model | Purpose |
 |---------|-------|---------|
 | **Three.js Code Generation** | `@cf/qwen/qwen2.5-coder-32b-instruct` | Generates Three.js code from natural language |
-| **Semantic Search** | `@cf/baai/bge-base-en-v1.5` | Vector embeddings for AI-powered search |
-| **Project Summaries** | `@cf/meta/llama-2-7b-chat-int8` | Generates project descriptions and features |
+| **Semantic Search** | `@cf/google/embeddinggemma-300m` | Vector embeddings for AI-powered search (Google's optimized embedding model) |
+| **Project Summaries** | `@cf/meta/llama-4-scout-17b-16e-instruct` | Generates project descriptions and features (Meta's latest Llama 4) |
 
 ## How It Works
 
@@ -141,17 +141,20 @@ pnpm run dev:worker
 - **Purpose**: Code generation (Three.js scenes)
 - **Max Tokens**: 3000
 - **Temperature**: 0.7 (balanced creativity)
+- **Why**: Specialized for coding tasks with excellent Three.js knowledge
 
-### BGE Embeddings
-- **ID**: `@cf/baai/bge-base-en-v1.5`
+### Google EmbeddingGemma (300M)
+- **ID**: `@cf/google/embeddinggemma-300m`
 - **Purpose**: Convert text to vector embeddings
 - **Dimensions**: 768
 - **Use Case**: Semantic search
+- **Why**: Google's optimized embedding model - faster and more accurate than BGE
 
-### Llama 2 Chat
-- **ID**: `@cf/meta/llama-2-7b-chat-int8`
+### Meta Llama 4 Scout (17B)
+- **ID**: `@cf/meta/llama-4-scout-17b-16e-instruct`
 - **Purpose**: Generate summaries and descriptions
 - **Use Case**: Project documentation
+- **Why**: Latest Llama 4 model - significantly better at instruction following and content generation
 
 ## Troubleshooting
 

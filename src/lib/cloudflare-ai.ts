@@ -60,7 +60,7 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				text,
-				model: "@cf/baai/bge-base-en-v1.5",
+				model: "@cf/google/embeddinggemma-300m",
 			}),
 		});
 
@@ -112,7 +112,7 @@ export async function generateSummary(project: any): Promise<AIContent> {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				project,
-				model: "@cf/meta/llama-2-7b-chat-int8",
+				model: "@cf/meta/llama-4-scout-17b-16e-instruct",
 			}),
 		});
 
@@ -169,7 +169,7 @@ export async function parseNaturalLanguage(
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				query,
-				model: "@cf/meta/llama-2-7b-chat-int8",
+				model: "@cf/meta/llama-4-scout-17b-16e-instruct",
 			}),
 		});
 
@@ -208,7 +208,7 @@ export async function chatWithProject(
 				projectId,
 				message,
 				history,
-				model: "@cf/meta/llama-2-7b-chat-int8",
+				model: "@cf/meta/llama-4-scout-17b-16e-instruct",
 			}),
 		});
 
@@ -256,7 +256,7 @@ export async function categorizeProject(project: any): Promise<string> {
 			headers: { "Content-Type": "application/json" },
 			body: JSON.stringify({
 				project,
-				model: "@cf/meta/llama-2-7b-chat-int8",
+				model: "@cf/meta/llama-4-scout-17b-16e-instruct",
 			}),
 		});
 

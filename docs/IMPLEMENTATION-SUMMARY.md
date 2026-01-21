@@ -109,8 +109,8 @@ This implementation adds full Cloudflare Workers AI integration to the portfolio
 - **Workers**: Serverless API endpoints
 
 ### AI Models Used
-- **@cf/baai/bge-base-en-v1.5** - Text embeddings (768-dim)
-- **@cf/meta/llama-2-7b-chat-int8** - Fast chat model (~2s)
+- **@cf/google/embeddinggemma-300m** - Text embeddings (768-dim)
+- **@cf/meta/llama-4-scout-17b-16e-instruct** - Fast chat model (~2s)
 - **@cf/mistral/mistral-7b-instruct-v0.1** - High-quality instructions (~3s)
 
 ### Client-Side

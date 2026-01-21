@@ -400,7 +400,7 @@ const performSemanticSearch = async (query: string): Promise<Project[]> => {
 const generateEmbedding = async (text: string): Promise<number[]> => {
   const response = await fetch('/api/workers/embeddings', {
     method: 'POST',
-    body: JSON.stringify({ text, model: '@cf/baai/bge-base-en-v1.5' }),
+    body: JSON.stringify({ text, model: '@cf/google/embeddinggemma-300m' }),
   });
   return response.json();
 };
@@ -437,7 +437,7 @@ interface AIContent {
 // Generate concise summaries using Cloudflare Workers AI
 const generateSummary = async (project: Project): Promise<AIContent> => {
   const summary = await cloudflareAI.generateText({
-    model: '@cf/meta/llama-2-7b-chat-int8',
+    model: '@cf/meta/llama-4-scout-17b-16e-instruct',
     prompt: `Summarize this project in 150 words or less:\n\n${project.description}\n\nTags: ${project.tags.join(', ')}`,
     maxTokens: 200,
   });
@@ -457,7 +457,7 @@ const generateSummary = async (project: Project): Promise<AIContent> => {
 const categorizeProject = async (project: Partial<Project>): Promise<ProjectCategory> => {
   const features = extractFeatures(project);
   const prediction = await cloudflareAI.predict({
-    model: '@cf/meta/llama-2-7b-chat-int8',
+    model: '@cf/meta/llama-4-scout-17b-16e-instruct',
     input: `Categorize this project into one of: ai-ml, web-apps, 3d-graphics, tools\n\nProject: ${JSON.stringify(features)}`,
   });
   return prediction.category;
@@ -479,7 +479,7 @@ const suggestTags = async (description: string): Promise<string[]> => {
 // Support natural language queries using Cloudflare Workers AI
 const parseNaturalLanguage = async (query: string): ParsedQuery => {
   const result = await cloudflareAI.generateText({
-    model: '@cf/meta/llama-2-7b-chat-int8',
+    model: '@cf/meta/llama-4-scout-17b-16e-instruct',
     prompt: `Parse this query into JSON format:\n\n"${query}"\n\nReturn structure: {\n  "technologies": [],\n  "categories": [],\n  "complexity": "",\n  "features": [],\n  "status": ""\n}`,
     maxTokens: 300,
   });
@@ -550,11 +550,11 @@ const chatWithProject = async (projectId: string, message: string) => {
   "cloudflare": {
     "workersAI": {
       "llm": [
-        "@cf/meta/llama-2-7b-chat-int8",
+        "@cf/meta/llama-4-scout-17b-16e-instruct",
         "@cf/mistral/mistral-7b-instruct-v0.1",
         "@hf/thebloke/deepseek-coder-6.7b-instruct-awq"
       ],
-      "embeddings": "@cf/baai/bge-base-en-v1.5",
+      "embeddings": "@cf/google/embeddinggemma-300m",
       "imageGeneration": "@cf/stabilityai/stable-diffusion-xl-base-1.0"
     },
     "kv": "Project metadata caching",
@@ -582,7 +582,7 @@ export default {
     const { query } = await request.json();
 
     // Generate embedding
-    const embedding = await ai.run('@cf/baai/bge-base-en-v1.5', {
+    const embedding = await ai.run('@cf/google/embeddinggemma-300m', {
       text: [query],
     });
 
@@ -624,7 +624,7 @@ export default {
     if (cached) return Response.json(cached);
 
     // Generate response
-    const response = await ai.run('@cf/meta/llama-2-7b-chat-int8', {
+    const response = await ai.run('@cf/meta/llama-4-scout-17b-16e-instruct', {
       messages: [
         { role: 'system', content: `You are a helpful assistant for the project "${project.title}".\n\n${project.description}\n\nTech Stack: ${project.tags.join(', ')}` },
         ...history,
@@ -657,7 +657,7 @@ export default {
     const project = await env.KV.get(`project:${projectId}`, { type: 'json' });
 
     // Generate recommendations based on similarity and user interests
-    const results = await ai.run('@cf/baai/bge-base-en-v1.5', {
+    const results = await ai.run('@cf/google/embeddinggemma-300m', {
       text: [userInterests.join(' ')],
     });
 

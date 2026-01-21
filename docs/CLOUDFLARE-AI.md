@@ -41,7 +41,7 @@ Generate vector embeddings for semantic search.
 ```json
 {
   "text": "AI projects with React",
-  "model": "@cf/baai/bge-base-en-v1.5"
+  "model": "@cf/google/embeddinggemma-300m"
 }
 ```
 
@@ -89,7 +89,7 @@ Generate AI summary for a project.
     "tags": ["Phaser", "AI", ...],
     "techStack": {...}
   },
-  "model": "@cf/meta/llama-2-7b-chat-int8"
+  "model": "@cf/meta/llama-4-scout-17b-16e-instruct"
 }
 ```
 
@@ -128,7 +128,7 @@ Parse natural language search query.
 ```json
 {
   "query": "Show me React AI projects that are beginner-friendly",
-  "model": "@cf/meta/llama-2-7b-chat-int8"
+  "model": "@cf/meta/llama-4-scout-17b-16e-instruct"
 }
 ```
 
@@ -152,7 +152,7 @@ Chat with AI assistant about a specific project.
   "projectId": "tetris-ai",
   "message": "How do I set up this project?",
   "history": [...],
-  "model": "@cf/meta/llama-2-7b-chat-int8"
+  "model": "@cf/meta/llama-4-scout-17b-16e-instruct"
 }
 ```
 
@@ -199,7 +199,7 @@ Auto-categorize a project.
     "description": "...",
     "tags": [...]
   },
-  "model": "@cf/meta/llama-2-7b-chat-int8"
+  "model": "@cf/meta/llama-4-scout-17b-16e-instruct"
 }
 ```
 
@@ -269,12 +269,12 @@ import { ProjectAIAssistant } from "~/components/ProjectAIAssistant";
 ## Cloudflare Workers AI Models Used
 
 ### Embeddings
-- **@cf/baai/bge-base-en-v1.5** - High-quality text embeddings for semantic search
+- **@cf/google/embeddinggemma-300m** - High-quality text embeddings for semantic search
 - 768-dimensional vectors
 - Optimized for English text similarity
 
 ### Language Models
-- **@cf/meta/llama-2-7b-chat-int8** - Fast, efficient chat model
+- **@cf/meta/llama-4-scout-17b-16e-instruct** - Fast, efficient chat model
   - Quantized for faster inference
   - Good for general chatbot use cases
   - ~2-3s response time
