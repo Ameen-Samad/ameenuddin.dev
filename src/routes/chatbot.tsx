@@ -573,6 +573,62 @@ function Chatbot() {
 						</Stack>
 					)}
 				</Drawer>
+
+				<Modal
+					opened={editingDocument !== null}
+					onClose={closeEditModal}
+					title={
+						<Group gap="sm">
+							<IconEdit size={20} style={{ color: "#00f3ff" }} />
+							<Text fw={600}>Edit Document {editingDocument?.id}</Text>
+						</Group>
+					}
+					size="lg"
+					styles={{
+						content: { background: "#1a1a1a" },
+						header: {
+							background: "#1a1a1a",
+							borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+						},
+						body: { padding: "md" },
+					}}
+				>
+					<Stack gap="md">
+						<Textarea
+							value={editingContent}
+							onChange={(e) => setEditingContent(e.target.value)}
+							placeholder="Enter document content..."
+							minRows={10}
+							maxRows={20}
+							autosize
+							styles={{
+								input: {
+									background: "rgba(0, 0, 0, 0.3)",
+									border: "1px solid rgba(0, 243, 255, 0.2)",
+									color: "white",
+								},
+							}}
+						/>
+						<Group justify="flex-end" gap="sm">
+							<Button
+								variant="outline"
+								onClick={closeEditModal}
+								style={{ borderColor: "#666", color: "#999" }}
+							>
+								Cancel
+							</Button>
+							<Button
+								onClick={saveEditedDocument}
+								style={{
+									background: "linear-gradient(45deg, #00f3ff, #0066ff)",
+								}}
+								leftSection={<IconCheck size={16} />}
+							>
+								Save Changes
+							</Button>
+						</Group>
+					</Stack>
+				</Modal>
 			</Container>
 		</div>
 	);
@@ -875,8 +931,10 @@ function ChatArea({
 
 			<Divider my="md" style={{ borderColor: "rgba(255, 255, 255, 0.1)" }} />
 
-			<Group p="md">
+			<Group p="md" gap="md" align="flex-end" style={{ flexWrap: "nowrap" }}>
 				<Textarea
+					value={input}
+					onChange={(e) => setInput(e.target.value)}
 					placeholder="Type your message here... (RAG context from documents will be applied)"
 					minRows={2}
 					onKeyDown={(e) => {
@@ -889,13 +947,20 @@ function ChatArea({
 						background: "rgba(0, 0, 0, 0.3)",
 						border: "1px solid rgba(0, 243, 255, 0.2)",
 						color: "white",
+						flex: 1,
 					}}
 				/>
 				<ActionIcon
 					size="lg"
 					variant="filled"
 					onClick={() => onSendMessage()}
-					style={{ background: "linear-gradient(45deg, #00f3ff, #0066ff)" }}
+					disabled={!input.trim()}
+					style={{
+						background: input.trim()
+							? "linear-gradient(45deg, #00f3ff, #0066ff)"
+							: "rgba(100, 100, 100, 0.5)",
+						cursor: input.trim() ? "pointer" : "not-allowed",
+					}}
 				>
 					<IconSend size={20} />
 				</ActionIcon>
