@@ -22,7 +22,6 @@ import {
 	IconMail,
 	IconPhone,
 	IconRobot,
-	IconSchool,
 } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
@@ -95,7 +94,6 @@ function Home() {
 			<About />
 			<Skills skills={skills} />
 			<Projects projects={projects} />
-			<Education />
 			<Contact />
 		</>
 	);
@@ -512,75 +510,6 @@ function Projects({
 							</motion.div>
 						))}
 					</SimpleGrid>
-				</motion.div>
-			</Container>
-		</section>
-	);
-}
-
-function Education() {
-	return (
-		<section
-			id="education"
-			style={{ padding: "100px 0", background: "rgba(0, 0, 0, 0.3)" }}
-		>
-			<Container size="xl">
-				<motion.div
-					initial={{ opacity: 0, y: 50 }}
-					whileInView={{ opacity: 1, y: 0 }}
-					viewport={{ once: true }}
-					transition={{ duration: 0.6 }}
-				>
-					<Title order={2} c="white" mb="xl" style={{ textAlign: "center" }}>
-						Education
-					</Title>
-					<Paper
-						shadow="xl"
-						radius="lg"
-						p="xl"
-						style={{
-							background: "rgba(26, 26, 26, 0.8)",
-							border: "1px solid rgba(255, 0, 255, 0.1)",
-						}}
-					>
-						<Group gap="lg" align="flex-start">
-							<div
-								style={{
-									width: 80,
-									height: 80,
-									background:
-										"linear-gradient(45deg, rgba(255, 0, 255, 0.2), rgba(0, 243, 255, 0.2))",
-									borderRadius: "md",
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "center",
-									flexShrink: 0,
-								}}
-							>
-								<IconSchool size={40} style={{ color: "#ff00ff" }} />
-							</div>
-							<div style={{ flex: 1 }}>
-								<Title order={3} c="white" mb="xs">
-									Ngee Ann Polytechnic
-								</Title>
-								<Text size="lg" c="neonCyan" fw={600} mb="sm">
-									Diploma in Information Technology
-								</Text>
-								<Text c="dimmed" mb="md">
-									Elective in{" "}
-									<span style={{ color: "white", fontWeight: 600 }}>
-										Enterprise Computing
-									</span>
-								</Text>
-								<Text c="dimmed" size="sm">
-									Focused on building strong fundamentals in software
-									development, databases, and enterprise systems. Developed
-									practical skills through hands-on projects and
-									industry-relevant coursework.
-								</Text>
-							</div>
-						</Group>
-					</Paper>
 				</motion.div>
 			</Container>
 		</section>
