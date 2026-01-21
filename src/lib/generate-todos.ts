@@ -32,7 +32,7 @@ export function generateRandomTodos(count: number) {
 		"file upload handler",
 		"real-time websocket",
 		"data pipeline",
-		" caching layer",
+		"caching layer",
 		"rate limiter",
 		"error handler",
 		"logging system",

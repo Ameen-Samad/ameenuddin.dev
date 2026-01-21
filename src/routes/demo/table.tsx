@@ -127,7 +127,7 @@ function TableDemo() {
 			{
 				accessorKey: "firstName",
 				cell: (info) => info.getValue(),
-				filterFn: "includesStringSensitive", //note: normal non-fuzzy filter column - case sensitive
+				filterFn: "includesString",
 			},
 			{
 				accessorFn: (row) => row.lastName,

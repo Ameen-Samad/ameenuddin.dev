@@ -3,7 +3,6 @@ import "@mantine/notifications/styles.css";
 import { createTheme, MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import type { QueryClient } from "@tanstack/react-query";
-import { useQueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
@@ -72,35 +71,28 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					theme={theme}
 					defaultColorScheme={isDarkMode ? "dark" : "light"}
 				>
-					<TRPCProvider
-						trpcClient={trpcClient}
-						queryClient={useTRPCQueryClient()}
+					<Sidebar
+						collapsed={isSidebarCollapsed}
+						onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+						onMobileOpen={() => setIsMobileNavOpen(true)}
+						isDarkMode={isDarkMode}
+						onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+					/>
+					<MobileNav
+						isOpen={isMobileNavOpen}
+						onClose={() => setIsMobileNavOpen(false)}
+						isDarkMode={isDarkMode}
+						onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+					/>
+					<div
+						className="ml-0 md:ml-[280px] min-h-dvh transition-all duration-300 ease-out"
+						style={{ overflowX: "hidden" }}
 					>
-						<Sidebar
-							collapsed={isSidebarCollapsed}
-							onToggleCollapse={() =>
-								setIsSidebarCollapsed(!isSidebarCollapsed)
-							}
-							onMobileOpen={() => setIsMobileNavOpen(true)}
-							isDarkMode={isDarkMode}
-							onThemeToggle={() => setIsDarkMode(!isDarkMode)}
-						/>
-						<MobileNav
-							isOpen={isMobileNavOpen}
-							onClose={() => setIsMobileNavOpen(false)}
-							isDarkMode={isDarkMode}
-							onThemeToggle={() => setIsDarkMode(!isDarkMode)}
-						/>
-						<div
-							className="ml-0 md:ml-[280px] min-h-dvh transition-all duration-300 ease-out"
-							style={{ overflowX: "hidden" }}
-						>
-							{children}
-						</div>
-						<WhatsAppButton />
-						<Notifications position="top-right" zIndex={9999} />
-						<Scripts />
-					</TRPCProvider>
+						{children}
+					</div>
+					<WhatsAppButton />
+					<Notifications position="top-right" zIndex={9999} />
+					<Scripts />
 				</MantineProvider>
 			</body>
 		</html>
@@ -108,5 +100,11 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 }
 
 function RootLayout() {
-	return <Outlet />;
+	const { queryClient } = Route.useRouteContext();
+
+	return (
+		<TRPCProvider trpcClient={trpcClient} queryClient={queryClient}>
+			<Outlet />
+		</TRPCProvider>
+	);
 }

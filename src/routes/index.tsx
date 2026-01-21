@@ -19,18 +19,36 @@ import {
 } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { useEffect } from "react";
 import { ContactSection } from "../components/ContactSection";
 import { DemosSection } from "../components/DemosSection";
 import { ExperienceTimeline } from "../components/ExperienceTimeline";
 import { ProjectCarousel } from "../components/ProjectCarousel";
 import { ProjectsSection } from "../components/ProjectsSection";
 import { SkillsDashboard } from "../components/SkillsDashboard";
+import {
+	restoreScrollPosition,
+	saveScrollPosition,
+} from "../lib/scroll-restoration";
 
 export const Route = createFileRoute("/")({
 	component: Home,
+	onEnter: () => {
+		restoreScrollPosition();
+	},
+	onLeave: () => {
+		saveScrollPosition();
+	},
 });
 
 function Home() {
+	useEffect(() => {
+		restoreScrollPosition();
+		return () => {
+			saveScrollPosition();
+		};
+	}, []);
+
 	return (
 		<>
 			<Hero />
@@ -236,7 +254,9 @@ function About() {
 								<span style={{ color: "#00f3ff", fontWeight: 700 }}>
 									Ameen Samad
 								</span>
-								, a fast learner who proves it through working code. I don't claim expertise—I show evidence of learning through implementation.
+								, a fast learner who proves it through working code. I don't
+								claim expertise—I show evidence of learning through
+								implementation.
 							</Text>
 							<Text
 								c="dimmed"
@@ -255,7 +275,10 @@ function About() {
 								<span style={{ color: "#00f3ff", fontWeight: 700 }}>
 									"What I Learned"
 								</span>{" "}
-								sections showing technical challenges solved, skills developed, and code evidence. From building a real-time voice agent with WebSocket streaming to optimizing API costs by 80%, I learn by implementing production features.
+								sections showing technical challenges solved, skills developed,
+								and code evidence. From building a real-time voice agent with
+								WebSocket streaming to optimizing API costs by 80%, I learn by
+								implementing production features.
 							</Text>
 							<Text
 								c="dimmed"
@@ -271,10 +294,21 @@ function About() {
 									git history
 								</span>{" "}
 								shows the journey: commit{" "}
-								<code style={{ background: 'rgba(0,243,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#00f3ff', fontSize: '0.9em', wordBreak: 'break-all' }}>
+								<code
+									style={{
+										background: "rgba(0,243,255,0.1)",
+										padding: "2px 6px",
+										borderRadius: "4px",
+										color: "#00f3ff",
+										fontSize: "0.9em",
+										wordBreak: "break-all",
+									}}
+								>
 									8581789
 								</code>{" "}
-								documents migrating from OpenAI to Cloudflare Workers AI for security. Multiple "Fix X" commits show I iterate until it works.
+								documents migrating from OpenAI to Cloudflare Workers AI for
+								security. Multiple "Fix X" commits show I iterate until it
+								works.
 							</Text>
 							<Text
 								c="dimmed"
@@ -286,7 +320,9 @@ function About() {
 							>
 								Pursuing a Diploma in IT at{" "}
 								<span style={{ fontWeight: 600 }}>Ngee Ann Polytechnic</span>{" "}
-								(Year 2), I'm open to internships and junior roles where I can learn from experienced engineers and contribute to production systems.
+								(Year 2), I'm open to internships and junior roles where I can
+								learn from experienced engineers and contribute to production
+								systems.
 							</Text>
 						</Paper>
 						<Paper
@@ -308,8 +344,20 @@ function About() {
 								How I Learn
 							</Title>
 							<Stack gap="md">
-								<Group gap="sm" align="flex-start" style={{ flexWrap: "nowrap" }}>
-									<div style={{ color: "#00f3ff", fontSize: "24px", flexShrink: 0 }}>🔨</div>
+								<Group
+									gap="sm"
+									align="flex-start"
+									style={{ flexWrap: "nowrap" }}
+								>
+									<div
+										style={{
+											color: "#00f3ff",
+											fontSize: "24px",
+											flexShrink: 0,
+										}}
+									>
+										🔨
+									</div>
 									<Text
 										c="dimmed"
 										style={{
@@ -318,11 +366,26 @@ function About() {
 											hyphens: "auto",
 										}}
 									>
-										<b>Build to Understand</b> - I don't watch tutorials—I build real features. Each demo on this site documents what I learned, from WebSocket binary streaming to performance optimization.
+										<b>Build to Understand</b> - I don't watch tutorials—I build
+										real features. Each demo on this site documents what I
+										learned, from WebSocket binary streaming to performance
+										optimization.
 									</Text>
 								</Group>
-								<Group gap="sm" align="flex-start" style={{ flexWrap: "nowrap" }}>
-									<div style={{ color: "#ff00ff", fontSize: "24px", flexShrink: 0 }}>🔄</div>
+								<Group
+									gap="sm"
+									align="flex-start"
+									style={{ flexWrap: "nowrap" }}
+								>
+									<div
+										style={{
+											color: "#ff00ff",
+											fontSize: "24px",
+											flexShrink: 0,
+										}}
+									>
+										🔄
+									</div>
 									<Text
 										c="dimmed"
 										style={{
@@ -331,11 +394,25 @@ function About() {
 											hyphens: "auto",
 										}}
 									>
-										<b>Iterate Until It Works</b> - My git history has 10+ "Fix X" commits. That's not failure—that's learning. I debug, refactor, and improve until it's production-ready.
+										<b>Iterate Until It Works</b> - My git history has 10+ "Fix
+										X" commits. That's not failure—that's learning. I debug,
+										refactor, and improve until it's production-ready.
 									</Text>
 								</Group>
-								<Group gap="sm" align="flex-start" style={{ flexWrap: "nowrap" }}>
-									<div style={{ color: "#0066ff", fontSize: "24px", flexShrink: 0 }}>📦</div>
+								<Group
+									gap="sm"
+									align="flex-start"
+									style={{ flexWrap: "nowrap" }}
+								>
+									<div
+										style={{
+											color: "#0066ff",
+											fontSize: "24px",
+											flexShrink: 0,
+										}}
+									>
+										📦
+									</div>
 									<Text
 										c="dimmed"
 										style={{
@@ -344,7 +421,9 @@ function About() {
 											hyphens: "auto",
 										}}
 									>
-										<b>Ship to Production</b> - Every demo is deployed on Cloudflare Workers with real infrastructure (D1, KV, Workers AI). Deployment is part of development, not an afterthought.
+										<b>Ship to Production</b> - Every demo is deployed on
+										Cloudflare Workers with real infrastructure (D1, KV, Workers
+										AI). Deployment is part of development, not an afterthought.
 									</Text>
 								</Group>
 							</Stack>
