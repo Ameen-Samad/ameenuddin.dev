@@ -45,8 +45,18 @@ function VoiceAgentPage() {
   }, [])
 
   const getWebSocketUrl = () => {
-    const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
-    return `${protocol}//${window.location.host}/demo/api/ai/transcription`
+    // In development, the WebSocket worker runs on port 8787
+    // In production, it's on the same domain
+    const isDev = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1'
+
+    if (isDev) {
+      // Development: Connect to separate WebSocket worker
+      return 'ws://localhost:8787/demo/api/ai/transcription'
+    } else {
+      // Production: Same domain
+      const protocol = window.location.protocol === 'https:' ? 'wss:' : 'ws:'
+      return `${protocol}//${window.location.host}/demo/api/ai/transcription`
+    }
   }
 
   const connectWebSocket = () => {

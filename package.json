@@ -3,7 +3,8 @@
   "private": true,
   "type": "module",
   "scripts": {
-    "dev": "vite dev --port 3000",
+    "dev": "concurrently -n \"APP,WS-TRANS,WS-TTS\" -c \"cyan,green,magenta\" \"npm:dev:app\" \"npm:dev:transcription\" \"npm:dev:tts\"",
+    "dev:app": "vite dev --port 3000",
     "dev:worker": "npm run build && wrangler dev --config dist/server/wrangler.json",
     "dev:transcription": "wrangler dev --config workers/wrangler-transcription.toml",
     "dev:tts": "wrangler dev --config workers/wrangler-tts.toml",
@@ -90,6 +91,7 @@
     "@types/react": "^19.2.0",
     "@types/react-dom": "^19.2.0",
     "@vitejs/plugin-react": "^5.0.4",
+    "concurrently": "^9.2.1",
     "jsdom": "^27.0.0",
     "typescript": "^5.7.2",
     "vite": "^7.1.7",
