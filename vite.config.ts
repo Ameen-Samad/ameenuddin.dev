@@ -15,6 +15,19 @@ export default defineConfig({
 		contentCollections(),
 		tailwindcss(),
 	],
+	server: {
+		watch: {
+			// Ignore generated files to prevent watch loops
+			ignored: [
+				'**/routeTree.gen.ts',
+				'**/.content-collections/**',
+				'**/node_modules/**',
+			],
+		},
+	},
+	optimizeDeps: {
+		exclude: ['@cloudflare/ai', 'cloudflare:ai'],
+	},
 	build: {
 		rollupOptions: {
 			external: ["@cloudflare/ai", "cloudflare:ai"],
