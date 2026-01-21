@@ -1,15 +1,103 @@
-name: Deploy All Workers
+name: Deploy Workers (Smart)
 
 on:
   push:
     branches:
       - main
-  workflow_dispatch: # Allow manual triggering
+    paths:
+      - 'src/**'
+      - 'workers/**'
+      - 'package.json'
+      - 'vite.config.ts'
+      - 'tsconfig.json'
+      - '.github/workflows/deploy.yml'
+  workflow_dispatch: # Allow manual triggering of all deployments
 
 jobs:
-  deploy:
+  # Determine what changed
+  check-changes:
     runs-on: ubuntu-latest
-    name: Deploy to Cloudflare Workers
+    outputs:
+      transcription: ${{ steps.filter.outputs.transcription }}
+      tts: ${{ steps.filter.outputs.tts }}
+      main: ${{ steps.filter.outputs.main }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dorny/paths-filter@v3
+        id: filter
+        with:
+          filters: |
+            transcription:
+              - 'workers/transcription-ws.ts'
+              - 'workers/wrangler-transcription.toml'
+            tts:
+              - 'workers/tts-ws.ts'
+              - 'workers/wrangler-tts.toml'
+            main:
+              - 'src/**'
+              - 'package.json'
+              - 'vite.config.ts'
+              - 'tsconfig.json'
+              - '.github/workflows/deploy.yml'
+
+  # Deploy Transcription WebSocket Worker (only when its files change)
+  deploy-transcription:
+    needs: check-changes
+    if: needs.check-changes.outputs.transcription == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    name: Deploy Transcription Worker
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Deploy Transcription WebSocket Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config workers/wrangler-transcription.toml
+
+      - name: Summary
+        run: echo "✅ Transcription worker deployed to https://ameenuddin.dev/demo/api/ai/transcription"
+
+  # Deploy TTS WebSocket Worker (only when its files change)
+  deploy-tts:
+    needs: check-changes
+    if: needs.check-changes.outputs.tts == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    name: Deploy TTS Worker
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Setup Bun
+        uses: oven-sh/setup-bun@v1
+        with:
+          bun-version: latest
+
+      - name: Deploy TTS WebSocket Worker
+        uses: cloudflare/wrangler-action@v3
+        with:
+          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          command: deploy --config workers/wrangler-tts.toml
+
+      - name: Summary
+        run: echo "✅ TTS worker deployed to https://ameenuddin.dev/demo/api/ai/tts-stream"
+
+  # Deploy Main App Worker (only when app files change)
+  deploy-main:
+    needs: check-changes
+    if: needs.check-changes.outputs.main == 'true' || github.event_name == 'workflow_dispatch'
+    runs-on: ubuntu-latest
+    name: Deploy Main App
 
     steps:
       - name: Checkout code
@@ -26,36 +114,12 @@ jobs:
       - name: Build main app
         run: bun run build
 
-      - name: Deploy Transcription WebSocket Worker
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --config workers/wrangler-transcription.toml
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
-      - name: Deploy TTS WebSocket Worker
-        uses: cloudflare/wrangler-action@v3
-        with:
-          apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-          accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
-          command: deploy --config workers/wrangler-tts.toml
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-
       - name: Deploy Main App Worker
         uses: cloudflare/wrangler-action@v3
         with:
           apiToken: ${{ secrets.CLOUDFLARE_API_TOKEN }}
           accountId: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
           command: deploy --config dist/server/wrangler.json
-        env:
-          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
 
-      - name: Deployment Summary
-        run: |
-          echo "✅ All workers deployed successfully!"
-          echo "🔗 Main App: https://ameenuddin.dev"
-          echo "🎤 Transcription: https://ameenuddin.dev/demo/api/ai/transcription"
-          echo "🔊 TTS: https://ameenuddin.dev/demo/api/ai/tts-stream"
+      - name: Summary
+        run: echo "✅ Main app deployed to https://ameenuddin.dev"
