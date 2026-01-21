@@ -6,6 +6,7 @@ import {
 	Code,
 	Container,
 	Divider,
+	Drawer,
 	Group,
 	Paper,
 	ScrollArea,
@@ -18,6 +19,8 @@ import { notifications } from "@mantine/notifications";
 import {
 	IconBook,
 	IconBrain,
+	IconChevronDown,
+	IconChevronUp,
 	IconDatabase,
 	IconFileText,
 	IconMessage,
@@ -30,12 +33,17 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
 import ReactMarkdown from "react-markdown";
-import ReactMarkdown from "react-markdown";
-import ReactMarkdown from "react-markdown";
 
 export const Route = createFileRoute("/chatbot")({
 	component: Chatbot,
 });
+
+interface ContextDoc {
+	id: string;
+	content: string;
+	snippet: string;
+	score: number;
+}
 
 function Chatbot() {
 	const [messages, setMessages] = useState<
@@ -63,6 +71,9 @@ function Chatbot() {
 	]);
 	const [isSimulating, setIsSimulating] = useState(false);
 	const [streamingContent, setStreamingContent] = useState("");
+	const [showRagDescription, setShowRagDescription] = useState(false);
+	const [drawerOpened, setDrawerOpened] = useState(false);
+	const [drawerContent, setDrawerContent] = useState<ContextDoc | null>(null);
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const isStreamingRef = useRef(false);
 
@@ -100,6 +111,7 @@ function Chatbot() {
 
 			const decoder = new TextDecoder();
 			let fullContent = "";
+			let contextShown = false;
 
 			while (true) {
 				const { done, value } = await reader.read();
@@ -111,7 +123,71 @@ function Chatbot() {
 				for (const line of lines) {
 					if (line.startsWith("data: ")) {
 						const data = JSON.parse(line.slice(6));
-						if (data.type === "content") {
+						if (data.type === "context") {
+							if (!contextShown && data.context && data.context.length > 0) {
+								contextShown = true;
+								notifications.show({
+									id: `rag-context-${Date.now()}`,
+									title: (
+										<Group gap="xs">
+											<IconDatabase size={16} color="#00f3ff" />
+											<Text size="sm" fw={600}>
+												RAG Context Applied - {data.context.length} document
+												{data.context.length > 1 ? "s" : ""} retrieved
+											</Text>
+										</Group>
+									),
+									message: (
+										<Stack gap="xs">
+											{data.context.map((doc: ContextDoc) => (
+												<Paper
+													key={doc.id}
+													p="sm"
+													radius="sm"
+													style={{
+														background: "rgba(0, 243, 255, 0.1)",
+														border: "1px solid rgba(0, 243, 255, 0.2)",
+														cursor: "pointer",
+													}}
+													onClick={() => {
+														setDrawerContent(doc);
+														setDrawerOpened(true);
+													}}
+												>
+													<Stack gap="xs">
+														<Group justify="space-between">
+															<Text size="xs" fw={600} c="#00f3ff">
+																Document {doc.id}
+															</Text>
+															<Badge size="xs" variant="light" color="cyan">
+																{Math.round(doc.score * 100)}% match
+															</Badge>
+														</Group>
+														<Text size="xs" c="dimmed">
+															{doc.snippet}
+														</Text>
+														<Text
+															size="xs"
+															c="#00f3ff"
+															style={{
+																display: "flex",
+																alignItems: "center",
+																gap: 4,
+															}}
+														>
+															Click to expand <IconChevronDown size={12} />
+														</Text>
+													</Stack>
+												</Paper>
+											))}
+										</Stack>
+									),
+									color: "cyan",
+									autoClose: 8000,
+									withCloseButton: true,
+								});
+							}
+						} else if (data.type === "content") {
 							fullContent += data.content;
 							setStreamingContent(fullContent);
 						} else if (data.type === "tool_call") {
@@ -155,19 +231,24 @@ function Chatbot() {
 
 	const handleSimulate = async () => {
 		setIsSimulating(true);
+		setShowRagDescription(true);
+
 		const simulatedConversation = [
 			{
-				role: "user",
+				role: "user" as const,
 				content: "What programming languages are you familiar with?",
 			},
 			{
-				role: "assistant",
+				role: "assistant" as const,
 				content:
 					"I am familiar with several programming languages:\n\n**Python**: Great for data science, automation, and backend development.\n\n**JavaScript**: Essential for web development and works in all browsers.\n\n**TypeScript**: Adds type safety to JavaScript for better development experience.\n\nI use these languages daily in my AI-assisted development workflow.",
 			},
-			{ role: "user", content: "How do you use AI tools in your development?" },
 			{
-				role: "assistant",
+				role: "user" as const,
+				content: "How do you use AI tools in your development?",
+			},
+			{
+				role: "assistant" as const,
 				content:
 					"I leverage AI tools like Cursor and Claude Code to:\n\n1. **Accelerate development** - Generate boilerplate code quickly\n2. **Debug faster** - Get context-aware suggestions and fix issues\n3. **Learn continuously** - Understand codebases through AI explanations\n\nHowever, I always maintain strong fundamentals - proper testing, clean code practices, and understanding of what the code does.",
 			},
@@ -180,6 +261,7 @@ function Chatbot() {
 		}
 
 		setIsSimulating(false);
+		setShowRagDescription(false);
 	};
 
 	const addDocument = () => {
@@ -222,12 +304,153 @@ function Chatbot() {
 						</Title>
 					</Group>
 
+					{showRagDescription && (
+						<motion.div
+							initial={{ opacity: 0, height: 0 }}
+							animate={{ opacity: 1, height: "auto" }}
+							exit={{ opacity: 0, height: 0 }}
+							transition={{ duration: 0.3 }}
+						>
+							<Paper
+								shadow="xl"
+								radius="lg"
+								p="md"
+								mb="lg"
+								style={{
+									background:
+										"linear-gradient(135deg, rgba(0, 243, 255, 0.1) 0%, rgba(255, 0, 255, 0.1) 100%)",
+									border: "1px solid rgba(0, 243, 255, 0.2)",
+								}}
+							>
+								<Group justify="space-between" mb="sm">
+									<Group gap="sm">
+										<IconSparkles size={20} style={{ color: "#00f3ff" }} />
+										<Title order={4} c="white">
+											How RAG Works
+										</Title>
+									</Group>
+									<ActionIcon
+										variant="transparent"
+										onClick={() => setShowRagDescription(false)}
+										style={{ color: "white" }}
+									>
+										<IconChevronUp size={20} />
+									</ActionIcon>
+								</Group>
+								<Stack gap="md">
+									<Group gap="md">
+										<Paper
+											p="sm"
+											radius="sm"
+											style={{
+												background: "rgba(0, 0, 0, 0.3)",
+												flex: 1,
+												textAlign: "center",
+											}}
+										>
+											<IconFileText
+												size={24}
+												style={{ color: "#00f3ff", marginBottom: 8 }}
+											/>
+											<Text size="xs" c="white">
+												Documents
+											</Text>
+											<Text size="xs" c="dimmed">
+												Knowledge base
+											</Text>
+										</Paper>
+										<Text size="xl" c="dimmed">
+											→
+										</Text>
+										<Paper
+											p="sm"
+											radius="sm"
+											style={{
+												background: "rgba(0, 0, 0, 0.3)",
+												flex: 1,
+												textAlign: "center",
+											}}
+										>
+											<IconDatabase
+												size={24}
+												style={{ color: "#ff00ff", marginBottom: 8 }}
+											/>
+											<Text size="xs" c="white">
+												Vector Search
+											</Text>
+											<Text size="xs" c="dimmed">
+												Semantic matching
+											</Text>
+										</Paper>
+										<Text size="xl" c="dimmed">
+											→
+										</Text>
+										<Paper
+											p="sm"
+											radius="sm"
+											style={{
+												background: "rgba(0, 0, 0, 0.3)",
+												flex: 1,
+												textAlign: "center",
+											}}
+										>
+											<IconBook
+												size={24}
+												style={{ color: "#00f3ff", marginBottom: 8 }}
+											/>
+											<Text size="xs" c="white">
+												Context
+											</Text>
+											<Text size="xs" c="dimmed">
+												Relevant info
+											</Text>
+										</Paper>
+										<Text size="xl" c="dimmed">
+											→
+										</Text>
+										<Paper
+											p="sm"
+											radius="sm"
+											style={{
+												background: "rgba(0, 0, 0, 0.3)",
+												flex: 1,
+												textAlign: "center",
+											}}
+										>
+											<IconBrain
+												size={24}
+												style={{ color: "#ff00ff", marginBottom: 8 }}
+											/>
+											<Text size="xs" c="white">
+												AI Response
+											</Text>
+											<Text size="xs" c="dimmed">
+												Grounded answers
+											</Text>
+										</Paper>
+									</Group>
+									<Text size="sm" c="white">
+										<Text span c="#00f3ff" fw={600}>
+											RAG (Retrieval-Augmented Generation)
+										</Text>{" "}
+										searches your documents to find relevant information, then
+										injects that context into the AI model. This ensures
+										accurate, factual responses based on your knowledge base
+										rather than general training data.
+									</Text>
+								</Stack>
+							</Paper>
+						</motion.div>
+					)}
+
 					<Stack
 						style={{
 							display: "grid",
 							gridTemplateColumns: "280px 1fr",
 							gap: "lg",
-							height: "calc(100vh - 150px)",
+							height: showRagDescription
+								? "calc(100vh - 350px)"
+								: "calc(100vh - 150px)",
 						}}
 					>
 						<DocumentSidebar
@@ -247,6 +470,83 @@ function Chatbot() {
 						/>
 					</Stack>
 				</motion.div>
+
+				<Drawer
+					opened={drawerOpened}
+					onClose={() => setDrawerOpened(false)}
+					position="right"
+					size="md"
+					title={
+						<Group gap="sm">
+							<IconBook size={20} style={{ color: "#00f3ff" }} />
+							<Text fw={600}>Full Document Context</Text>
+						</Group>
+					}
+					styles={{
+						content: { background: "#1a1a1a" },
+						header: {
+							background: "#1a1a1a",
+							borderBottom: "1px solid rgba(255, 255, 255, 0.1)",
+						},
+					}}
+				>
+					{drawerContent && (
+						<Stack gap="md">
+							<Paper
+								p="md"
+								radius="sm"
+								style={{
+									background: "rgba(0, 243, 255, 0.1)",
+									border: "1px solid rgba(0, 243, 255, 0.2)",
+								}}
+							>
+								<Group justify="space-between" mb="xs">
+									<Text fw={600} c="#00f3ff">
+										Document {drawerContent.id}
+									</Text>
+									<Badge variant="light" color="cyan">
+										{Math.round(drawerContent.score * 100)}% match
+									</Badge>
+								</Group>
+								<Text size="xs" c="dimmed" mb="sm">
+									Relevance Score: {drawerContent.score}
+								</Text>
+							</Paper>
+
+							<Paper
+								p="md"
+								radius="sm"
+								style={{
+									background: "rgba(0, 0, 0, 0.3)",
+									border: "1px solid rgba(255, 255, 255, 0.1)",
+								}}
+							>
+								<Title order={5} c="white" mb="sm">
+									Full Content
+								</Title>
+								<Text size="sm" c="white" style={{ whiteSpace: "pre-wrap" }}>
+									{drawerContent.content}
+								</Text>
+							</Paper>
+
+							<Paper
+								p="md"
+								radius="sm"
+								style={{
+									background: "rgba(255, 0, 255, 0.1)",
+									border: "1px solid rgba(255, 0, 255, 0.2)",
+								}}
+							>
+								<Title order={5} c="#ff00ff" mb="sm">
+									Retrieved Snippet
+								</Title>
+								<Text size="sm" c="white" style={{ whiteSpace: "pre-wrap" }}>
+									{drawerContent.snippet}
+								</Text>
+							</Paper>
+						</Stack>
+					)}
+				</Drawer>
 			</Container>
 		</div>
 	);
@@ -290,7 +590,7 @@ function DocumentSidebar({
 				</Button>
 			</Group>
 
-			<ScrollArea h={600}>
+			<ScrollArea h="calc(100vh - 400px)">
 				<Stack gap="sm">
 					{documents.map((doc) => (
 						<Paper
@@ -353,7 +653,7 @@ function ChatArea({
 	isSimulating: boolean;
 	onSendMessage: (content?: string) => void;
 	onSimulate: () => void;
-	messagesEndRef: React.RefObject<HTMLDivElement>;
+	messagesEndRef: React.RefObject<HTMLDivElement | null>;
 }) {
 	return (
 		<Paper
@@ -363,6 +663,8 @@ function ChatArea({
 			style={{
 				background: "rgba(26, 26, 26, 0.8)",
 				border: "1px solid rgba(0, 243, 255, 0.1)",
+				display: "flex",
+				flexDirection: "column",
 			}}
 		>
 			<Group
@@ -394,12 +696,30 @@ function ChatArea({
 				</Button>
 			</Group>
 
-			<ScrollArea h={500} mb="md">
-				<Stack gap="md" p="md">
+			<ScrollArea flex={1} h={700} p="md">
+				<Stack gap="md">
 					{messages.length === 0 && (
-						<Text c="dimmed" align="center" py="xl">
-							No messages yet. Start a conversation!
-						</Text>
+						<Paper
+							p="xl"
+							radius="md"
+							style={{
+								background: "rgba(0, 243, 255, 0.05)",
+								border: "1px dashed rgba(0, 243, 255, 0.2)",
+								textAlign: "center",
+							}}
+						>
+							<Stack gap="sm" align="center">
+								<IconSparkles size={32} style={{ color: "#00f3ff" }} />
+								<Text c="white" size="lg" fw={600}>
+									Ready to Chat!
+								</Text>
+								<Text c="dimmed" size="sm">
+									Ask me anything about the documents in the sidebar.
+									<br />
+									RAG will search for relevant context automatically.
+								</Text>
+							</Stack>
+						</Paper>
 					)}
 
 					{messages.map((msg, idx) => (
@@ -440,7 +760,7 @@ function ChatArea({
 								{msg.toolCalls && msg.toolCalls.length > 0 && (
 									<Accordion mt="md">
 										{msg.toolCalls.map((toolCall: any, toolIdx: number) => (
-											<Accordion.Item key={toolIdx} value={toolIdx}>
+											<Accordion.Item key={`${toolIdx}`} value={`${toolIdx}`}>
 												<Accordion.Control>
 													<Group gap="sm">
 														<IconTool size={16} style={{ color: "#0066ff" }} />
