@@ -9,6 +9,7 @@ import {
 	IconHome,
 	IconMail,
 	IconRobot,
+	IconRoute,
 } from "@tabler/icons-react";
 
 export interface NavItem {
@@ -172,6 +173,12 @@ export const navItems: NavItem[] = [
 		],
 	},
 	{
+		id: "journey",
+		label: "Learning Journey",
+		icon: <IconRoute size={20} />,
+		path: "/journey",
+	},
+	{
 		id: "projects",
 		label: "Projects",
 		icon: <IconFolder size={20} />,
@@ -217,7 +224,7 @@ export const navItems: NavItem[] = [
 				id: "resume",
 				label: "Download Resume",
 				icon: <IconDownload size={18} />,
-				path: "#",
+				path: "/resume",
 			},
 		],
 	},

@@ -59,6 +59,30 @@ export function Sidebar({
 		}
 	};
 
+	const isAnchorLink = (path?: string) => {
+		return path?.startsWith("/#");
+	};
+
+	const handleAnchorClick = (e: React.MouseEvent, path: string) => {
+		e.preventDefault();
+		const anchor = path.split("#")[1];
+		if (!anchor) return;
+
+		// Check if we're on the home page
+		const isOnHomePage = window.location.pathname === "/";
+
+		if (isOnHomePage) {
+			// We're already on home, just scroll
+			const element = document.getElementById(anchor);
+			if (element) {
+				element.scrollIntoView({ behavior: "smooth", block: "start" });
+			}
+		} else {
+			// Navigate to home with hash, browser will handle scroll
+			window.location.href = path;
+		}
+	};
+
 	return (
 		<>
 			{/* Mobile Hamburger - visible only on mobile */}
@@ -137,6 +161,8 @@ export function Sidebar({
 							onToggle={() => handleItemClick(item)}
 							depth={0}
 							shouldReduceMotion={shouldReduceMotion}
+							expandedItems={expandedItems}
+							toggleExpand={toggleExpand}
 						/>
 					))}
 				</Stack>
@@ -208,6 +234,8 @@ interface NavItemComponentProps {
 	onToggle: () => void;
 	depth: number;
 	shouldReduceMotion: boolean | null;
+	expandedItems: Set<string>;
+	toggleExpand: (id: string) => void;
 }
 
 function NavItemComponent({
@@ -217,9 +245,28 @@ function NavItemComponent({
 	onToggle,
 	depth,
 	shouldReduceMotion,
+	expandedItems,
+	toggleExpand,
 }: NavItemComponentProps) {
 	const hasChildren = item.children && item.children.length > 0;
 	const paddingLeft = collapsed ? 0 : depth * 1.5;
+
+	const isAnchorLink = (path?: string) => {
+		return path?.startsWith("/#");
+	};
+
+	const handleAnchorClick = (e: React.MouseEvent, path: string) => {
+		e.preventDefault();
+		const anchor = path.split("#")[1];
+		if (anchor) {
+			const element = document.getElementById(anchor);
+			if (element) {
+				element.scrollIntoView({ behavior: "smooth", block: "start" });
+			} else {
+				window.location.href = path;
+			}
+		}
+	};
 
 	const ItemContent = (
 		<UnstyledButton
@@ -278,6 +325,21 @@ function NavItemComponent({
 				>
 					{ItemContent}
 				</Tooltip>
+			) : isAnchorLink(item.path) ? (
+				<Tooltip
+					label={item.label}
+					position="right"
+					disabled={!collapsed}
+					withArrow
+				>
+					<a
+						href={item.path}
+						onClick={(e) => handleAnchorClick(e, item.path!)}
+						className="no-underline block"
+					>
+						{ItemContent}
+					</a>
+				</Tooltip>
 			) : (
 				<Tooltip
 					label={item.label}
@@ -308,17 +370,26 @@ function NavItemComponent({
 						className="overflow-hidden"
 					>
 						<Stack gap="xs" className="mt-2">
-							{item.children?.map((child) => (
-								<Link
-									key={child.id}
-									to={child.path || "#"}
-									className="no-underline"
-									onClick={() => {
-										if (child.id === "resume") {
-											downloadResumePDF();
-										}
-									}}
-								>
+							{item.children?.map((child) => {
+								// If child has its own children, render as a nested NavItemComponent
+								if (child.children && child.children.length > 0) {
+									return (
+										<NavItemComponent
+											key={child.id}
+											item={child}
+											collapsed={collapsed}
+											expanded={expandedItems.has(child.id)}
+											onToggle={() => toggleExpand(child.id)}
+											depth={depth + 1}
+											shouldReduceMotion={shouldReduceMotion}
+											expandedItems={expandedItems}
+											toggleExpand={toggleExpand}
+										/>
+									);
+								}
+
+								// Otherwise render as a link/button
+								const ChildButton = (
 									<UnstyledButton
 										className={cn(
 											"w-full rounded-md bg-transparent",
@@ -336,8 +407,44 @@ function NavItemComponent({
 											{child.label}
 										</Text>
 									</UnstyledButton>
-								</Link>
-							))}
+								);
+
+								if (child.id === "resume") {
+									return (
+										<div
+											key={child.id}
+											onClick={() => downloadResumePDF()}
+											className="no-underline cursor-pointer"
+										>
+											{ChildButton}
+										</div>
+									);
+								}
+
+								if (isAnchorLink(child.path)) {
+									return (
+										<a
+											key={child.id}
+											href={child.path}
+											onClick={(e) => handleAnchorClick(e, child.path!)}
+											className="no-underline"
+											style={{ display: 'block' }}
+										>
+											{ChildButton}
+										</a>
+									);
+								}
+
+								return (
+									<Link
+										key={child.id}
+										to={child.path || "#"}
+										className="no-underline"
+									>
+										{ChildButton}
+									</Link>
+								);
+							})}
 						</Stack>
 					</motion.div>
 				)}

@@ -67,7 +67,7 @@ export const navItems: NavItem[] = [
 								id: 'resume',
 								label: 'Resume',
 								icon: 'Download',
-								path: '/index-resume',
+								path: '/resume',
 							},
 							{
 								id: 'download-cv',

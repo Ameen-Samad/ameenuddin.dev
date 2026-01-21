@@ -1,7 +1,12 @@
 import {
 	IconChartBar,
 	IconCpu,
+	IconFileText,
+	IconMessage,
+	IconMicrophone,
+	IconPhoto,
 	IconRobot,
+	IconVolume,
 } from "@tabler/icons-react";
 
 export interface Project {
@@ -116,14 +121,134 @@ export const projects: Project[] = [
 			tools: ["Vite", "TypeScript"],
 		},
 	},
+	{
+		id: "ai-voice",
+		title: "AI Voice Transcription",
+		description:
+			"Real-time speech-to-text transcription using WebSocket streaming with Cloudflare Workers AI.",
+		longDescription:
+			"A voice agent that performs real-time speech-to-text transcription using WebSocket streaming. Features audio capture, PCM encoding, and live transcription display with connection status management.",
+		link: "/demo/ai-voice",
+		category: "ai-ml",
+		color: "#339af0",
+		icon: <IconMicrophone size={32} />,
+		tags: ["WebSocket", "Speech-to-Text", "Real-time", "Cloudflare AI"],
+		featured: true,
+		status: "production",
+		stats: {
+			stars: 45,
+			views: 720,
+			lastUpdated: "Jan 2025",
+		},
+		techStack: {
+			frontend: ["React", "WebSocket", "AudioContext"],
+			ai: ["Cloudflare Workers AI", "Speech Recognition"],
+			tools: ["TypeScript", "Vite"],
+		},
+	},
+	{
+		id: "ai-image",
+		title: "AI Image Generator",
+		description:
+			"Generate stunning images from text prompts using Stable Diffusion XL Lightning via Cloudflare AI.",
+		longDescription:
+			"An AI image generation tool that creates images from text descriptions using Stable Diffusion XL Lightning. Supports multiple sizes, batch generation, and instant download of generated images.",
+		link: "/demo/ai-image",
+		category: "ai-ml",
+		color: "#ff6b6b",
+		icon: <IconPhoto size={32} />,
+		tags: ["Image Generation", "Stable Diffusion", "Cloudflare AI"],
+		featured: true,
+		status: "production",
+		stats: {
+			stars: 62,
+			views: 950,
+			lastUpdated: "Jan 2025",
+		},
+		techStack: {
+			frontend: ["React", "TypeScript"],
+			ai: ["Stable Diffusion XL", "Cloudflare AI"],
+			tools: ["Vite", "Base64 Handling"],
+		},
+	},
+	{
+		id: "ai-tts",
+		title: "AI Text-to-Speech",
+		description:
+			"Convert text to natural-sounding speech using Deepgram Aura voices with 12 different options.",
+		longDescription:
+			"A text-to-speech application that uses Deepgram Aura API to generate natural-sounding speech. Features 12 different voice options, live playback, and MP3 download functionality.",
+		link: "/demo/ai-tts",
+		category: "ai-ml",
+		color: "#51cf66",
+		icon: <IconVolume size={32} />,
+		tags: ["TTS", "Deepgram Aura", "Voice Synthesis"],
+		featured: true,
+		status: "production",
+		stats: {
+			stars: 38,
+			views: 540,
+			lastUpdated: "Jan 2025",
+		},
+		techStack: {
+			frontend: ["React", "TypeScript"],
+			ai: ["Deepgram Aura", "Text-to-Speech"],
+			tools: ["Vite", "Audio API"],
+		},
+	},
+	{
+		id: "ai-chat-demo",
+		title: "AI Chat Interface",
+		description:
+			"Interactive chat with streaming responses, context awareness, and tool calling capabilities.",
+		longDescription:
+			"A full-featured AI chat interface with streaming responses via Server-Sent Events. Includes context management for multi-turn conversations, real-time typing indicators, and tool calling support.",
+		link: "/demo/ai-chat",
+		category: "ai-ml",
+		color: "#ffd43b",
+		icon: <IconMessage size={32} />,
+		tags: ["Chat", "SSE Streaming", "Context Awareness"],
+		featured: true,
+		status: "production",
+		stats: {
+			stars: 51,
+			views: 810,
+			lastUpdated: "Jan 2025",
+		},
+		techStack: {
+			frontend: ["React", "TypeScript", "Tailwind CSS"],
+			ai: ["Cloudflare AI", "LLM", "SSE"],
+			tools: ["Vite", "Streamdown"],
+		},
+	},
+	{
+		id: "ai-structured",
+		title: "AI Structured Output",
+		description:
+			"Generate structured recipe data with type-safe Zod validation using LLM outputs.",
+		longDescription:
+			"A demonstration of forcing LLMs to return structured JSON data with Zod schemas for runtime validation. Generates complete recipes with ingredients, instructions, and metadata.",
+		link: "/demo/ai-structured",
+		category: "ai-ml",
+		color: "#cc5de8",
+		icon: <IconFileText size={32} />,
+		tags: ["Structured Output", "Zod", "JSON Validation"],
+		featured: true,
+		status: "production",
+		stats: {
+			stars: 44,
+			views: 680,
+			lastUpdated: "Jan 2025",
+		},
+		techStack: {
+			frontend: ["React", "TypeScript", "Zod"],
+			ai: ["Cloudflare AI", "LLM", "JSON Schema"],
+			tools: ["Vite", "Streamdown"],
+		},
+	},
 ];
 
-export type FilterType =
-	| "all"
-	| "ai-ml"
-	| "web-apps"
-	| "3d-graphics"
-	| "tools";
+export type FilterType = "all" | "ai-ml" | "web-apps" | "3d-graphics" | "tools";
 
 export interface FilterOption {
 	id: FilterType;
@@ -132,9 +257,7 @@ export interface FilterOption {
 	count: number;
 }
 
-export const getFilters = (
-	projectsList: Project[],
-): FilterOption[] => [
+export const getFilters = (projectsList: Project[]): FilterOption[] => [
 	{
 		id: "all",
 		label: "All",

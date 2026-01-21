@@ -4,13 +4,13 @@ import type { Skill, SkillLevel } from "../lib/skills-data";
 interface SkillsStats {
 	total: number;
 	byLevel: {
-		expert: number;
-		advanced: number;
 		intermediate: number;
+		learning: number;
 		beginner: number;
 	};
+	rapidlyLearning: number;
 	byCategory: Record<string, number>;
-	topSkills: Array<{ name: string; proficiency: number }>;
+	topSkills: Array<{ name: string; proficiency: number; rapidlyLearning?: boolean }>;
 }
 
 interface SkillsStatsProps {
@@ -23,11 +23,11 @@ export function getSkillsStats(skills: any[]): SkillsStats {
 	return {
 		total: allSkills.length,
 		byLevel: {
-			expert: allSkills.filter((s) => s.level === "expert").length,
-			advanced: allSkills.filter((s) => s.level === "advanced").length,
 			intermediate: allSkills.filter((s) => s.level === "intermediate").length,
+			learning: allSkills.filter((s) => s.level === "learning").length,
 			beginner: allSkills.filter((s) => s.level === "beginner").length,
 		},
+		rapidlyLearning: allSkills.filter((s) => s.rapidlyLearning).length,
 		byCategory: allSkills.reduce(
 			(acc, skill) => {
 				const catName = skill.categoryName || skill.category?.name || "Other";
@@ -42,20 +42,19 @@ export function getSkillsStats(skills: any[]): SkillsStats {
 			.map((skill) => ({
 				name: skill.name,
 				proficiency: skill.proficiency,
+				rapidlyLearning: skill.rapidlyLearning,
 			})),
 	};
 }
 
 const getLevelColor = (level: SkillLevel): string => {
 	switch (level) {
-		case "expert":
-			return "teal";
-		case "advanced":
-			return "blue";
 		case "intermediate":
+			return "blue";
+		case "learning":
 			return "yellow";
 		case "beginner":
-			return "indigo";
+			return "gray";
 		default:
 			return "gray";
 	}
@@ -92,6 +91,13 @@ export function SkillsStats({ allSkills }: SkillsStatsProps) {
 						{level.charAt(0).toUpperCase() + level.slice(1)}: {count}
 					</Badge>
 				))}
+				<Badge
+					size="xl"
+					variant="gradient"
+					gradient={{ from: 'orange', to: 'red', deg: 90 }}
+				>
+					🚀 Rapidly Learning: {stats.rapidlyLearning}
+				</Badge>
 			</SimpleGrid>
 
 			<Stack>
@@ -103,8 +109,9 @@ export function SkillsStats({ allSkills }: SkillsStatsProps) {
 						<Badge
 							key={skill.name}
 							size="lg"
-							variant="filled"
-							color="blue"
+							variant={skill.rapidlyLearning ? "gradient" : "filled"}
+							gradient={skill.rapidlyLearning ? { from: 'orange', to: 'red', deg: 90 } : undefined}
+							color={skill.rapidlyLearning ? undefined : "blue"}
 							leftSection={
 								<span
 									style={{
@@ -119,7 +126,7 @@ export function SkillsStats({ allSkills }: SkillsStatsProps) {
 										fontWeight: "bold",
 									}}
 								>
-									{index + 1}
+									{skill.rapidlyLearning ? "🚀" : index + 1}
 								</span>
 							}
 						>

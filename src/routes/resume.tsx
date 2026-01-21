@@ -5,7 +5,7 @@ import DownloadPDFButton from "@/components/DownloadPDFButton";
 import ResumeAssistant from "@/components/ResumeAssistant";
 import { Paper, Title, Divider, Stack } from "@mantine/core";
 
-export const Route = createFileRoute("/index-resume")({
+export const Route = createFileRoute("/resume")({
 	component: App,
 });
 

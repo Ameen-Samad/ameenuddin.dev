@@ -72,6 +72,27 @@ export function MobileNav({
 		}
 	};
 
+	const isAnchorLink = (path?: string) => {
+		return path?.startsWith("/#");
+	};
+
+	const handleAnchorClick = (e: React.MouseEvent, path: string) => {
+		e.preventDefault();
+		onClose(); // Close mobile nav first
+		const anchor = path.split("#")[1];
+		if (anchor) {
+			// Small delay to allow mobile nav to close
+			setTimeout(() => {
+				const element = document.getElementById(anchor);
+				if (element) {
+					element.scrollIntoView({ behavior: "smooth", block: "start" });
+				} else {
+					window.location.href = path;
+				}
+			}, 300);
+		}
+	};
+
 	return (
 		<AnimatePresence>
 			{isOpen && (
@@ -154,6 +175,8 @@ export function MobileNav({
 									onToggle={() => handleItemClick(item)}
 									onClose={onClose}
 									shouldReduceMotion={shouldReduceMotion}
+									expandedItems={expandedItems}
+									toggleExpand={toggleExpand}
 								/>
 							))}
 						</Stack>
@@ -217,6 +240,8 @@ interface MobileNavItemProps {
 	onToggle: () => void;
 	onClose: () => void;
 	shouldReduceMotion: boolean | null;
+	expandedItems: Set<string>;
+	toggleExpand: (id: string) => void;
 }
 
 function MobileNavItem({
@@ -225,8 +250,30 @@ function MobileNavItem({
 	onToggle,
 	onClose,
 	shouldReduceMotion,
+	expandedItems,
+	toggleExpand,
 }: MobileNavItemProps) {
 	const hasChildren = item.children && item.children.length > 0;
+
+	const isAnchorLink = (path?: string) => {
+		return path?.startsWith("/#");
+	};
+
+	const handleAnchorClick = (e: React.MouseEvent, path: string) => {
+		e.preventDefault();
+		onClose();
+		const anchor = path.split("#")[1];
+		if (anchor) {
+			setTimeout(() => {
+				const element = document.getElementById(anchor);
+				if (element) {
+					element.scrollIntoView({ behavior: "smooth", block: "start" });
+				} else {
+					window.location.href = path;
+				}
+			}, 300);
+		}
+	};
 
 	const ItemButton = (
 		<UnstyledButton
@@ -265,6 +312,14 @@ function MobileNavItem({
 		<>
 			{hasChildren || item.id === "resume" ? (
 				ItemButton
+			) : isAnchorLink(item.path) ? (
+				<a
+					href={item.path}
+					onClick={(e) => handleAnchorClick(e, item.path!)}
+					className="no-underline"
+				>
+					{ItemButton}
+				</a>
 			) : (
 				<Link
 					to={item.path || "#"}
@@ -289,18 +344,25 @@ function MobileNavItem({
 						className="overflow-hidden"
 					>
 						<Stack gap="xs" className="mt-2 ml-4">
-							{item.children?.map((child) => (
-								<Link
-									key={child.id}
-									to={child.path || "#"}
-									className="no-underline"
-									onClick={() => {
-										if (child.id === "resume") {
-											downloadResumePDF();
-										}
-										onClose();
-									}}
-								>
+							{item.children?.map((child) => {
+								// If child has its own children, render as a nested MobileNavItem
+								if (child.children && child.children.length > 0) {
+									return (
+										<MobileNavItem
+											key={child.id}
+											item={child}
+											expanded={expandedItems.has(child.id)}
+											onToggle={() => toggleExpand(child.id)}
+											onClose={onClose}
+											shouldReduceMotion={shouldReduceMotion}
+											expandedItems={expandedItems}
+											toggleExpand={toggleExpand}
+										/>
+									);
+								}
+
+								// Otherwise render as a link/button
+								const ChildButton = (
 									<UnstyledButton
 										className={cn(
 											"w-full px-4 py-3.5 rounded-lg",
@@ -319,8 +381,47 @@ function MobileNavItem({
 											{child.label}
 										</Text>
 									</UnstyledButton>
-								</Link>
-							))}
+								);
+
+								if (child.id === "resume") {
+									return (
+										<div
+											key={child.id}
+											onClick={() => {
+												downloadResumePDF();
+												onClose();
+											}}
+											className="no-underline cursor-pointer"
+										>
+											{ChildButton}
+										</div>
+									);
+								}
+
+								if (isAnchorLink(child.path)) {
+									return (
+										<a
+											key={child.id}
+											href={child.path}
+											onClick={(e) => handleAnchorClick(e, child.path!)}
+											className="no-underline"
+										>
+											{ChildButton}
+										</a>
+									);
+								}
+
+								return (
+									<Link
+										key={child.id}
+										to={child.path || "#"}
+										className="no-underline"
+										onClick={onClose}
+									>
+										{ChildButton}
+									</Link>
+								);
+							})}
 						</Stack>
 					</motion.div>
 				)}

@@ -205,45 +205,34 @@ function About() {
 								<span style={{ color: "#00f3ff", fontWeight: 700 }}>
 									Ameen Samad
 								</span>
-								, an AI-Native Software Engineer who leverages cutting-edge AI
-								tools to deliver exceptional results.
+								, a fast learner who proves it through working code. I don't claim expertise—I show evidence of learning through implementation.
 							</Text>
 							<Text c="dimmed" mb="md">
-								Using{" "}
+								This portfolio contains{" "}
 								<span style={{ color: "#ff00ff", fontWeight: 600 }}>
-									Claude Code
+									15+ live demos
 								</span>{" "}
-								with the latest plugins and MCPs (Model Context Protocols), I
-								build production-ready features at{" "}
+								with{" "}
 								<span style={{ color: "#00f3ff", fontWeight: 700 }}>
-									100x speed
+									"What I Learned"
 								</span>{" "}
-								while maintaining code quality, proper testing, and strong
-								engineering fundamentals.
+								sections showing technical challenges solved, skills developed, and code evidence. From building a real-time voice agent with WebSocket streaming to optimizing API costs by 80%, I learn by implementing production features.
+							</Text>
+							<Text c="dimmed" mb="md">
+								My{" "}
+								<span style={{ color: "#ff00ff", fontWeight: 600 }}>
+									git history
+								</span>{" "}
+								shows the journey: commit{" "}
+								<code style={{ background: 'rgba(0,243,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#00f3ff', fontSize: '0.9em' }}>
+									8581789
+								</code>{" "}
+								documents migrating from OpenAI to Cloudflare Workers AI for security. Multiple "Fix X" commits show I iterate until it works.
 							</Text>
 							<Text c="dimmed">
 								Pursuing a Diploma in IT at{" "}
 								<span style={{ fontWeight: 600 }}>Ngee Ann Polytechnic</span>{" "}
-								while building real-world applications that demonstrate my
-								ability to ship quickly without compromising on quality.
-							</Text>
-							<Text c="dimmed" mb="md">
-								Using tools like{" "}
-								<span style={{ color: "#ff00ff", fontWeight: 600 }}>
-									Cursor
-								</span>{" "}
-								and{" "}
-								<span style={{ color: "#00f3ff", fontWeight: 600 }}>
-									Claude Code
-								</span>
-								, I build and ship features quickly while learning and
-								maintaining strong engineering fundamentals.
-							</Text>
-							<Text c="dimmed">
-								Currently a Year 2 student at{" "}
-								<span style={{ fontWeight: 600 }}>Ngee Ann Polytechnic</span>,
-								pursuing a Diploma in Information Technology with an elective in
-								Enterprise Computing.
+								(Year 2), I'm open to internships and junior roles where I can learn from experienced engineers and contribute to production systems.
 							</Text>
 						</Paper>
 						<Paper
@@ -256,32 +245,25 @@ function About() {
 							}}
 						>
 							<Title order={3} c="white" mb="md">
-								My Superpower
+								How I Learn
 							</Title>
 							<Stack gap="md">
 								<Group gap="sm">
-									<div style={{ color: "#00f3ff", fontSize: "24px" }}>🚀</div>
+									<div style={{ color: "#00f3ff", fontSize: "24px" }}>🔨</div>
 									<Text c="dimmed">
-										<b>100x Productivity with AI</b> - Claude Code + MCPs +
-										Latest Plugins = Rapid development without sacrificing
-										quality. I ship features faster than traditional developers
-										while maintaining proper testing and code standards.
+										<b>Build to Understand</b> - I don't watch tutorials—I build real features. Each demo on this site documents what I learned, from WebSocket binary streaming to performance optimization.
 									</Text>
 								</Group>
 								<Group gap="sm">
-									<div style={{ color: "#ff00ff", fontSize: "24px" }}>🤖</div>
+									<div style={{ color: "#ff00ff", fontSize: "24px" }}>🔄</div>
 									<Text c="dimmed">
-										<b>AI-Native Development Stack</b> - Deep expertise in
-										Cursor, Claude Code, and AI tooling ecosystem. I don't just
-										use AI tools—I master them to maximize efficiency.
+										<b>Iterate Until It Works</b> - My git history has 10+ "Fix X" commits. That's not failure—that's learning. I debug, refactor, and improve until it's production-ready.
 									</Text>
 								</Group>
 								<Group gap="sm">
-									<div style={{ color: "#0066ff", fontSize: "24px" }}>💎</div>
+									<div style={{ color: "#0066ff", fontSize: "24px" }}>📦</div>
 									<Text c="dimmed">
-										<b>Quality at Speed</b> - Strong fundamentals in Python,
-										JavaScript, TypeScript with rigorous testing practices. Fast
-										doesn't mean sloppy—it means efficient.
+										<b>Ship to Production</b> - Every demo is deployed on Cloudflare Workers with real infrastructure (D1, KV, Workers AI). Deployment is part of development, not an afterthought.
 									</Text>
 								</Group>
 							</Stack>

@@ -545,6 +545,7 @@ export function DemosSection() {
                       {/* What I Learned Section */}
                       <Accordion
                         variant="separated"
+                        onClick={(e) => e.stopPropagation()}
                         styles={{
                           root: { marginTop: 16 },
                           item: {
