@@ -16,6 +16,7 @@
     "lint": "biome lint",
     "check": "biome check",
     "deploy": "npm run build && wrangler deploy --config dist/server/wrangler.json",
+    "deploy:ci": "npm run build && wrangler deploy --config dist/server/wrangler.json",
     "deploy:transcription": "wrangler deploy --config workers/wrangler-transcription.toml",
     "deploy:tts": "wrangler deploy --config workers/wrangler-tts.toml",
     "deploy:websockets": "npm run deploy:transcription && npm run deploy:tts",
