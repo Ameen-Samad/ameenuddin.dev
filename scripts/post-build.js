@@ -13,18 +13,35 @@
  * This script copies server.js to _worker.js for Pages deployment.
  */
 
-import { copyFileSync } from 'fs';
+import { copyFileSync, existsSync } from 'fs';
 import { join, dirname } from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, '..');
 
-const serverJs = join(projectRoot, 'dist/server/server.js');
+// Try server.js first (old output), then index.js (new output)
+const serverFiles = [
+  join(projectRoot, 'dist/server/server.js'),
+  join(projectRoot, 'dist/server/index.js'),
+];
+
 const workerJs = join(projectRoot, 'dist/client/_worker.js');
 
 try {
-  console.log('📦 Copying server.js to _worker.js for Cloudflare Pages...');
+  let serverJs = null;
+  for (const file of serverFiles) {
+    if (existsSync(file)) {
+      serverJs = file;
+      break;
+    }
+  }
+
+  if (!serverJs) {
+    throw new Error('Could not find server entry file (server.js or index.js)');
+  }
+
+  console.log(`📦 Copying ${serverJs.split('/').pop()} to _worker.js for Cloudflare Pages...`);
   copyFileSync(serverJs, workerJs);
   console.log('✅ Successfully created dist/client/_worker.js');
   console.log('🚀 Ready to deploy to Cloudflare Pages!');

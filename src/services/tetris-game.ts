@@ -1,4 +1,4 @@
-import Phaser from "phaser";
+import * as Phaser from "phaser";
 import init, { TetrisAI as WasmTetrisAI } from "../wasm/tetris_wasm.js";
 
 let wasmAI: WasmTetrisAI | null = null;

@@ -21,7 +21,7 @@ import {
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { Phaser } from "phaser";
+import * as Phaser from "phaser";
 import { useCallback, useEffect, useRef, useState } from "react";
 import { TetrisGame as TetrisGameService } from "@/services/tetris-game";
 
