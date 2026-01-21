@@ -16,8 +16,8 @@ interface ProjectAIAssistantProps {
 export function ProjectAIAssistant({
 	projectId,
 	projectTitle,
-	projectDescription,
-	projectTags,
+	projectDescription: _projectDescription,
+	projectTags: _projectTags,
 	initialQuestion,
 }: ProjectAIAssistantProps) {
 	const [isOpen, setIsOpen] = useState(false);
@@ -66,7 +66,7 @@ export function ProjectAIAssistant({
 			const response = await PacerAI.chat(projectId, messageText, messages);
 			setMessages((prev) => [
 				...prev,
-				{ role: "assistant", content: response },
+				{ role: "assistant", content: response || "No response received" },
 			]);
 		} catch (error) {
 			console.error("Chat error:", error);

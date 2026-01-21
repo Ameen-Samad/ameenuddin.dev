@@ -1,5 +1,5 @@
 import { AnimatePresence, motion } from "framer-motion";
-import { GitFork, Sparkles, Star, TrendingUp } from "lucide-react";
+import { Sparkles, Star, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PacerAI } from "@/lib/pacer-ai-utils";
 import type { Project } from "@/lib/projects-data";
@@ -48,13 +48,13 @@ export function AIRecommendations({
 					});
 				} else if (type === "similar" && projectId) {
 					const results = await PacerAI.recommendations(projectId, undefined, limit);
-					const recIds = results.map((r) => r.id);
+					const recIds = results?.map((r) => r.id) || [];
 					recs = projects.filter((p) => recIds.includes(p.id)).slice(0, limit);
 					setExplanations({
 						...recs.reduce(
 							(acc, p) => {
-								const similarity = results.find((r) => r.id === p.id)?.distance;
-								acc[p.id] = `${Math.round((1 - similarity) * 100)}% similar`;
+								const similarity = results?.find((r) => r.id === p.id)?.distance;
+								acc[p.id] = `${Math.round((1 - (similarity || 0)) * 100)}% similar`;
 								return acc;
 							},
 							{} as Record<string, string>,
@@ -62,7 +62,7 @@ export function AIRecommendations({
 					});
 				} else if (type === "personalized" && userInterests.length > 0) {
 					const results = await PacerAI.recommendations("", userInterests, limit);
-					const recIds = results.map((r) => r.id);
+					const recIds = results?.map((r) => r.id) || [];
 					recs = projects.filter((p) => recIds.includes(p.id)).slice(0, limit);
 					setExplanations({
 						...recs.reduce(

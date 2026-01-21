@@ -79,7 +79,7 @@ export const navItems: NavItem[] = [
 					},
 				],
 			},
-		},
+		],
 	},
 ];
 

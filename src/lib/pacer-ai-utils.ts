@@ -5,8 +5,7 @@
  * of AI functions to prevent abuse and optimize performance.
  */
 
-import { rateLimit, batch, queue } from "@tanstack/pacer";
-import type { RateLimiter, Batcher, Queuer } from "@tanstack/pacer";
+import { asyncRateLimit, batch, queue } from "@tanstack/pacer";
 import {
 	generateEmbedding,
 	performSemanticSearch,
@@ -35,6 +34,7 @@ const RATE_LIMITS = {
 	SUMMARY: { limit: 3, window: 60000 }, // 3/min
 	CHAT: { limit: 5, window: 60000 }, // 5/min
 	TAGS: { limit: 10, window: 60000 }, // 10/min
+	RECOMMENDATIONS: { limit: 10, window: 60000 }, // 10/min
 } as const;
 
 /**
@@ -43,12 +43,12 @@ const RATE_LIMITS = {
  * Limits: 10 calls per minute
  * On reject: Queues request for later
  */
-export const rateLimitedEmbedding = rateLimit(
+export const asyncRateLimitedEmbedding = asyncRateLimit(
 	async (text: string) => generateEmbedding(text),
 	{
 		...RATE_LIMITS.EMBEDDINGS,
-		onReject: (fn, limiter: RateLimiter<string, Promise<number[]>>) => {
-			const remaining = limiter.getMsUntilNextWindow();
+		onReject: (_args, rateLimiter) => {
+			const remaining = rateLimiter.getMsUntilNextWindow();
 			console.warn(`Embedding rate limit exceeded. Retry in ${remaining}ms`);
 			throw new Error(
 				`Too many embedding requests. Please wait ${Math.ceil(remaining / 1000)} seconds.`,
@@ -62,7 +62,7 @@ export const rateLimitedEmbedding = rateLimit(
  *
  * Limits: 20 calls per minute
  */
-export const rateLimitedSearch = rateLimit(
+export const asyncRateLimitedSearch = asyncRateLimit(
 	async (query: string, limit?: number) => performSemanticSearch(query, limit),
 	{
 		...RATE_LIMITS.SEARCH,
@@ -78,7 +78,7 @@ export const rateLimitedSearch = rateLimit(
  *
  * Limits: 30 calls per minute
  */
-export const rateLimitedParse = rateLimit(
+export const asyncRateLimitedParse = asyncRateLimit(
 	async (query: string) => parseNaturalLanguage(query),
 	{
 		...RATE_LIMITS.PARSE,
@@ -93,7 +93,7 @@ export const rateLimitedParse = rateLimit(
  *
  * Limits: 3 calls per minute (very expensive operation)
  */
-export const rateLimitedSummary = rateLimit(
+export const asyncRateLimitedSummary = asyncRateLimit(
 	async (project: any) => generateSummary(project),
 	{
 		...RATE_LIMITS.SUMMARY,
@@ -110,12 +110,12 @@ export const rateLimitedSummary = rateLimit(
  *
  * Limits: 5 calls per minute
  */
-export const rateLimitedChat = rateLimit(
+export const asyncRateLimitedChat = asyncRateLimit(
 	async (
 		projectId: string,
 		message: string,
 		history?: Array<{ role: string; content: string }>,
-	) => chatWithProject(projectId, message, history),
+	): Promise<string> => chatWithProject(projectId, message, history),
 	{
 		...RATE_LIMITS.CHAT,
 		onReject: () => {
@@ -129,7 +129,7 @@ export const rateLimitedChat = rateLimit(
  *
  * Limits: 10 calls per minute
  */
-export const rateLimitedTags = rateLimit(
+export const asyncRateLimitedTags = asyncRateLimit(
 	async (description: string) => suggestTags(description),
 	{
 		...RATE_LIMITS.TAGS,
@@ -144,9 +144,12 @@ export const rateLimitedTags = rateLimit(
  *
  * Limits: 10 calls per minute
  */
-export const rateLimitedRecommendations = rateLimit(
-	async (projectId: string, userInterests?: string[], limit?: number) =>
-		getRecommendations(projectId, userInterests, limit),
+export const asyncRateLimitedRecommendations = asyncRateLimit(
+	async (
+		projectId: string,
+		userInterests?: string[],
+		limit?: number,
+	): Promise<any[]> => getRecommendations(projectId, userInterests, limit),
 	{
 		...RATE_LIMITS.RECOMMENDATIONS,
 		onReject: () => {
@@ -248,20 +251,20 @@ export function queueGenerateSummary(project: any): Promise<any> {
  */
 export const PacerAI = {
 	// Rate limited
-	embedding: rateLimitedEmbedding,
-	search: rateLimitedSearch,
-	parse: rateLimitedParse,
-	summary: rateLimitedSummary,
-	chat: rateLimitedChat,
-	tags: rateLimitedTags,
-	recommendations: rateLimitedRecommendations,
+	embedding: asyncRateLimitedEmbedding,
+	search: asyncRateLimitedSearch,
+	parse: asyncRateLimitedParse,
+	summary: asyncRateLimitedSummary,
+	chat: asyncRateLimitedChat,
+	tags: asyncRateLimitedTags,
+	recommendations: asyncRateLimitedRecommendations,
 
 	// Batched
 	batchEmbedding: batchGenerateEmbedding,
 
 	// Queued
 	queueSummary: queueGenerateSummary,
-} as const;
+};
 
 /**
  * Example Usage:
