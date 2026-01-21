@@ -17,6 +17,7 @@ import {
 	IconMail,
 	IconPhone,
 } from "@tabler/icons-react";
+import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect } from "react";
@@ -30,6 +31,15 @@ import {
 	restoreScrollPosition,
 	saveScrollPosition,
 } from "../lib/scroll-restoration";
+
+interface GitHubStats {
+	commits: number;
+	stars: number;
+	forks: number;
+	lastUpdated: string;
+	url: string;
+	name: string;
+}
 
 export const Route = createFileRoute("/")({
 	component: Home,
@@ -49,10 +59,24 @@ function Home() {
 		};
 	}, []);
 
+	// Fetch GitHub stats
+	const { data: githubStats } = useQuery({
+		queryKey: ["github-stats"],
+		queryFn: async () => {
+			const response = await fetch("/api/github/stats");
+			if (!response.ok) throw new Error("Failed to fetch GitHub stats");
+			return response.json() as Promise<GitHubStats>;
+		},
+		staleTime: 5 * 60 * 1000, // 5 minutes
+		retry: 1,
+	});
+
+	const commits = githubStats?.commits || 50; // Fallback to 50
+
 	return (
 		<>
-			<Hero />
-			<About />
+			<Hero commits={commits} />
+			<About commits={commits} />
 			<DemosSection />
 			<SkillsDashboard />
 			<ExperienceTimeline />
@@ -62,7 +86,7 @@ function Home() {
 	);
 }
 
-function Hero() {
+function Hero({ commits }: { commits: number }) {
 	return (
 		<section
 			id="hero"
@@ -141,7 +165,7 @@ function Hero() {
 						>
 							15+ working demos
 						</motion.span>{" "}
-						and a git history of 30+ commits showing real problem-solving
+						and a git history of {commits}+ commits showing real problem-solving
 					</Text>
 					<Group gap="md" style={{ flexWrap: "wrap" }}>
 						<Button
@@ -197,7 +221,7 @@ function Hero() {
 	);
 }
 
-function About() {
+function About({ commits }: { commits: number }) {
 	return (
 		<section id="about" style={{ padding: "100px 1rem" }}>
 			<Container size="xl" style={{ maxWidth: "100%", padding: "0 1rem" }}>
@@ -394,9 +418,10 @@ function About() {
 											hyphens: "auto",
 										}}
 									>
-										<b>Iterate Until It Works</b> - My git history has 10+ "Fix
-										X" commits. That's not failure—that's learning. I debug,
-										refactor, and improve until it's production-ready.
+										<b>Iterate Until It Works</b> - My git history has{" "}
+										{Math.floor(commits * 0.2)}+ "Fix X" commits. That's not
+										failure—that's learning. I debug, refactor, and improve until
+										it's production-ready.
 									</Text>
 								</Group>
 								<Group
