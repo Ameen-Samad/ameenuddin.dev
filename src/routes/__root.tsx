@@ -32,7 +32,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 			},
 			{
 				name: "viewport",
-				content: "width=device-width, initial-scale=1",
+				content: "width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes",
 			},
 			{
 				title: "Ameenuddin.dev | AI-Native Software Engineer",
@@ -75,7 +75,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						isDarkMode={isDarkMode}
 						onThemeToggle={() => setIsDarkMode(!isDarkMode)}
 					/>
-					<div className="ml-0 md:ml-[280px] min-h-dvh transition-all duration-300 ease-out">
+					<div className="ml-0 md:ml-[280px] min-h-dvh transition-all duration-300 ease-out" style={{ overflowX: "hidden" }}>
 						{children}
 					</div>
 					<Scripts />

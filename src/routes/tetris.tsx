@@ -13,7 +13,9 @@ import {
 } from "@mantine/core";
 import {
 	IconHistory,
+	IconPlayerPause,
 	IconPlayerPlay,
+	IconPlayerStop,
 	IconRefresh,
 	IconRobot,
 	IconTrash,
@@ -34,6 +36,7 @@ export const Route = createFileRoute("/tetris")({
 function TetrisPage() {
 	const [gameStarted, setGameStarted] = useState(false);
 	const [useAI, setUseAI] = useState(false);
+	const [isPaused, setIsPaused] = useState(false);
 	const [score, setScore] = useState(0);
 	const [level, setLevel] = useState(1);
 	const [lines, setLines] = useState(0);
@@ -130,6 +133,7 @@ function TetrisPage() {
 
 				const scene = new TetrisGameService();
 				game.scene.add("TetrisGame", scene);
+				game.scene.start("TetrisGame"); // Start the scene!
 
 				const handleScoreChange = (event: Event) => {
 					const customEvent = event as CustomEvent<{
@@ -167,7 +171,7 @@ function TetrisPage() {
 
 	const handleKeyPress = useCallback(
 		(e: KeyboardEvent) => {
-			if (!gameInstance || gameOver || useAI) return;
+			if (!gameInstance || gameOver || useAI || isPaused) return;
 
 			switch (e.key) {
 				case "ArrowLeft":
@@ -187,7 +191,7 @@ function TetrisPage() {
 					break;
 			}
 		},
-		[gameInstance, gameOver, useAI],
+		[gameInstance, gameOver, useAI, isPaused],
 	);
 
 	useEffect(() => {
@@ -198,20 +202,45 @@ function TetrisPage() {
 	const handleStartGame = () => {
 		setGameOver(false);
 		setGameStarted(true);
+		setIsPaused(false);
 	};
 
 	const handleRestart = () => {
 		setGameOver(false);
+		setIsPaused(false);
+		setScore(0);
+		setLevel(1);
+		setLines(0);
 		if (gameInstance) {
-			gameInstance.scene.keys["TetrisGame"].spawnPiece();
+			// Destroy and recreate the game
+			gameInstance.destroy(true);
+			setGameInstance(null);
+			setGameStarted(false);
+			// Let useEffect handle recreation
+			setTimeout(() => setGameStarted(true), 100);
 		}
 	};
 
 	const handleToggleAI = () => {
-		setUseAI(!useAI);
-		if (gameInstance) {
-			gameInstance.scene.keys["TetrisGame"].setUseAI(!useAI);
+		const newAIState = !useAI;
+		setUseAI(newAIState);
+		if (gameInstance && gameStarted) {
+			gameInstance.scene.keys["TetrisGame"].setUseAI(newAIState);
 		}
+	};
+
+	const handleTogglePause = () => {
+		if (!gameInstance || !gameStarted || gameOver) return;
+		const newPausedState = !isPaused;
+		setIsPaused(newPausedState);
+		gameInstance.scene.keys["TetrisGame"].setPaused(newPausedState);
+	};
+
+	const handleStopGame = () => {
+		if (!gameInstance) return;
+		setGameStarted(false);
+		setIsPaused(false);
+		setGameOver(true);
 	};
 
 	const handleSaveScore = async () => {
@@ -302,6 +331,7 @@ function TetrisPage() {
 						<GamePanel
 							gameStarted={gameStarted}
 							gameOver={gameOver}
+							isPaused={isPaused}
 							score={score}
 							level={level}
 							lines={lines}
@@ -314,8 +344,11 @@ function TetrisPage() {
 
 						<ControlsPanel
 							gameStarted={gameStarted}
+							isPaused={isPaused}
 							onStart={handleStartGame}
 							onRestart={handleRestart}
+							onTogglePause={handleTogglePause}
+							onStop={handleStopGame}
 							onToggleAI={handleToggleAI}
 							useAI={useAI}
 						/>
@@ -341,6 +374,7 @@ function TetrisPage() {
 function GamePanel({
 	gameStarted,
 	gameOver,
+	isPaused,
 	score,
 	level,
 	lines,
@@ -352,6 +386,7 @@ function GamePanel({
 }: {
 	gameStarted: boolean;
 	gameOver: boolean;
+	isPaused: boolean;
 	score: number;
 	level: number;
 	lines: number;
@@ -454,6 +489,31 @@ function GamePanel({
 					</div>
 				)}
 
+				{isPaused && gameStarted && !gameOver && (
+					<div
+						style={{
+							position: "absolute",
+							top: 0,
+							left: 0,
+							right: 0,
+							bottom: 0,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							background: "rgba(0, 0, 0, 0.7)",
+						}}
+					>
+						<Stack align="center" gap="md">
+							<Text size="2xl" c="white" fw={700}>
+								⏸️ PAUSED
+							</Text>
+							<Text size="sm" c="white">
+								Click Resume to continue
+							</Text>
+						</Stack>
+					</div>
+				)}
+
 				{gameOver && (
 					<div
 						style={{
@@ -486,14 +546,20 @@ function GamePanel({
 
 function ControlsPanel({
 	gameStarted,
+	isPaused,
 	onStart,
 	onRestart,
+	onTogglePause,
+	onStop,
 	onToggleAI,
 	useAI,
 }: {
 	gameStarted: boolean;
+	isPaused: boolean;
 	onStart: () => void;
 	onRestart: () => void;
+	onTogglePause: () => void;
+	onStop: () => void;
 	onToggleAI: () => void;
 	useAI: boolean;
 }) {
@@ -524,7 +590,10 @@ function ControlsPanel({
 						border: "none",
 					}}
 				>
-					{gameStarted ? "Game Running" : "Start Game"}
+					<Group gap="sm" justify="center">
+						<IconPlayerPlay size={20} />
+						{gameStarted ? "Game Running" : "Start Game"}
+					</Group>
 				</Button>
 
 				<Button
@@ -532,7 +601,6 @@ function ControlsPanel({
 					size="lg"
 					variant={useAI ? "filled" : "outline"}
 					onClick={onToggleAI}
-					disabled={gameStarted}
 					style={{
 						background: useAI
 							? "linear-gradient(45deg, #ff00ff, #ff66aa)"
@@ -543,23 +611,60 @@ function ControlsPanel({
 				>
 					<Group gap="sm" justify="center">
 						<IconRobot size={20} />
-						{useAI ? "AI Playing" : "Play Yourself"}
+						{useAI ? "Switch to Human" : "Switch to AI"}
 					</Group>
 				</Button>
 
 				{gameStarted && (
-					<Button
-						fullWidth
-						size="lg"
-						variant="outline"
-						onClick={onRestart}
-						style={{ borderColor: "#00f3ff", color: "#00f3ff" }}
-					>
-						<Group gap="sm" justify="center">
-							<IconRefresh size={20} />
-							Restart
-						</Group>
-					</Button>
+					<>
+						<Button
+							fullWidth
+							size="lg"
+							variant="outline"
+							onClick={onTogglePause}
+							style={{ borderColor: "#ffaa00", color: "#ffaa00" }}
+						>
+							<Group gap="sm" justify="center">
+								{isPaused ? (
+									<>
+										<IconPlayerPlay size={20} />
+										Resume
+									</>
+								) : (
+									<>
+										<IconPlayerPause size={20} />
+										Pause
+									</>
+								)}
+							</Group>
+						</Button>
+
+						<Button
+							fullWidth
+							size="lg"
+							variant="outline"
+							onClick={onStop}
+							style={{ borderColor: "#ff0000", color: "#ff0000" }}
+						>
+							<Group gap="sm" justify="center">
+								<IconPlayerStop size={20} />
+								Stop Game
+							</Group>
+						</Button>
+
+						<Button
+							fullWidth
+							size="lg"
+							variant="outline"
+							onClick={onRestart}
+							style={{ borderColor: "#00f3ff", color: "#00f3ff" }}
+						>
+							<Group gap="sm" justify="center">
+								<IconRefresh size={20} />
+								Restart
+							</Group>
+						</Button>
+					</>
 				)}
 
 				{!gameStarted && (

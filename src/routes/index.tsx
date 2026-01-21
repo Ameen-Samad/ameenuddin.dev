@@ -54,6 +54,7 @@ function Hero() {
 				alignItems: "center",
 				position: "relative",
 				overflow: "hidden",
+				padding: "2rem 1rem", // Mobile padding
 			}}
 		>
 			<div
@@ -68,7 +69,7 @@ function Hero() {
 					pointerEvents: "none",
 				}}
 			/>
-			<Container size="xl">
+			<Container size="xl" style={{ width: "100%" }}>
 				<motion.div
 					initial={{ opacity: 0, y: 50 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -79,10 +80,13 @@ function Hero() {
 					</Text>
 					<Title
 						order={1}
-						size="h1"
 						c="white"
 						mb="md"
-						style={{ lineHeight: 1.1 }}
+						style={{
+							lineHeight: 1.1,
+							fontSize: "clamp(2rem, 8vw, 4rem)", // Responsive font size
+							wordWrap: "break-word",
+						}}
 					>
 						<motion.span
 							initial={{ opacity: 0 }}
@@ -94,7 +98,15 @@ function Hero() {
 						</motion.span>{" "}
 						Who Builds to Understand
 					</Title>
-					<Text size="xl" c="dimmed" mb="xl">
+					<Text
+						c="dimmed"
+						mb="xl"
+						style={{
+							fontSize: "clamp(1rem, 3vw, 1.25rem)", // Responsive text
+							lineHeight: 1.6,
+							maxWidth: "100%",
+						}}
+					>
 						Not an expert—I show{" "}
 						<motion.span
 							style={{ color: "#ff00ff", fontWeight: 700 }}
@@ -113,7 +125,7 @@ function Hero() {
 						</motion.span>{" "}
 						and a git history of 30+ commits showing real problem-solving
 					</Text>
-					<Group gap="md">
+					<Group gap="md" style={{ flexWrap: "wrap" }}>
 						<Button
 							component="a"
 							href="#demos"
@@ -122,6 +134,7 @@ function Hero() {
 							style={{
 								background: "linear-gradient(45deg, #00f3ff, #0066ff)",
 								border: "none",
+								fontSize: "clamp(0.875rem, 2vw, 1rem)", // Responsive button text
 							}}
 						>
 							View Projects
@@ -131,7 +144,11 @@ function Hero() {
 							href="#contact"
 							size="lg"
 							variant="outline"
-							style={{ borderColor: "#ff00ff", color: "#ff00ff" }}
+							style={{
+								borderColor: "#ff00ff",
+								color: "#ff00ff",
+								fontSize: "clamp(0.875rem, 2vw, 1rem)",
+							}}
 						>
 							Get In Touch
 						</Button>
@@ -164,8 +181,8 @@ function Hero() {
 
 function About() {
 	return (
-		<section id="about" style={{ padding: "100px 0" }}>
-			<Container size="xl">
+		<section id="about" style={{ padding: "100px 1rem" }}>
+			<Container size="xl" style={{ maxWidth: "100%", padding: "0 1rem" }}>
 				<motion.div
 					initial={{ opacity: 0, y: 50 }}
 					whileInView={{ opacity: 1, y: 0 }}
@@ -176,7 +193,11 @@ function About() {
 						order={2}
 						c="white"
 						mb="xl"
-						style={{ position: "relative", display: "inline-block" }}
+						style={{
+							position: "relative",
+							display: "inline-block",
+							fontSize: "clamp(1.75rem, 5vw, 2.5rem)",
+						}}
 					>
 						About Me
 						<div
@@ -198,16 +219,34 @@ function About() {
 							style={{
 								background: "rgba(26, 26, 26, 0.8)",
 								border: "1px solid rgba(0, 243, 255, 0.1)",
+								overflow: "hidden",
 							}}
 						>
-							<Text size="lg" c="white" mb="md">
+							<Text
+								size="lg"
+								c="white"
+								mb="md"
+								style={{
+									wordWrap: "break-word",
+									overflowWrap: "break-word",
+									hyphens: "auto",
+								}}
+							>
 								I'm{" "}
 								<span style={{ color: "#00f3ff", fontWeight: 700 }}>
 									Ameen Samad
 								</span>
 								, a fast learner who proves it through working code. I don't claim expertise—I show evidence of learning through implementation.
 							</Text>
-							<Text c="dimmed" mb="md">
+							<Text
+								c="dimmed"
+								mb="md"
+								style={{
+									wordWrap: "break-word",
+									overflowWrap: "break-word",
+									hyphens: "auto",
+								}}
+							>
 								This portfolio contains{" "}
 								<span style={{ color: "#ff00ff", fontWeight: 600 }}>
 									15+ live demos
@@ -218,18 +257,33 @@ function About() {
 								</span>{" "}
 								sections showing technical challenges solved, skills developed, and code evidence. From building a real-time voice agent with WebSocket streaming to optimizing API costs by 80%, I learn by implementing production features.
 							</Text>
-							<Text c="dimmed" mb="md">
+							<Text
+								c="dimmed"
+								mb="md"
+								style={{
+									wordWrap: "break-word",
+									overflowWrap: "break-word",
+									hyphens: "auto",
+								}}
+							>
 								My{" "}
 								<span style={{ color: "#ff00ff", fontWeight: 600 }}>
 									git history
 								</span>{" "}
 								shows the journey: commit{" "}
-								<code style={{ background: 'rgba(0,243,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#00f3ff', fontSize: '0.9em' }}>
+								<code style={{ background: 'rgba(0,243,255,0.1)', padding: '2px 6px', borderRadius: '4px', color: '#00f3ff', fontSize: '0.9em', wordBreak: 'break-all' }}>
 									8581789
 								</code>{" "}
 								documents migrating from OpenAI to Cloudflare Workers AI for security. Multiple "Fix X" commits show I iterate until it works.
 							</Text>
-							<Text c="dimmed">
+							<Text
+								c="dimmed"
+								style={{
+									wordWrap: "break-word",
+									overflowWrap: "break-word",
+									hyphens: "auto",
+								}}
+							>
 								Pursuing a Diploma in IT at{" "}
 								<span style={{ fontWeight: 600 }}>Ngee Ann Polytechnic</span>{" "}
 								(Year 2), I'm open to internships and junior roles where I can learn from experienced engineers and contribute to production systems.
@@ -242,27 +296,54 @@ function About() {
 							style={{
 								background: "rgba(26, 26, 26, 0.8)",
 								border: "1px solid rgba(255, 0, 255, 0.1)",
+								overflow: "hidden",
 							}}
 						>
-							<Title order={3} c="white" mb="md">
+							<Title
+								order={3}
+								c="white"
+								mb="md"
+								style={{ fontSize: "clamp(1.25rem, 4vw, 1.75rem)" }}
+							>
 								How I Learn
 							</Title>
 							<Stack gap="md">
-								<Group gap="sm">
-									<div style={{ color: "#00f3ff", fontSize: "24px" }}>🔨</div>
-									<Text c="dimmed">
+								<Group gap="sm" align="flex-start" style={{ flexWrap: "nowrap" }}>
+									<div style={{ color: "#00f3ff", fontSize: "24px", flexShrink: 0 }}>🔨</div>
+									<Text
+										c="dimmed"
+										style={{
+											wordWrap: "break-word",
+											overflowWrap: "break-word",
+											hyphens: "auto",
+										}}
+									>
 										<b>Build to Understand</b> - I don't watch tutorials—I build real features. Each demo on this site documents what I learned, from WebSocket binary streaming to performance optimization.
 									</Text>
 								</Group>
-								<Group gap="sm">
-									<div style={{ color: "#ff00ff", fontSize: "24px" }}>🔄</div>
-									<Text c="dimmed">
+								<Group gap="sm" align="flex-start" style={{ flexWrap: "nowrap" }}>
+									<div style={{ color: "#ff00ff", fontSize: "24px", flexShrink: 0 }}>🔄</div>
+									<Text
+										c="dimmed"
+										style={{
+											wordWrap: "break-word",
+											overflowWrap: "break-word",
+											hyphens: "auto",
+										}}
+									>
 										<b>Iterate Until It Works</b> - My git history has 10+ "Fix X" commits. That's not failure—that's learning. I debug, refactor, and improve until it's production-ready.
 									</Text>
 								</Group>
-								<Group gap="sm">
-									<div style={{ color: "#0066ff", fontSize: "24px" }}>📦</div>
-									<Text c="dimmed">
+								<Group gap="sm" align="flex-start" style={{ flexWrap: "nowrap" }}>
+									<div style={{ color: "#0066ff", fontSize: "24px", flexShrink: 0 }}>📦</div>
+									<Text
+										c="dimmed"
+										style={{
+											wordWrap: "break-word",
+											overflowWrap: "break-word",
+											hyphens: "auto",
+										}}
+									>
 										<b>Ship to Production</b> - Every demo is deployed on Cloudflare Workers with real infrastructure (D1, KV, Workers AI). Deployment is part of development, not an afterthought.
 									</Text>
 								</Group>

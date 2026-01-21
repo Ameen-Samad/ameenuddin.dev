@@ -147,6 +147,36 @@ TanStack Start is designed for **pure Cloudflare Workers** deployment (not Pages
 
 ---
 
+## ⚠️ KNOWN LIMITATION: WebSocket Support
+
+### TanStack Start Does NOT Support WebSocket Upgrades
+
+**Current Status (as of v1.132.0):**
+- TanStack Start's server route handlers (`server: { handlers: { GET: ... } }`) **do not support WebSocket upgrade responses**
+- The `Response(null, { status: 101, webSocket: client })` pattern is intercepted by Vite dev server / Nitro
+- Tracked in [GitHub Discussion #4576](https://github.com/TanStack/router/discussions/4576)
+
+### Workaround: Separate WebSocket Worker
+
+For real-time features requiring WebSocket (like voice transcription), we deploy a **separate Cloudflare Worker** that bypasses TanStack Start:
+
+| File | Purpose |
+|------|---------|
+| `workers/transcription-ws.ts` | Standalone WebSocket Worker |
+| `workers/wrangler.toml` | Worker-specific configuration |
+
+**Deployment:**
+```bash
+npm run deploy:ws      # Deploy WebSocket worker only
+npm run deploy:all     # Deploy main app + WebSocket worker
+```
+
+The WebSocket worker handles the route `/demo/api/ai/transcription` separately from the main app.
+
+**See `WEBSOCKET-DEPLOYMENT.md` for complete setup and deployment instructions.**
+
+---
+
 ## 🎯 How We Use Each Package
 
 ### 1. TanStack Start (Full-Stack Framework)

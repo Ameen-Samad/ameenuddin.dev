@@ -162,6 +162,8 @@ export class TetrisGame extends Phaser.Scene {
 	private paused: boolean = false;
 	private useAI: boolean = false;
 	private useImprovedAI: boolean = true;
+	private aiTimeout: number | null = null;
+	private isProcessingAIMove: boolean = false;
 
 	constructor() {
 		super({ key: "TetrisGame" });
@@ -279,9 +281,10 @@ export class TetrisGame extends Phaser.Scene {
 	}
 
 	update(time: number) {
-		if (this.paused || this.useAI) return;
+		if (this.paused) return;
 
-		if (time - this.lastDropTime > this.dropInterval) {
+		// Manual play mode - handle automatic dropping
+		if (!this.useAI && time - this.lastDropTime > this.dropInterval) {
 			this.moveDown();
 			this.lastDropTime = time;
 		}
@@ -400,43 +403,112 @@ export class TetrisGame extends Phaser.Scene {
 
 	setPaused(paused: boolean) {
 		this.paused = paused;
+		if (!paused && this.useAI && !this.isProcessingAIMove) {
+			// Resume AI if it was paused
+			this.startAI();
+		}
+	}
+
+	togglePause() {
+		this.setPaused(!this.paused);
+	}
+
+	isPaused(): boolean {
+		return this.paused;
+	}
+
+	isAIMode(): boolean {
+		return this.useAI;
+	}
+
+	destroy() {
+		this.stopAI();
+		super.destroy();
 	}
 
 	setUseAI(useAI: boolean) {
 		this.useAI = useAI;
 		if (useAI) {
 			this.startAI();
+		} else {
+			this.stopAI();
 		}
+	}
+
+	private stopAI() {
+		if (this.aiTimeout !== null) {
+			clearTimeout(this.aiTimeout);
+			this.aiTimeout = null;
+		}
+		this.isProcessingAIMove = false;
 	}
 
 	async startAI() {
-		while (this.useAI && !this.paused) {
-			await this.makeAIMove();
+		if (this.isProcessingAIMove) return;
+
+		this.isProcessingAIMove = true;
+		await this.scheduleNextAIMove();
+	}
+
+	private async scheduleNextAIMove() {
+		if (!this.useAI || this.paused || !this.isProcessingAIMove) {
+			this.isProcessingAIMove = false;
+			return;
+		}
+
+		await this.makeAIMove();
+
+		// Schedule next move with a delay
+		this.aiTimeout = window.setTimeout(() => {
+			this.scheduleNextAIMove();
+		}, 100); // 100ms delay between moves for visibility
+	}
+
+	private async makeAIMove() {
+		if (!this.currentPiece || !this.useAI) {
+			return;
+		}
+
+		try {
+			const bestMove = await TetrisAI.getBestMove(this.grid, this.currentPiece);
+
+			// Execute the best move step by step with delays
+			while (
+				this.useAI &&
+				!this.paused &&
+				this.currentPiece &&
+				(this.currentX !== bestMove.x ||
+					this.currentY !== bestMove.y ||
+					this.currentPiece.rotation !== bestMove.rotation)
+			) {
+				if (bestMove.rotation !== this.currentPiece.rotation) {
+					this.rotate();
+					await this.sleep(50);
+				} else if (bestMove.x < this.currentX) {
+					this.moveLeft();
+					await this.sleep(50);
+				} else if (bestMove.x > this.currentX) {
+					this.moveRight();
+					await this.sleep(50);
+				} else if (bestMove.y > this.currentY) {
+					this.moveDown();
+					await this.sleep(50);
+				} else {
+					break;
+				}
+			}
+
+			// Drop the piece
+			if (this.useAI && !this.paused && this.currentPiece) {
+				this.hardDrop();
+			}
+		} catch (error) {
+			console.error("AI move error:", error);
 		}
 	}
 
-	async makeAIMove() {
-		if (!this.currentPiece) {
-			this.spawnPiece();
-		}
-
-		const bestMove = await TetrisAI.getBestMove(this.grid, this.currentPiece!);
-
-		while (
-			this.currentX !== bestMove.x ||
-			this.currentY !== bestMove.y ||
-			this.currentPiece!.rotation !== bestMove.rotation
-		) {
-			if (bestMove.rotation !== this.currentPiece!.rotation) {
-				this.rotate();
-			} else if (bestMove.x < this.currentX) {
-				this.moveLeft();
-			} else if (bestMove.x > this.currentX) {
-				this.moveRight();
-			} else if (bestMove.y > this.currentY) {
-				this.moveDown();
-			}
-		}
+	private sleep(ms: number): Promise<void> {
+		return new Promise((resolve) => setTimeout(resolve, ms));
 	}
 
 	hardDrop() {

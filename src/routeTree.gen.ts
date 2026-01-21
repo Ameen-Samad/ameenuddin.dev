@@ -10,7 +10,8 @@
 
 import { Route as rootRouteImport } from './routes/__root'
 import { Route as TetrisRouteImport } from './routes/tetris'
-import { Route as IndexResumeRouteImport } from './routes/index-resume'
+import { Route as ResumeRouteImport } from './routes/resume'
+import { Route as JourneyRouteImport } from './routes/journey'
 import { Route as ChatbotRouteImport } from './routes/chatbot'
 import { Route as BuilderRouteImport } from './routes/builder'
 import { Route as IndexRouteImport } from './routes/index'
@@ -63,9 +64,14 @@ const TetrisRoute = TetrisRouteImport.update({
   path: '/tetris',
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexResumeRoute = IndexResumeRouteImport.update({
-  id: '/index-resume',
-  path: '/index-resume',
+const ResumeRoute = ResumeRouteImport.update({
+  id: '/resume',
+  path: '/resume',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const JourneyRoute = JourneyRouteImport.update({
+  id: '/journey',
+  path: '/journey',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ChatbotRoute = ChatbotRouteImport.update({
@@ -305,7 +311,8 @@ export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
   '/builder': typeof BuilderRoute
   '/chatbot': typeof ChatbotRoute
-  '/index-resume': typeof IndexResumeRoute
+  '/journey': typeof JourneyRoute
+  '/resume': typeof ResumeRoute
   '/tetris': typeof TetrisRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-three': typeof ApiGenerateThreeRoute
@@ -355,7 +362,8 @@ export interface FileRoutesByTo {
   '/': typeof IndexRoute
   '/builder': typeof BuilderRoute
   '/chatbot': typeof ChatbotRoute
-  '/index-resume': typeof IndexResumeRoute
+  '/journey': typeof JourneyRoute
+  '/resume': typeof ResumeRoute
   '/tetris': typeof TetrisRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-three': typeof ApiGenerateThreeRoute
@@ -406,7 +414,8 @@ export interface FileRoutesById {
   '/': typeof IndexRoute
   '/builder': typeof BuilderRoute
   '/chatbot': typeof ChatbotRoute
-  '/index-resume': typeof IndexResumeRoute
+  '/journey': typeof JourneyRoute
+  '/resume': typeof ResumeRoute
   '/tetris': typeof TetrisRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-three': typeof ApiGenerateThreeRoute
@@ -458,7 +467,8 @@ export interface FileRouteTypes {
     | '/'
     | '/builder'
     | '/chatbot'
-    | '/index-resume'
+    | '/journey'
+    | '/resume'
     | '/tetris'
     | '/api/chat'
     | '/api/generate-three'
@@ -508,7 +518,8 @@ export interface FileRouteTypes {
     | '/'
     | '/builder'
     | '/chatbot'
-    | '/index-resume'
+    | '/journey'
+    | '/resume'
     | '/tetris'
     | '/api/chat'
     | '/api/generate-three'
@@ -558,7 +569,8 @@ export interface FileRouteTypes {
     | '/'
     | '/builder'
     | '/chatbot'
-    | '/index-resume'
+    | '/journey'
+    | '/resume'
     | '/tetris'
     | '/api/chat'
     | '/api/generate-three'
@@ -609,7 +621,8 @@ export interface RootRouteChildren {
   IndexRoute: typeof IndexRoute
   BuilderRoute: typeof BuilderRoute
   ChatbotRoute: typeof ChatbotRoute
-  IndexResumeRoute: typeof IndexResumeRoute
+  JourneyRoute: typeof JourneyRoute
+  ResumeRoute: typeof ResumeRoute
   TetrisRoute: typeof TetrisRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateThreeRoute: typeof ApiGenerateThreeRoute
@@ -664,11 +677,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TetrisRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/index-resume': {
-      id: '/index-resume'
-      path: '/index-resume'
-      fullPath: '/index-resume'
-      preLoaderRoute: typeof IndexResumeRouteImport
+    '/resume': {
+      id: '/resume'
+      path: '/resume'
+      fullPath: '/resume'
+      preLoaderRoute: typeof ResumeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/journey': {
+      id: '/journey'
+      path: '/journey'
+      fullPath: '/journey'
+      preLoaderRoute: typeof JourneyRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/chatbot': {
@@ -1012,7 +1032,8 @@ const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BuilderRoute: BuilderRoute,
   ChatbotRoute: ChatbotRoute,
-  IndexResumeRoute: IndexResumeRoute,
+  JourneyRoute: JourneyRoute,
+  ResumeRoute: ResumeRoute,
   TetrisRoute: TetrisRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateThreeRoute: ApiGenerateThreeRoute,
