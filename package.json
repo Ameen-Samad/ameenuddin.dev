@@ -9,6 +9,7 @@
     "dev:tts": "wrangler dev --config workers/wrangler-tts.toml",
     "prebuild": "bun install",
     "build": "NODE_OPTIONS='--max-old-space-size=8192' vite build",
+    "postbuild": "node scripts/merge-wrangler-routes.js",
     "test": "vitest run",
     "format": "biome format",
     "lint": "biome lint",

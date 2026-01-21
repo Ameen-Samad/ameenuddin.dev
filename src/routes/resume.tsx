@@ -82,18 +82,16 @@ function App() {
 											key={education.school}
 											shadow="md" p="lg" radius="md" className="hover:shadow-lg transition-shadow"
 										>
-											<div>
+											<div className="space-y-3">
 												<Title order={3} className="text-xl text-gray-900">
 													{education.school}
 												</Title>
-											</div>
-											<div>
 												<p className="text-gray-700 leading-relaxed">
 													{education.summary}
 												</p>
 												{education.content && (
 													<div
-														className="mt-6 text-gray-700 prose prose-sm max-w-none"
+														className="mt-3 text-gray-700 prose prose-sm max-w-none"
 														dangerouslySetInnerHTML={{
 															__html: marked(education.content),
 														}}
@@ -116,20 +114,17 @@ function App() {
 											key={job.jobTitle}
 											shadow="md" p="lg" radius="md" className="hover:shadow-lg transition-shadow"
 										>
-											<div>
-												<div className="flex justify-between items-start">
-													<div>
-														<Title order={3} className="text-xl text-gray-900">
-															{job.jobTitle}
-														</Title>
-														<p className="text-lg text-gray-700 mt-1">
-															{job.company}
-														</p>
-														<p className="text-sm text-gray-500 mt-1">
-															{job.location} · {job.startDate}
-															{job.endDate && ` - ${job.endDate}`}
-														</p>
-													</div>
+											<div className="space-y-2">
+												<Title order={3} className="text-xl text-gray-900">
+													{job.jobTitle}
+												</Title>
+												<p className="text-lg text-gray-700">
+													{job.company}
+												</p>
+												<div className="flex flex-wrap gap-x-2 items-center text-sm text-gray-500">
+													<span>{job.location}</span>
+													<span>·</span>
+													<span>{job.startDate}{job.endDate && ` — ${job.endDate}`}</span>
 												</div>
 											</div>
 											<div>
@@ -173,13 +168,11 @@ function App() {
 											key={skill.name}
 											shadow="md" p="lg" radius="md" className="hover:shadow-lg transition-shadow"
 										>
-											<div>
+											<div className="space-y-3">
 												<Title order={3} className="text-xl text-gray-900">
 													{skill.name}
 												</Title>
-											</div>
-											<div>
-												<p className="text-gray-700 leading-relaxed mb-4">
+												<p className="text-gray-700 leading-relaxed">
 													{skill.summary}
 												</p>
 												{skill.content && (

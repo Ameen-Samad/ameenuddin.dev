@@ -29,6 +29,7 @@ import { Route as ApiResumeChatStreamRouteImport } from './routes/api.resume-cha
 import { Route as ApiResumeChatRouteImport } from './routes/api.resume-chat'
 import { Route as ApiLeaderboardRouteImport } from './routes/api/leaderboard'
 import { Route as ApiGenerateThreeRouteImport } from './routes/api/generate-three'
+import { Route as ApiContactRouteImport } from './routes/api/contact'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as DemoGuitarsIndexRouteImport } from './routes/demo/guitars/index'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
@@ -160,6 +161,11 @@ const ApiLeaderboardRoute = ApiLeaderboardRouteImport.update({
 const ApiGenerateThreeRoute = ApiGenerateThreeRouteImport.update({
   id: '/api/generate-three',
   path: '/api/generate-three',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiContactRoute = ApiContactRouteImport.update({
+  id: '/api/contact',
+  path: '/api/contact',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiChatRoute = ApiChatRouteImport.update({
@@ -334,6 +340,7 @@ export interface FileRoutesByFullPath {
   '/resume': typeof ResumeRoute
   '/tetris': typeof TetrisRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/contact': typeof ApiContactRoute
   '/api/generate-three': typeof ApiGenerateThreeRoute
   '/api/leaderboard': typeof ApiLeaderboardRouteWithChildren
   '/api/resume-chat': typeof ApiResumeChatRoute
@@ -388,6 +395,7 @@ export interface FileRoutesByTo {
   '/resume': typeof ResumeRoute
   '/tetris': typeof TetrisRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/contact': typeof ApiContactRoute
   '/api/generate-three': typeof ApiGenerateThreeRoute
   '/api/leaderboard': typeof ApiLeaderboardRouteWithChildren
   '/api/resume-chat': typeof ApiResumeChatRoute
@@ -443,6 +451,7 @@ export interface FileRoutesById {
   '/resume': typeof ResumeRoute
   '/tetris': typeof TetrisRoute
   '/api/chat': typeof ApiChatRoute
+  '/api/contact': typeof ApiContactRoute
   '/api/generate-three': typeof ApiGenerateThreeRoute
   '/api/leaderboard': typeof ApiLeaderboardRouteWithChildren
   '/api/resume-chat': typeof ApiResumeChatRoute
@@ -499,6 +508,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/tetris'
     | '/api/chat'
+    | '/api/contact'
     | '/api/generate-three'
     | '/api/leaderboard'
     | '/api/resume-chat'
@@ -553,6 +563,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/tetris'
     | '/api/chat'
+    | '/api/contact'
     | '/api/generate-three'
     | '/api/leaderboard'
     | '/api/resume-chat'
@@ -607,6 +618,7 @@ export interface FileRouteTypes {
     | '/resume'
     | '/tetris'
     | '/api/chat'
+    | '/api/contact'
     | '/api/generate-three'
     | '/api/leaderboard'
     | '/api/resume-chat'
@@ -662,6 +674,7 @@ export interface RootRouteChildren {
   ResumeRoute: typeof ResumeRoute
   TetrisRoute: typeof TetrisRoute
   ApiChatRoute: typeof ApiChatRoute
+  ApiContactRoute: typeof ApiContactRoute
   ApiGenerateThreeRoute: typeof ApiGenerateThreeRoute
   ApiLeaderboardRoute: typeof ApiLeaderboardRouteWithChildren
   ApiResumeChatRoute: typeof ApiResumeChatRoute
@@ -847,6 +860,13 @@ declare module '@tanstack/react-router' {
       path: '/api/generate-three'
       fullPath: '/api/generate-three'
       preLoaderRoute: typeof ApiGenerateThreeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/contact': {
+      id: '/api/contact'
+      path: '/api/contact'
+      fullPath: '/api/contact'
+      preLoaderRoute: typeof ApiContactRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/chat': {
@@ -1107,6 +1127,7 @@ const rootRouteChildren: RootRouteChildren = {
   ResumeRoute: ResumeRoute,
   TetrisRoute: TetrisRoute,
   ApiChatRoute: ApiChatRoute,
+  ApiContactRoute: ApiContactRoute,
   ApiGenerateThreeRoute: ApiGenerateThreeRoute,
   ApiLeaderboardRoute: ApiLeaderboardRouteWithChildren,
   ApiResumeChatRoute: ApiResumeChatRoute,

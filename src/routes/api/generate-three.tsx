@@ -66,15 +66,25 @@ CRITICAL RULES:
 
 REQUIRED CODE STRUCTURE:
 \`\`\`javascript
-import * as THREE from 'https://cdn.skypack.dev/three@0.182.0';
-import { OrbitControls } from 'https://cdn.skypack.dev/three@0.182.0/examples/jsm/controls/OrbitControls.js';
+import * as THREE from 'https://esm.sh/three@0.182.0';
+import { OrbitControls } from 'https://esm.sh/three@0.182.0/examples/jsm/controls/OrbitControls';
 
 export async function createScene(canvas) {
   // 1. Initialize scene, camera, renderer
   const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
+  const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  renderer.setSize(canvas.width, canvas.height);
+
+  // Set size to match canvas parent
+  function updateSize() {
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    renderer.setSize(width, height, false);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  }
+  updateSize();
+  window.addEventListener('resize', updateSize);
 
   // 2. Create geometry and materials based on user request
   // [YOUR CREATIVE CODE HERE]
@@ -97,12 +107,11 @@ export async function createScene(canvas) {
   function animate() {
     requestAnimationFrame(animate);
     controls.update();
-    // Add rotation/animation here if needed
     renderer.render(scene, camera);
   }
   animate();
 
-  return { scene, camera, renderer };
+  return { scene, camera, renderer, controls };
 }
 \`\`\`
 
@@ -147,7 +156,7 @@ NOW GENERATE COMPLETE CODE FOR THE USER'S REQUEST.`;
 
 					// Ensure imports are present
 					if (!generatedCode.startsWith("import")) {
-						generatedCode = `import * as THREE from 'https://cdn.skypack.dev/three@0.182.0';\n\n${generatedCode}`;
+						generatedCode = `import * as THREE from 'https://esm.sh/three@0.182.0';\nimport { OrbitControls } from 'https://esm.sh/three@0.182.0/examples/jsm/controls/OrbitControls';\n\n${generatedCode}`;
 					}
 
 					// Cache the generated code (7 days TTL)

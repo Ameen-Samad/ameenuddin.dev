@@ -8,6 +8,12 @@
     "directory": "dist/client",
     "binding": "ASSETS"
   },
+  "routes": [
+    {
+      "pattern": "ameenuddin.dev/*",
+      "zone_name": "ameenuddin.dev"
+    }
+  ],
   "observability": {
     "enabled": true
   },
