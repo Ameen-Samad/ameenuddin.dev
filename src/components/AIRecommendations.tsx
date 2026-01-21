@@ -1,9 +1,9 @@
+import { Badge, Button, Paper } from "@mantine/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles, Star, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PacerAI } from "@/lib/pacer-ai-utils";
 import type { Project } from "@/lib/projects-data";
-import { Badge, Button, Paper } from "@mantine/core";
 
 interface AIRecommendationsProps {
 	type: "trending" | "similar" | "personalized";
@@ -45,21 +45,32 @@ export function AIRecommendations({
 						),
 					});
 				} else if (type === "similar" && projectId) {
-					const results = await PacerAI.recommendations(projectId, undefined, limit);
+					const results = await PacerAI.recommendations(
+						projectId,
+						undefined,
+						limit,
+					);
 					const recIds = results?.map((r) => r.id) || [];
 					recs = projects.filter((p) => recIds.includes(p.id)).slice(0, limit);
 					setExplanations({
 						...recs.reduce(
 							(acc, p) => {
-								const similarity = results?.find((r) => r.id === p.id)?.distance;
-								acc[p.id] = `${Math.round((1 - (similarity || 0)) * 100)}% similar`;
+								const similarity = results?.find(
+									(r) => r.id === p.id,
+								)?.distance;
+								acc[p.id] =
+									`${Math.round((1 - (similarity || 0)) * 100)}% similar`;
 								return acc;
 							},
 							{} as Record<string, string>,
 						),
 					});
 				} else if (type === "personalized" && userInterests.length > 0) {
-					const results = await PacerAI.recommendations("", userInterests, limit);
+					const results = await PacerAI.recommendations(
+						"",
+						userInterests,
+						limit,
+					);
 					const recIds = results?.map((r) => r.id) || [];
 					recs = projects.filter((p) => recIds.includes(p.id)).slice(0, limit);
 					setExplanations({
@@ -83,14 +94,15 @@ export function AIRecommendations({
 		}
 
 		loadRecommendations();
-	}, [type, projectId, userInterests, projects, limit]);
+		// eslint-disable-next-line react-hooks/exhaustive-deps
+	}, [type, projectId, userInterests, limit]);
 
 	if (isLoading) {
 		return (
 			<div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
 				{Array.from({ length: limit }).map((_, i) => (
 					<motion.div
-						key={i}
+						key={`skeleton-${i}`}
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						transition={{ delay: i * 0.1 }}
@@ -211,13 +223,14 @@ export function AIRecommendations({
 										)}
 									</div>
 
-									<Button
-										asChild
-										className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
-										size="sm"
-									>
-										<a href={project.link}>View Project</a>
-									</Button>
+									<a href={project.link}>
+										<Button
+											className="w-full bg-cyan-600 hover:bg-cyan-700 text-white"
+											size="sm"
+										>
+											View Project
+										</Button>
+									</a>
 								</div>
 							</Paper>
 						</motion.div>

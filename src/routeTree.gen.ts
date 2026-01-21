@@ -47,6 +47,7 @@ import { Route as ApiWorkersEmbeddingsRouteImport } from './routes/api/workers/e
 import { Route as ApiWorkersChatRouteImport } from './routes/api/workers/chat'
 import { Route as ApiWorkersCategorizeRouteImport } from './routes/api/workers/categorize'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
+import { Route as ApiTetrisLeaderboardRouteImport } from './routes/api/tetris/leaderboard'
 import { Route as ApiLeaderboardHistoryRouteImport } from './routes/api/leaderboard/history'
 import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
 import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode'
@@ -59,6 +60,7 @@ import { Route as DemoApiAiSpeechRouteImport } from './routes/demo/api.ai.speech
 import { Route as DemoApiAiImageRouteImport } from './routes/demo/api.ai.image'
 import { Route as DemoApiAiChatRouteImport } from './routes/demo/api.ai.chat'
 import { Route as ApiWorkersEmbeddingsProtectedExampleRouteImport } from './routes/api/workers/embeddings-protected.example'
+import { Route as ApiTetrisLeaderboardHistoryRouteImport } from './routes/api/tetris/leaderboard/history'
 
 const TetrisRoute = TetrisRouteImport.update({
   id: '/tetris',
@@ -251,6 +253,11 @@ const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   path: '/api/trpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiTetrisLeaderboardRoute = ApiTetrisLeaderboardRouteImport.update({
+  id: '/api/tetris/leaderboard',
+  path: '/api/tetris/leaderboard',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiLeaderboardHistoryRoute = ApiLeaderboardHistoryRouteImport.update({
   id: '/history',
   path: '/history',
@@ -312,6 +319,12 @@ const ApiWorkersEmbeddingsProtectedExampleRoute =
     path: '/api/workers/embeddings-protected/example',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiTetrisLeaderboardHistoryRoute =
+  ApiTetrisLeaderboardHistoryRouteImport.update({
+    id: '/history',
+    path: '/history',
+    getParentRoute: () => ApiTetrisLeaderboardRoute,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -336,6 +349,7 @@ export interface FileRoutesByFullPath {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
   '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
+  '/api/tetris/leaderboard': typeof ApiTetrisLeaderboardRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/api/workers/categorize': typeof ApiWorkersCategorizeRoute
   '/api/workers/chat': typeof ApiWorkersChatRoute
@@ -353,6 +367,7 @@ export interface FileRoutesByFullPath {
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/guitars/': typeof DemoGuitarsIndexRoute
+  '/api/tetris/leaderboard/history': typeof ApiTetrisLeaderboardHistoryRoute
   '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
   '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
@@ -388,6 +403,7 @@ export interface FileRoutesByTo {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
   '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
+  '/api/tetris/leaderboard': typeof ApiTetrisLeaderboardRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/api/workers/categorize': typeof ApiWorkersCategorizeRoute
   '/api/workers/chat': typeof ApiWorkersChatRoute
@@ -405,6 +421,7 @@ export interface FileRoutesByTo {
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/guitars': typeof DemoGuitarsIndexRoute
+  '/api/tetris/leaderboard/history': typeof ApiTetrisLeaderboardHistoryRoute
   '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
   '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
@@ -441,6 +458,7 @@ export interface FileRoutesById {
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
   '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
+  '/api/tetris/leaderboard': typeof ApiTetrisLeaderboardRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/api/workers/categorize': typeof ApiWorkersCategorizeRoute
   '/api/workers/chat': typeof ApiWorkersChatRoute
@@ -458,6 +476,7 @@ export interface FileRoutesById {
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/guitars/': typeof DemoGuitarsIndexRoute
+  '/api/tetris/leaderboard/history': typeof ApiTetrisLeaderboardHistoryRoute
   '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
   '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
@@ -495,6 +514,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
     | '/api/leaderboard/history'
+    | '/api/tetris/leaderboard'
     | '/api/trpc/$'
     | '/api/workers/categorize'
     | '/api/workers/chat'
@@ -512,6 +532,7 @@ export interface FileRouteTypes {
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
     | '/demo/guitars/'
+    | '/api/tetris/leaderboard/history'
     | '/api/workers/embeddings-protected/example'
     | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
@@ -547,6 +568,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
     | '/api/leaderboard/history'
+    | '/api/tetris/leaderboard'
     | '/api/trpc/$'
     | '/api/workers/categorize'
     | '/api/workers/chat'
@@ -564,6 +586,7 @@ export interface FileRouteTypes {
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
     | '/demo/guitars'
+    | '/api/tetris/leaderboard/history'
     | '/api/workers/embeddings-protected/example'
     | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
@@ -599,6 +622,7 @@ export interface FileRouteTypes {
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
     | '/api/leaderboard/history'
+    | '/api/tetris/leaderboard'
     | '/api/trpc/$'
     | '/api/workers/categorize'
     | '/api/workers/chat'
@@ -616,6 +640,7 @@ export interface FileRouteTypes {
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
     | '/demo/guitars/'
+    | '/api/tetris/leaderboard/history'
     | '/api/workers/embeddings-protected/example'
     | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
@@ -651,6 +676,7 @@ export interface RootRouteChildren {
   DemoTableRoute: typeof DemoTableRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   DemoTrpcTodoRoute: typeof DemoTrpcTodoRoute
+  ApiTetrisLeaderboardRoute: typeof ApiTetrisLeaderboardRouteWithChildren
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
   ApiWorkersCategorizeRoute: typeof ApiWorkersCategorizeRoute
   ApiWorkersChatRoute: typeof ApiWorkersChatRoute
@@ -949,6 +975,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTrpcSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tetris/leaderboard': {
+      id: '/api/tetris/leaderboard'
+      path: '/api/tetris/leaderboard'
+      fullPath: '/api/tetris/leaderboard'
+      preLoaderRoute: typeof ApiTetrisLeaderboardRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/leaderboard/history': {
       id: '/api/leaderboard/history'
       path: '/history'
@@ -1033,6 +1066,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiWorkersEmbeddingsProtectedExampleRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/tetris/leaderboard/history': {
+      id: '/api/tetris/leaderboard/history'
+      path: '/history'
+      fullPath: '/api/tetris/leaderboard/history'
+      preLoaderRoute: typeof ApiTetrisLeaderboardHistoryRouteImport
+      parentRoute: typeof ApiTetrisLeaderboardRoute
+    }
   }
 }
 
@@ -1047,6 +1087,17 @@ const ApiLeaderboardRouteChildren: ApiLeaderboardRouteChildren = {
 const ApiLeaderboardRouteWithChildren = ApiLeaderboardRoute._addFileChildren(
   ApiLeaderboardRouteChildren,
 )
+
+interface ApiTetrisLeaderboardRouteChildren {
+  ApiTetrisLeaderboardHistoryRoute: typeof ApiTetrisLeaderboardHistoryRoute
+}
+
+const ApiTetrisLeaderboardRouteChildren: ApiTetrisLeaderboardRouteChildren = {
+  ApiTetrisLeaderboardHistoryRoute: ApiTetrisLeaderboardHistoryRoute,
+}
+
+const ApiTetrisLeaderboardRouteWithChildren =
+  ApiTetrisLeaderboardRoute._addFileChildren(ApiTetrisLeaderboardRouteChildren)
 
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
@@ -1070,6 +1121,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoTableRoute: DemoTableRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   DemoTrpcTodoRoute: DemoTrpcTodoRoute,
+  ApiTetrisLeaderboardRoute: ApiTetrisLeaderboardRouteWithChildren,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
   ApiWorkersCategorizeRoute: ApiWorkersCategorizeRoute,
   ApiWorkersChatRoute: ApiWorkersChatRoute,

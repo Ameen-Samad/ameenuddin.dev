@@ -130,9 +130,7 @@ class TetrisAI {
 		const flatPiece = piece.shape.flat();
 
 		const move = wasmAI.get_best_move(
-			new Int32Array(
-				flatGrid.map((cell) => (cell === null ? 0 : 1) as number),
-			),
+			new Int32Array(flatGrid.map((cell) => (cell === null ? 0 : 1) as number)),
 			grid[0].length,
 			grid.length,
 			new Int32Array(flatPiece),
@@ -164,9 +162,7 @@ class TetrisAI {
 		const flatNextPiece = nextPiece.shape.flat();
 
 		const move = wasmAI.get_best_move_with_lookahead(
-			new Int32Array(
-				flatGrid.map((cell) => (cell === null ? 0 : 1) as number),
-			),
+			new Int32Array(flatGrid.map((cell) => (cell === null ? 0 : 1) as number)),
 			grid[0].length,
 			grid.length,
 			new Int32Array(flatPiece),
@@ -250,7 +246,6 @@ export class TetrisGame extends Phaser.Scene {
 		super({ key: "TetrisGame" });
 	}
 
-
 	create() {
 		this.initGrid();
 
@@ -267,7 +262,7 @@ export class TetrisGame extends Phaser.Scene {
 
 		// Create combo text
 		this.comboText = this.add
-			.text(this.gridCols * this.blockSize / 2, 50, "", {
+			.text((this.gridCols * this.blockSize) / 2, 50, "", {
 				fontSize: "32px",
 				color: "#FFD700",
 				fontStyle: "bold",
@@ -289,8 +284,16 @@ export class TetrisGame extends Phaser.Scene {
 	private setupInput() {
 		if (!this.input.keyboard) return;
 
+		// Initialize audio on first keypress (required by browsers)
+		const initAudio = () => {
+			if (this.audioContext && this.audioContext.state === "suspended") {
+				this.audioContext.resume();
+			}
+		};
+
 		this.input.keyboard.on("keydown-LEFT", () => {
 			if (!this.paused && !this.gameOver) {
+				initAudio();
 				this.moveLeft();
 				this.playSound("move");
 			}
@@ -298,6 +301,7 @@ export class TetrisGame extends Phaser.Scene {
 
 		this.input.keyboard.on("keydown-RIGHT", () => {
 			if (!this.paused && !this.gameOver) {
+				initAudio();
 				this.moveRight();
 				this.playSound("move");
 			}
@@ -305,12 +309,14 @@ export class TetrisGame extends Phaser.Scene {
 
 		this.input.keyboard.on("keydown-DOWN", () => {
 			if (!this.paused && !this.gameOver) {
+				initAudio();
 				this.moveDown();
 			}
 		});
 
 		this.input.keyboard.on("keydown-UP", () => {
 			if (!this.paused && !this.gameOver) {
+				initAudio();
 				this.rotate();
 				this.playSound("rotate");
 			}
@@ -318,6 +324,7 @@ export class TetrisGame extends Phaser.Scene {
 
 		this.input.keyboard.on("keydown-SPACE", () => {
 			if (!this.paused && !this.gameOver) {
+				initAudio();
 				this.hardDrop();
 				this.playSound("drop");
 			}
@@ -325,19 +332,37 @@ export class TetrisGame extends Phaser.Scene {
 
 		this.input.keyboard.on("keydown-C", () => {
 			if (!this.paused && !this.gameOver) {
+				initAudio();
 				this.holdCurrentPiece();
 			}
 		});
 
 		this.input.keyboard.on("keydown-SHIFT", () => {
 			if (!this.paused && !this.gameOver) {
+				initAudio();
 				this.holdCurrentPiece();
 			}
 		});
 	}
 
+	private audioContext: AudioContext | null = null;
+	private soundEnabled: boolean = true;
+
 	private playSound(soundKey: string) {
+		if (!this.soundEnabled) return;
+
 		try {
+			// Create or resume AudioContext (needed for browser autoplay policy)
+			if (!this.audioContext) {
+				this.audioContext = new (
+					window.AudioContext || (window as any).webkitAudioContext
+				)();
+			}
+
+			if (this.audioContext.state === "suspended") {
+				this.audioContext.resume();
+			}
+
 			// Create procedural sound effects
 			switch (soundKey) {
 				case "move":
@@ -375,24 +400,28 @@ export class TetrisGame extends Phaser.Scene {
 		duration: number,
 		type: OscillatorType = "sine",
 	) {
-		const audioContext = new AudioContext();
-		const oscillator = audioContext.createOscillator();
-		const gainNode = audioContext.createGain();
+		if (!this.audioContext) return;
+
+		const oscillator = this.audioContext.createOscillator();
+		const gainNode = this.audioContext.createGain();
 
 		oscillator.type = type;
-		oscillator.frequency.setValueAtTime(frequency, audioContext.currentTime);
+		oscillator.frequency.setValueAtTime(
+			frequency,
+			this.audioContext.currentTime,
+		);
 
-		gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+		gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
 		gainNode.gain.exponentialRampToValueAtTime(
 			0.01,
-			audioContext.currentTime + duration,
+			this.audioContext.currentTime + duration,
 		);
 
 		oscillator.connect(gainNode);
-		gainNode.connect(audioContext.destination);
+		gainNode.connect(this.audioContext.destination);
 
 		oscillator.start();
-		oscillator.stop(audioContext.currentTime + duration);
+		oscillator.stop(this.audioContext.currentTime + duration);
 	}
 
 	private createChord(frequencies: number[], duration: number) {
@@ -406,28 +435,32 @@ export class TetrisGame extends Phaser.Scene {
 		endFreq: number,
 		duration: number,
 	) {
-		const audioContext = new AudioContext();
-		const oscillator = audioContext.createOscillator();
-		const gainNode = audioContext.createGain();
+		if (!this.audioContext) return;
+
+		const oscillator = this.audioContext.createOscillator();
+		const gainNode = this.audioContext.createGain();
 
 		oscillator.type = "sine";
-		oscillator.frequency.setValueAtTime(startFreq, audioContext.currentTime);
+		oscillator.frequency.setValueAtTime(
+			startFreq,
+			this.audioContext.currentTime,
+		);
 		oscillator.frequency.exponentialRampToValueAtTime(
 			endFreq,
-			audioContext.currentTime + duration,
+			this.audioContext.currentTime + duration,
 		);
 
-		gainNode.gain.setValueAtTime(0.3, audioContext.currentTime);
+		gainNode.gain.setValueAtTime(0.3, this.audioContext.currentTime);
 		gainNode.gain.exponentialRampToValueAtTime(
 			0.01,
-			audioContext.currentTime + duration,
+			this.audioContext.currentTime + duration,
 		);
 
 		oscillator.connect(gainNode);
-		gainNode.connect(audioContext.destination);
+		gainNode.connect(this.audioContext.destination);
 
 		oscillator.start();
-		oscillator.stop(audioContext.currentTime + duration);
+		oscillator.stop(this.audioContext.currentTime + duration);
 	}
 
 	private createDescendingTone(
@@ -589,18 +622,8 @@ export class TetrisGame extends Phaser.Scene {
 
 		// Shadow
 		graphics.fillStyle(0x000000, alpha * 0.3);
-		graphics.fillRect(
-			x + 2,
-			y + this.blockSize - 6,
-			this.blockSize - 4,
-			4,
-		);
-		graphics.fillRect(
-			x + this.blockSize - 6,
-			y + 2,
-			4,
-			this.blockSize - 4,
-		);
+		graphics.fillRect(x + 2, y + this.blockSize - 6, this.blockSize - 4, 4);
+		graphics.fillRect(x + this.blockSize - 6, y + 2, 4, this.blockSize - 4);
 
 		// Border glow
 		graphics.lineStyle(1, color, alpha * 0.5);
@@ -748,7 +771,9 @@ export class TetrisGame extends Phaser.Scene {
 			const temp = this.holdPiece;
 			this.holdPiece = new Tetromino(this.currentPiece.type);
 			this.currentPiece = temp;
-			this.currentX = Math.floor((this.gridCols - this.currentPiece.shape[0].length) / 2);
+			this.currentX = Math.floor(
+				(this.gridCols - this.currentPiece.shape[0].length) / 2,
+			);
 			this.currentY = 0;
 		}
 
@@ -778,6 +803,11 @@ export class TetrisGame extends Phaser.Scene {
 	private triggerGameOver() {
 		this.gameOver = true;
 		this.stopAI();
+
+		// Initialize audio if needed
+		if (this.audioContext && this.audioContext.state === "suspended") {
+			this.audioContext.resume();
+		}
 		this.playSound("gameOver");
 
 		// Game over animation
@@ -883,8 +913,10 @@ export class TetrisGame extends Phaser.Scene {
 		if (!this.currentPiece || this.gameOver) return;
 
 		// Lock piece with particle effect
-		const lockX = (this.currentX + this.currentPiece.shape[0].length / 2) * this.blockSize;
-		const lockY = (this.currentY + this.currentPiece.shape.length / 2) * this.blockSize;
+		const lockX =
+			(this.currentX + this.currentPiece.shape[0].length / 2) * this.blockSize;
+		const lockY =
+			(this.currentY + this.currentPiece.shape.length / 2) * this.blockSize;
 		this.lockParticles.setPosition(lockX, lockY);
 		this.lockParticles.particleTint = this.currentPiece.color;
 		this.lockParticles.explode(10);
@@ -999,7 +1031,12 @@ export class TetrisGame extends Phaser.Scene {
 			// Flash effect
 			const flash = this.add.graphics();
 			flash.fillStyle(0xffffff, 0.8);
-			flash.fillRect(0, row * this.blockSize, this.gridCols * this.blockSize, this.blockSize);
+			flash.fillRect(
+				0,
+				row * this.blockSize,
+				this.gridCols * this.blockSize,
+				this.blockSize,
+			);
 			flash.setDepth(50);
 
 			this.tweens.add({
@@ -1019,7 +1056,7 @@ export class TetrisGame extends Phaser.Scene {
 	private showScorePopup(score: number, row: number) {
 		const text = this.add
 			.text(
-				this.gridCols * this.blockSize / 2,
+				(this.gridCols * this.blockSize) / 2,
 				row * this.blockSize,
 				`+${score}`,
 				{
@@ -1050,10 +1087,7 @@ export class TetrisGame extends Phaser.Scene {
 		this.comboText.setAlpha(1);
 
 		// Spawn combo particles
-		this.comboParticles.setPosition(
-			this.gridCols * this.blockSize / 2,
-			100,
-		);
+		this.comboParticles.setPosition((this.gridCols * this.blockSize) / 2, 100);
 		this.comboParticles.explode(20 + this.combo * 5);
 
 		// Animate combo text
@@ -1181,7 +1215,7 @@ export class TetrisGame extends Phaser.Scene {
 						this.grid,
 						this.currentPiece,
 						this.nextPieces[0],
-				  )
+					)
 				: TetrisAI.getBestMove(this.grid, this.currentPiece);
 
 		aiPromise

@@ -9,6 +9,7 @@ import {
 	Select,
 	Stack,
 	Text,
+	TextInput,
 	Title,
 } from "@mantine/core";
 import {
@@ -27,7 +28,8 @@ import { useCallback, useEffect, useRef, useState } from "react";
 
 // Dynamic imports for heavy dependencies
 const loadPhaser = () => import("phaser");
-const loadTetrisGame = () => import("@/services/tetris-game").then(m => m.TetrisGame);
+const loadTetrisGame = () =>
+	import("@/services/tetris-game").then((m) => m.TetrisGame);
 
 export const Route = createFileRoute("/tetris")({
 	component: TetrisPage,
@@ -67,10 +69,11 @@ function TetrisPage() {
 	>([]);
 	const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
+	const [playerName, setPlayerName] = useState("");
 
 	const fetchLeaderboard = useCallback(async () => {
 		try {
-			const response = await fetch("/api/leaderboard");
+			const response = await fetch("/api/tetris/leaderboard");
 			if (response.ok) {
 				const data = await response.json();
 				setHighScores(data);
@@ -84,8 +87,8 @@ function TetrisPage() {
 		setLoading(true);
 		try {
 			const url = playerName
-				? `/api/leaderboard/history?playerName=${encodeURIComponent(playerName)}`
-				: "/api/leaderboard/history";
+				? `/api/tetris/leaderboard/history?playerName=${encodeURIComponent(playerName)}`
+				: "/api/tetris/leaderboard/history";
 			const response = await fetch(url);
 			if (response.ok) {
 				const data = await response.json();
@@ -184,36 +187,6 @@ function TetrisPage() {
 		};
 	}, [gameStarted]);
 
-	const handleKeyPress = useCallback(
-		(e: KeyboardEvent) => {
-			if (!gameInstance || gameOver || useAI || isPaused) return;
-
-			switch (e.key) {
-				case "ArrowLeft":
-					gameInstance.scene.keys["TetrisGame"].moveLeft();
-					break;
-				case "ArrowRight":
-					gameInstance.scene.keys["TetrisGame"].moveRight();
-					break;
-				case "ArrowDown":
-					gameInstance.scene.keys["TetrisGame"].moveDown();
-					break;
-				case "ArrowUp":
-					gameInstance.scene.keys["TetrisGame"].rotate();
-					break;
-				case " ":
-					gameInstance.scene.keys["TetrisGame"].hardDrop();
-					break;
-			}
-		},
-		[gameInstance, gameOver, useAI, isPaused],
-	);
-
-	useEffect(() => {
-		window.addEventListener("keydown", handleKeyPress);
-		return () => window.removeEventListener("keydown", handleKeyPress);
-	}, [handleKeyPress]);
-
 	const handleStartGame = () => {
 		setGameOver(false);
 		setGameStarted(true);
@@ -252,18 +225,16 @@ function TetrisPage() {
 
 	const handleSaveScore = async () => {
 		if (score === 0) return;
-
-		const name = prompt("Enter your name for the leaderboard:") || "Anonymous";
-		if (!name) return;
+		if (!playerName.trim()) return;
 
 		try {
-			const response = await fetch("/api/leaderboard", {
+			const response = await fetch("/api/tetris/leaderboard", {
 				method: "POST",
 				headers: {
 					"Content-Type": "application/json",
 				},
 				body: JSON.stringify({
-					name,
+					name: playerName,
 					score,
 					level,
 					lines,
@@ -274,6 +245,7 @@ function TetrisPage() {
 				await fetchLeaderboard();
 				setGameOver(true);
 				setGameStarted(false);
+				setPlayerName("");
 			} else {
 				alert("Failed to save score");
 			}
@@ -328,16 +300,38 @@ function TetrisPage() {
 						</Title>
 					</Group>
 
-					<Paper p="md" style={{ background: "rgba(26, 26, 46, 0.8)", border: "1px solid rgba(74, 105, 255, 0.3)" }}>
+					<Paper
+						p="md"
+						style={{
+							background: "rgba(26, 26, 46, 0.8)",
+							border: "1px solid rgba(74, 105, 255, 0.3)",
+						}}
+					>
 						<Group gap="xs" wrap="wrap">
-							<Badge color="cyan" variant="light">Next Piece Preview</Badge>
-							<Badge color="yellow" variant="light">Hold Piece (C/Shift)</Badge>
-							<Badge color="green" variant="light">Ghost Piece Shadow</Badge>
-							<Badge color="orange" variant="light">Combo System</Badge>
-							<Badge color="pink" variant="light">Particle Effects</Badge>
-							<Badge color="violet" variant="light">Dynamic Sounds</Badge>
-							<Badge color="red" variant="light">Screen Shake</Badge>
-							<Badge color="lime" variant="light">Score Animations</Badge>
+							<Badge color="cyan" variant="light">
+								Next Piece Preview
+							</Badge>
+							<Badge color="yellow" variant="light">
+								Hold Piece (C/Shift)
+							</Badge>
+							<Badge color="green" variant="light">
+								Ghost Piece Shadow
+							</Badge>
+							<Badge color="orange" variant="light">
+								Combo System
+							</Badge>
+							<Badge color="pink" variant="light">
+								Particle Effects
+							</Badge>
+							<Badge color="violet" variant="light">
+								Dynamic Sounds
+							</Badge>
+							<Badge color="red" variant="light">
+								Screen Shake
+							</Badge>
+							<Badge color="lime" variant="light">
+								Score Animations
+							</Badge>
 						</Group>
 					</Paper>
 
@@ -360,6 +354,9 @@ function TetrisPage() {
 							onToggleAI={handleToggleAI}
 							useAI={useAI}
 							canvasRef={canvasRef}
+							playerName={playerName}
+							setPlayerName={setPlayerName}
+							onSaveScore={handleSaveScore}
 						/>
 
 						<ControlsPanel
@@ -375,7 +372,6 @@ function TetrisPage() {
 
 						<LeaderboardPanel
 							highScores={highScores}
-							onSaveScore={handleSaveScore}
 							onToggleHistory={handleToggleHistory}
 							showHistory={showHistory}
 							historyData={historyData}
@@ -403,6 +399,9 @@ function GamePanel({
 	onToggleAI,
 	useAI,
 	canvasRef,
+	playerName,
+	setPlayerName,
+	onSaveScore,
 }: {
 	gameStarted: boolean;
 	gameOver: boolean;
@@ -415,6 +414,9 @@ function GamePanel({
 	onToggleAI: () => void;
 	useAI: boolean;
 	canvasRef: React.RefObject<HTMLDivElement>;
+	playerName: string;
+	setPlayerName: (name: string) => void;
+	onSaveScore: () => void;
 }) {
 	return (
 		<Paper
@@ -556,6 +558,30 @@ function GamePanel({
 							<Text size="lg" c="white">
 								Score: {score}
 							</Text>
+							<TextInput
+								placeholder="Enter your name"
+								value={playerName}
+								onChange={(e) => setPlayerName(e.currentTarget.value)}
+								style={{
+									background: "rgba(255, 255, 255, 0.1)",
+									borderColor: "rgba(0, 243, 255, 0.3)",
+									color: "white",
+									width: "250px",
+								}}
+								maxLength={20}
+							/>
+							<Button
+								onClick={onSaveScore}
+								disabled={!playerName.trim()}
+								style={{
+									background: playerName.trim()
+										? "linear-gradient(45deg, #00f3ff, #0066ff)"
+										: "#404040",
+									border: "none",
+								}}
+							>
+								Save Score
+							</Button>
 						</Stack>
 					</div>
 				)}
@@ -736,7 +762,6 @@ function ControlsPanel({
 
 function LeaderboardPanel({
 	highScores,
-	onSaveScore,
 	onToggleHistory,
 	showHistory,
 	historyData,
@@ -753,7 +778,6 @@ function LeaderboardPanel({
 		lines: number;
 		date: string;
 	}>;
-	onSaveScore: () => void;
 	onToggleHistory: () => void;
 	showHistory: boolean;
 	historyData: Array<{
@@ -874,19 +898,6 @@ function LeaderboardPanel({
 					))
 				)}
 			</Stack>
-
-			{!showHistory && highScores.length > 0 && (
-				<Button
-					fullWidth
-					size="sm"
-					variant="light"
-					onClick={onSaveScore}
-					style={{ background: "rgba(0, 243, 255, 0.1)" }}
-					mt="md"
-				>
-					Save Current Score
-				</Button>
-			)}
 
 			{!showHistory && highScores.length === 0 && (
 				<Text c="dimmed" ta="center" mt="md">

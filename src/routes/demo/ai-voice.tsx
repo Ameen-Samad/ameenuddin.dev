@@ -33,7 +33,7 @@ function VoiceAgentPage() {
 
   const wsRef = useRef<WebSocket | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
-  const processorRef = useRef<ScriptProcessorNode | null>(null)
+  const workletNodeRef = useRef<AudioWorkletNode | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
 
   // Cleanup on unmount
@@ -57,6 +57,9 @@ function VoiceAgentPage() {
     const ws = new WebSocket(wsUrl)
     wsRef.current = ws
 
+    // Set binary type for efficient audio data transfer
+    ws.binaryType = 'arraybuffer'
+
     ws.onopen = () => {
       console.log('WebSocket connected')
       setIsConnected(true)
@@ -65,28 +68,32 @@ function VoiceAgentPage() {
 
     ws.onmessage = (event) => {
       try {
-        const message: TranscriptionMessage = JSON.parse(event.data)
+        // Handle text messages (JSON)
+        if (typeof event.data === 'string') {
+          const message: TranscriptionMessage = JSON.parse(event.data)
 
-        if (message.type === 'connected') {
-          console.log('Voice agent ready:', message.config)
-          setModelConfig(message.config)
-          setConnectionStatus(`Connected (${message.config?.model})`)
-        } else if (message.type === 'transcription') {
-          // Handle transcription result
-          const text = message.data?.text || message.text || ''
-          if (text.trim()) {
-            setTranscriptions((prev) => [
-              ...prev,
-              {
-                text,
-                timestamp: message.timestamp || Date.now(),
-                confidence: message.data?.confidence,
-              },
-            ])
+          if (message.type === 'connected') {
+            console.log('Voice agent ready:', message.config)
+            setModelConfig(message.config)
+            setConnectionStatus(`Connected (${message.config?.model})`)
+          } else if (message.type === 'transcription') {
+            // Handle transcription result
+            const text = message.data?.text || message.text || ''
+            console.log('Received transcription:', text)
+            if (text.trim()) {
+              setTranscriptions((prev) => [
+                ...prev,
+                {
+                  text,
+                  timestamp: message.timestamp || Date.now(),
+                  confidence: message.data?.confidence,
+                },
+              ])
+            }
+          } else if (message.error) {
+            console.error('Voice agent error:', message.error)
+            setError(`${message.error}: ${message.details || ''}`)
           }
-        } else if (message.error) {
-          console.error('Voice agent error:', message.error)
-          setError(`${message.error}: ${message.details || ''}`)
         }
       } catch (err) {
         console.error('Failed to parse message:', err)
@@ -101,17 +108,32 @@ function VoiceAgentPage() {
 
     ws.onclose = (event) => {
       console.log('WebSocket closed:', event.code, event.reason)
+
+      // Stop recording if it was active
+      if (isRecording) {
+        stopRecording()
+      }
+
       setIsConnected(false)
-      setIsRecording(false)
       setConnectionStatus('Disconnected')
 
-      if (event.code !== 1000) {
-        setError(`Connection closed: ${event.reason || 'Unknown reason'}`)
+      // Show user-friendly error messages
+      if (event.code === 1006) {
+        setError('Connection lost unexpectedly. The server may have closed the connection.')
+      } else if (event.code !== 1000 && event.code !== 1001) {
+        setError(`Connection closed: ${event.reason || `Code ${event.code}`}`)
       }
+
+      wsRef.current = null
     }
   }
 
   const disconnectWebSocket = () => {
+    // Stop recording first if recording is active
+    if (isRecording) {
+      stopRecording()
+    }
+
     if (wsRef.current) {
       wsRef.current.close(1000, 'User disconnected')
       wsRef.current = null
@@ -140,34 +162,59 @@ function VoiceAgentPage() {
 
       streamRef.current = stream
 
-      // Create audio context
+      // Create audio context for processing
       const audioContext = new AudioContext({ sampleRate: 16000 })
       audioContextRef.current = audioContext
 
-      const source = audioContext.createMediaStreamSource(stream)
-      const processor = audioContext.createScriptProcessor(4096, 1, 1)
-      processorRef.current = processor
+      // Create inline AudioWorklet processor
+      const processorCode = `
+        class AudioProcessor extends AudioWorkletProcessor {
+          process(inputs, outputs) {
+            const input = inputs[0];
+            if (input.length > 0) {
+              const audioData = input[0];
 
-      processor.onaudioprocess = (e) => {
-        if (!wsRef.current || wsRef.current.readyState !== WebSocket.OPEN) {
-          return
+              // Convert Float32Array to Int16Array (linear16 format)
+              const int16Data = new Int16Array(audioData.length);
+              for (let i = 0; i < audioData.length; i++) {
+                const s = Math.max(-1, Math.min(1, audioData[i]));
+                int16Data[i] = s < 0 ? s * 0x8000 : s * 0x7fff;
+              }
+
+              // Send to main thread
+              this.port.postMessage(int16Data.buffer);
+            }
+            return true;
+          }
         }
 
-        const audioData = e.inputBuffer.getChannelData(0)
+        registerProcessor('audio-processor', AudioProcessor);
+      `;
 
-        // Convert Float32Array to Int16Array (linear16 format)
-        const int16Data = new Int16Array(audioData.length)
-        for (let i = 0; i < audioData.length; i++) {
-          const s = Math.max(-1, Math.min(1, audioData[i]))
-          int16Data[i] = s < 0 ? s * 0x8000 : s * 0x7fff
-        }
+      // Create blob URL for the processor
+      const blob = new Blob([processorCode], { type: 'application/javascript' })
+      const processorUrl = URL.createObjectURL(blob)
 
-        // Send to WebSocket
-        wsRef.current.send(int16Data.buffer)
+      try {
+        await audioContext.audioWorklet.addModule(processorUrl)
+      } finally {
+        URL.revokeObjectURL(processorUrl)
       }
 
-      source.connect(processor)
-      processor.connect(audioContext.destination)
+      // Create worklet node
+      const workletNode = new AudioWorkletNode(audioContext, 'audio-processor')
+      workletNodeRef.current = workletNode
+
+      // Handle messages from worklet (audio data)
+      workletNode.port.onmessage = (event) => {
+        if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
+          wsRef.current.send(event.data)
+        }
+      }
+
+      // Connect nodes
+      const source = audioContext.createMediaStreamSource(stream)
+      source.connect(workletNode)
 
       setIsRecording(true)
       setError(null)
@@ -179,9 +226,10 @@ function VoiceAgentPage() {
 
   const stopRecording = () => {
     // Stop audio processing
-    if (processorRef.current) {
-      processorRef.current.disconnect()
-      processorRef.current = null
+    if (workletNodeRef.current) {
+      workletNodeRef.current.disconnect()
+      workletNodeRef.current.port.close()
+      workletNodeRef.current = null
     }
 
     // Close audio context
@@ -250,8 +298,7 @@ function VoiceAgentPage() {
               ) : (
                 <button
                   onClick={disconnectWebSocket}
-                  disabled={isRecording}
-                  className="px-4 py-2 bg-red-600 hover:bg-red-700 disabled:bg-gray-600 text-white rounded-lg font-medium transition-colors"
+                  className="px-4 py-2 bg-red-600 hover:bg-red-700 text-white rounded-lg font-medium transition-colors"
                 >
                   Disconnect
                 </button>
