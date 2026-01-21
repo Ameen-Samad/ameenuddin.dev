@@ -2,6 +2,42 @@
 
 This document explains how the TanStack Start application is configured for **pure Cloudflare Workers** deployment (not Cloudflare Pages) as a fullstack application with server-side rendering (SSR) and API routes.
 
+---
+
+## 🚨 CRITICAL: Multi-Worker Deployment Order
+
+This project uses **THREE separate Cloudflare Workers**:
+
+1. `ameenuddin-transcription-ws` - WebSocket for real-time speech-to-text (`/demo/api/ai/transcription`)
+2. `ameenuddin-tts-ws` - WebSocket for text-to-speech (`/demo/api/ai/tts-stream`)
+3. `ameenuddin` - Main TanStack Start app (wildcard route `/*`)
+
+### Deployment Order Matters
+
+**Always deploy WebSocket workers BEFORE the main app:**
+
+```bash
+# ✅ CORRECT ORDER
+npm run deploy:websockets  # Deploy specific routes first
+npm run deploy             # Deploy wildcard route last
+
+# OR use the combined command (does this automatically)
+npm run deploy:all
+```
+
+### Why This Matters
+
+The main app uses a **wildcard route** (`ameenuddin.dev/*`) that catches all requests. If deployed first, it can override the WebSocket worker routes. Cloudflare uses route specificity, but deployment order affects registration priority.
+
+### Route Precedence
+
+After correct deployment:
+1. ✅ `/demo/api/ai/transcription` → `ameenuddin-transcription-ws`
+2. ✅ `/demo/api/ai/tts-stream` → `ameenuddin-tts-ws`
+3. ✅ `/*` (everything else) → `ameenuddin`
+
+---
+
 ## Architecture Overview
 
 ### TanStack Start + Cloudflare Workers
