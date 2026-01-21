@@ -111,12 +111,20 @@ ws.onmessage = (event) => {
 
       console.log('Connecting to AI Gateway:', aiGatewayUrl.replace(env.CLOUDFLARE_API_TOKEN, '***'));
 
-      // Connect to Cloudflare AI Gateway
-      const aiWebSocket = new WebSocket(aiGatewayUrl, {
+      // Connect to Cloudflare AI Gateway using fetch API
+      // In Cloudflare Workers, outbound WebSocket connections with custom headers require fetch()
+      const aiGatewayResponse = await fetch(aiGatewayUrl, {
         headers: {
+          'Upgrade': 'websocket',
           'cf-aig-authorization': env.CLOUDFLARE_API_TOKEN,
         },
-      } as any);
+      });
+
+      const aiWebSocket = aiGatewayResponse.webSocket;
+      if (!aiWebSocket) {
+        throw new Error('Failed to establish WebSocket connection to AI Gateway');
+      }
+      aiWebSocket.accept();
 
       // Track connection state
       let aiConnected = false;
