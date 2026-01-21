@@ -250,56 +250,6 @@ export class TetrisGame extends Phaser.Scene {
 		super({ key: "TetrisGame" });
 	}
 
-	preload() {
-		// Load sounds (we'll create these using Web Audio API)
-		this.loadSoundEffects();
-	}
-
-	private loadSoundEffects() {
-		// Create sound effects using oscillators
-		const audioContext = new AudioContext();
-
-		// Helper to create sound buffers
-		const createSound = (
-			frequency: number,
-			duration: number,
-			type: OscillatorType = "sine",
-		): AudioBuffer => {
-			const sampleRate = audioContext.sampleRate;
-			const buffer = audioContext.createBuffer(
-				1,
-				duration * sampleRate,
-				sampleRate,
-			);
-			const channel = buffer.getChannelData(0);
-
-			for (let i = 0; i < buffer.length; i++) {
-				const t = i / sampleRate;
-				if (type === "sine") {
-					channel[i] = Math.sin(2 * Math.PI * frequency * t) * 0.3;
-				} else if (type === "square") {
-					channel[i] = Math.sign(Math.sin(2 * Math.PI * frequency * t)) * 0.3;
-				} else if (type === "sawtooth") {
-					channel[i] = (2 * (frequency * t - Math.floor(frequency * t + 0.5))) * 0.3;
-				}
-				// Apply envelope
-				const envelope = Math.exp(-5 * t / duration);
-				channel[i] *= envelope;
-			}
-
-			return buffer;
-		};
-
-		// Create sound effects
-		this.sound.add("move", { volume: 0.3 });
-		this.sound.add("rotate", { volume: 0.3 });
-		this.sound.add("drop", { volume: 0.4 });
-		this.sound.add("lineClear", { volume: 0.5 });
-		this.sound.add("tetris", { volume: 0.6 });
-		this.sound.add("levelUp", { volume: 0.5 });
-		this.sound.add("gameOver", { volume: 0.5 });
-		this.sound.add("hold", { volume: 0.3 });
-	}
 
 	create() {
 		this.initGrid();
