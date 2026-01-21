@@ -53,6 +53,7 @@ import { Route as DemoApiAiTranscriptionRouteImport } from './routes/demo/api.ai
 import { Route as DemoApiAiStructuredRouteImport } from './routes/demo/api.ai.structured'
 import { Route as DemoApiAiImageRouteImport } from './routes/demo/api.ai.image'
 import { Route as DemoApiAiChatRouteImport } from './routes/demo/api.ai.chat'
+import { Route as ApiWorkersEmbeddingsProtectedExampleRouteImport } from './routes/api/workers/embeddings-protected.example'
 
 const TetrisRoute = TetrisRouteImport.update({
   id: '/tetris',
@@ -275,6 +276,12 @@ const DemoApiAiChatRoute = DemoApiAiChatRouteImport.update({
   path: '/demo/api/ai/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWorkersEmbeddingsProtectedExampleRoute =
+  ApiWorkersEmbeddingsProtectedExampleRouteImport.update({
+    id: '/api/workers/embeddings-protected/example',
+    path: '/api/workers/embeddings-protected/example',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -312,6 +319,7 @@ export interface FileRoutesByFullPath {
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/guitars/': typeof DemoGuitarsIndexRoute
+  '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
   '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
   '/demo/api/ai/structured': typeof DemoApiAiStructuredRoute
@@ -358,6 +366,7 @@ export interface FileRoutesByTo {
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/guitars': typeof DemoGuitarsIndexRoute
+  '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
   '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
   '/demo/api/ai/structured': typeof DemoApiAiStructuredRoute
@@ -405,6 +414,7 @@ export interface FileRoutesById {
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/guitars/': typeof DemoGuitarsIndexRoute
+  '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
   '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
   '/demo/api/ai/structured': typeof DemoApiAiStructuredRoute
@@ -453,6 +463,7 @@ export interface FileRouteTypes {
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
     | '/demo/guitars/'
+    | '/api/workers/embeddings-protected/example'
     | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
     | '/demo/api/ai/structured'
@@ -499,6 +510,7 @@ export interface FileRouteTypes {
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
     | '/demo/guitars'
+    | '/api/workers/embeddings-protected/example'
     | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
     | '/demo/api/ai/structured'
@@ -545,6 +557,7 @@ export interface FileRouteTypes {
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
     | '/demo/guitars/'
+    | '/api/workers/embeddings-protected/example'
     | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
     | '/demo/api/ai/structured'
@@ -591,6 +604,7 @@ export interface RootRouteChildren {
   DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
   DemoGuitarsIndexRoute: typeof DemoGuitarsIndexRoute
+  ApiWorkersEmbeddingsProtectedExampleRoute: typeof ApiWorkersEmbeddingsProtectedExampleRoute
   DemoApiAiChatRoute: typeof DemoApiAiChatRoute
   DemoApiAiImageRoute: typeof DemoApiAiImageRoute
   DemoApiAiStructuredRoute: typeof DemoApiAiStructuredRoute
@@ -912,6 +926,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoApiAiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/workers/embeddings-protected/example': {
+      id: '/api/workers/embeddings-protected/example'
+      path: '/api/workers/embeddings-protected/example'
+      fullPath: '/api/workers/embeddings-protected/example'
+      preLoaderRoute: typeof ApiWorkersEmbeddingsProtectedExampleRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -962,6 +983,8 @@ const rootRouteChildren: RootRouteChildren = {
   DemoStartApiRequestRoute: DemoStartApiRequestRoute,
   DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,
   DemoGuitarsIndexRoute: DemoGuitarsIndexRoute,
+  ApiWorkersEmbeddingsProtectedExampleRoute:
+    ApiWorkersEmbeddingsProtectedExampleRoute,
   DemoApiAiChatRoute: DemoApiAiChatRoute,
   DemoApiAiImageRoute: DemoApiAiImageRoute,
   DemoApiAiStructuredRoute: DemoApiAiStructuredRoute,

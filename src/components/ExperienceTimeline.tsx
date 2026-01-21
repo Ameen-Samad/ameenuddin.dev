@@ -1,5 +1,14 @@
+import { useStore } from "@tanstack/react-store";
+import {
+	type ColumnDef,
+	getCoreRowModel,
+	getFilteredRowModel,
+	getSortedRowModel,
+	type SortingState,
+} from "@tanstack/react-table";
+import { Store } from "@tanstack/store";
 import { motion } from "framer-motion";
-import { useMemo, useState } from "react";
+import { useEffect, useMemo } from "react";
 import { type Experience, experiences } from "@/lib/experience-data";
 import { ExperienceCard } from "./ExperienceCard";
 import { ExperienceFilter } from "./ExperienceFilter";
@@ -15,6 +24,18 @@ interface ExperienceTimelineProps {
 	className?: string;
 }
 
+interface ExperienceState {
+	filter: string;
+	expandedCard: string | null;
+	sorting: SortingState;
+}
+
+export const experienceStore = new Store<ExperienceState>({
+	filter: "all",
+	expandedCard: null,
+	sorting: [],
+});
+
 export const ExperienceTimeline = ({
 	experiences: customExperiences,
 	initialFilter = "all",
@@ -24,30 +45,90 @@ export const ExperienceTimeline = ({
 	// enableSort = true, // TODO: Implement sorting
 	className = "",
 }: ExperienceTimelineProps) => {
-	const [activeFilter, setActiveFilter] = useState(initialFilter);
-	const [expandedCard, setExpandedCard] = useState<string | null>(
-		customExperiences?.find((e) => e.isCurrent)?.id ||
-			experiences.find((e) => e.isCurrent)?.id ||
-			null,
+	const filter = useStore(experienceStore, (state) => state.filter);
+	const expandedCard = useStore(experienceStore, (state) => state.expandedCard);
+	const sorting = useStore(experienceStore, (state) => state.sorting);
+
+	useEffect(() => {
+		if (!filter || filter === "all") {
+			experienceStore.setState((state) => ({
+				...state,
+				filter: initialFilter,
+			}));
+		}
+	}, [initialFilter, filter]);
+
+	const allExperiences = useMemo(
+		() => customExperiences || experiences,
+		[customExperiences],
 	);
 
-	const filteredExperiences = useMemo(() => {
-		let filtered = customExperiences || experiences;
+	const columns = useMemo<ColumnDef<Experience>[]>(
+		() => [
+			{
+				accessorKey: "startDate",
+				header: "Start Date",
+			},
+			{
+				accessorKey: "category",
+				header: "Category",
+			},
+			{
+				accessorKey: "isCurrent",
+				header: "Current",
+			},
+		],
+		[],
+	);
 
-		if (activeFilter === "current") {
-			filtered = filtered.filter((exp) => exp.isCurrent);
-		} else if (activeFilter !== "all") {
-			filtered = filtered.filter((exp) => exp.category === activeFilter);
+	const _table = useReactTable({
+		data: allExperiences,
+		columns,
+		state: {
+			sorting,
+			globalFilter: filter,
+		},
+		onSortingChange: (updater) => {
+			experienceStore.setState((state) => ({
+				...state,
+				sorting:
+					typeof updater === "function" ? updater(state.sorting) : updater,
+			}));
+		},
+		onGlobalFilterChange: (updater) => {
+			experienceStore.setState((state) => ({
+				...state,
+				filter: typeof updater === "function" ? updater(state.filter) : updater,
+			}));
+		},
+		getCoreRowModel: getCoreRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
+		getSortedRowModel: getSortedRowModel(),
+		initialState: {
+			globalFilter: initialFilter,
+		},
+	});
+
+	const filteredExperiences = useMemo(() => {
+		if (filter === "current") {
+			return allExperiences.filter((exp) => exp.isCurrent);
 		}
 
-		return filtered.sort(
+		if (filter !== "all") {
+			return allExperiences.filter((exp) => exp.category === filter);
+		}
+
+		return allExperiences.sort(
 			(a, b) =>
 				new Date(b.startDate).getTime() - new Date(a.startDate).getTime(),
 		);
-	}, [activeFilter, customExperiences]);
+	}, [filter, allExperiences]);
 
 	const toggleCard = (id: string) => {
-		setExpandedCard((prev) => (prev === id ? null : id));
+		experienceStore.setState((state) => ({
+			...state,
+			expandedCard: state.expandedCard === id ? null : id,
+		}));
 	};
 
 	return (
@@ -71,9 +152,14 @@ export const ExperienceTimeline = ({
 			{/* Filters */}
 			{enableFilter && (
 				<ExperienceFilter
-					currentFilter={activeFilter}
-					onFilterChange={setActiveFilter}
-					experiences={customExperiences || experiences}
+					currentFilter={filter}
+					onFilterChange={(newFilter) => {
+						experienceStore.setState((state) => ({
+							...state,
+							filter: newFilter,
+						}));
+					}}
+					experiences={allExperiences}
 				/>
 			)}
 

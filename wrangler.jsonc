@@ -1,6 +1,6 @@
 {
   "$schema": "node_modules/wrangler/config-schema.json",
-  "name": "ameenuddin-dev",
+  "name": "ameenuddin",
   "compatibility_date": "2025-09-02",
   "compatibility_flags": ["nodejs_compat"],
   "d1_databases": [
@@ -16,6 +16,10 @@
   "kv_namespaces": [
     {
       "binding": "PROJECT_CACHE",
+      "id": "3b6fc452a52e4906be204952436b588b"
+    },
+    {
+      "binding": "RATE_LIMIT",
       "id": "3b6fc452a52e4906be204952436b588b"
     }
   ]

@@ -9,77 +9,71 @@ import {
 	Title,
 } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
+import { useStore } from "@tanstack/react-store";
+import {
+	type ColumnDef,
+	getCoreRowModel,
+	useReactTable,
+} from "@tanstack/react-table";
 import { motion } from "framer-motion";
-import { useState } from "react";
-import { type SkillLevel, skillCategories } from "../lib/skills-data";
+import type { SkillLevel } from "../lib/skills-data";
+import {
+	type SkillItem,
+	skillsActions,
+	skillsStore,
+} from "../lib/skills-store";
 import { SkillCard } from "./SkillCard";
 import { SkillsStats } from "./SkillsStats";
 
-interface SkillFilters {
-	level?: SkillLevel;
-	searchQuery?: string;
-}
+const columns: ColumnDef<SkillItem>[] = [
+	{
+		accessorKey: "name",
+		header: "Skill",
+	},
+	{
+		accessorKey: "level",
+		header: "Level",
+	},
+	{
+		accessorKey: "proficiency",
+		header: "Proficiency",
+	},
+	{
+		accessorKey: "categoryName",
+		header: "Category",
+	},
+];
 
 export function SkillsDashboard() {
-	const [filterLevel, setFilterLevel] = useState<SkillLevel | "all">("all");
-	const [searchQuery, setSearchQuery] = useState("");
-
-	const allSkills = skillCategories.flatMap((category) =>
-		category.skills.map((skill) => ({ ...skill, category })),
+	const filterLevel = useStore(skillsStore, (state) => state.filterLevel);
+	const searchQuery = useStore(skillsStore, (state) => state.searchQuery);
+	const filteredCategories = skillsActions.getFilteredCategories();
+	const filteredSkills = filteredCategories.flatMap((category) =>
+		category.skills.map((skill) => ({
+			...skill,
+			categoryName: category.name,
+			categoryColor: category.color,
+		})),
 	);
 
-	const filterSkills = (filters: SkillFilters) => {
-		return skillCategories
-			.map((category) => ({
-				...category,
-				skills: category.skills.filter((skill) => {
-					if (filters.level && skill.level !== filters.level) return false;
-					if (filters.searchQuery) {
-						const query = filters.searchQuery.toLowerCase();
-						if (
-							!skill.name.toLowerCase().includes(query) &&
-							!category.name.toLowerCase().includes(query)
-						) {
-							return false;
-						}
-					}
-					return true;
-				}),
-			}))
-			.filter((category) => category.skills.length > 0);
-	};
-
-	const filteredCategories = filterSkills({
-		level: filterLevel === "all" ? undefined : filterLevel,
-		searchQuery: searchQuery || undefined,
+	const table = useReactTable({
+		data: filteredSkills,
+		columns,
+		getCoreRowModel: getCoreRowModel(),
 	});
 
-	const filteredSkills = filteredCategories.flatMap((category) =>
-		category.skills.map((skill) => ({ ...skill, category })),
-	);
+	const levelCounts = skillsActions.getLevelCounts();
 
 	const levelFilters = [
-		{ id: "all" as const, label: "All", count: allSkills.length },
-		{
-			id: "expert" as const,
-			label: "Expert",
-			count: allSkills.filter((s) => s.level === "expert").length,
-		},
-		{
-			id: "advanced" as const,
-			label: "Advanced",
-			count: allSkills.filter((s) => s.level === "advanced").length,
-		},
+		{ id: "all" as const, label: "All", count: levelCounts.all },
+		{ id: "expert" as const, label: "Expert", count: levelCounts.expert },
+		{ id: "advanced" as const, label: "Advanced", count: levelCounts.advanced },
 		{
 			id: "intermediate" as const,
 			label: "Intermediate",
-			count: allSkills.filter((s) => s.level === "intermediate").length,
+			count: levelCounts.intermediate,
 		},
-		{
-			id: "beginner" as const,
-			label: "Beginner",
-			count: allSkills.filter((s) => s.level === "beginner").length,
-		},
+		{ id: "beginner" as const, label: "Beginner", count: levelCounts.beginner },
 	];
 
 	return (
@@ -105,7 +99,9 @@ export function SkillsDashboard() {
 							leftSection={<IconSearch size={20} color="#6b7280" />}
 							size="lg"
 							value={searchQuery}
-							onChange={(event) => setSearchQuery(event.currentTarget.value)}
+							onChange={(event) =>
+								skillsActions.setSearchQuery(event.currentTarget.value)
+							}
 							style={{
 								maxWidth: 400,
 								margin: "0 auto",
@@ -126,7 +122,7 @@ export function SkillsDashboard() {
 										cursor: "pointer",
 										transition: "all 0.2s",
 									}}
-									onClick={() => setFilterLevel(filter.id)}
+									onClick={() => skillsActions.setFilterLevel(filter.id)}
 								>
 									{filter.label} ({filter.count})
 								</Badge>
@@ -137,7 +133,7 @@ export function SkillsDashboard() {
 					{/* Statistics */}
 					{searchQuery === "" && filterLevel === "all" && (
 						<Stack mb="xl">
-							<SkillsStats allSkills={allSkills} />
+							<SkillsStats allSkills={skillsActions.getAllSkills()} />
 						</Stack>
 					)}
 

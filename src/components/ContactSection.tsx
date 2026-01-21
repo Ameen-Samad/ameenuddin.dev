@@ -1,51 +1,57 @@
 import { Container, Stack } from "@mantine/core";
-import { useState } from "react";
+import { useMutation, useQueryClient } from "@tanstack/react-query";
+import { useId, useState } from "react";
+import {
+	type ContactFormData,
+	contactFormActions,
+} from "@/lib/contact-form-store";
 import { ContactForm } from "./ContactForm";
 import { ContactSuccess } from "./ContactSuccess";
 import { SocialLinks } from "./SocialLinks";
 
-interface ContactFormData {
-	name: string;
-	email: string;
-	subject: string;
-	message: string;
+async function submitContactForm(data: ContactFormData): Promise<void> {
+	const response = await fetch("/api/contact", {
+		method: "POST",
+		headers: { "Content-Type": "application/json" },
+		body: JSON.stringify(data),
+	});
+
+	if (!response.ok) {
+		throw new Error("Failed to send message");
+	}
 }
 
 export function ContactSection() {
+	const contactId = useId();
+	const queryClient = useQueryClient();
 	const [isSuccess, setIsSuccess] = useState(false);
-	const [isSubmitting, setIsSubmitting] = useState(false);
 
-	const handleSubmit = async (data: ContactFormData) => {
-		setIsSubmitting(true);
-		try {
-			const response = await fetch("/api/contact", {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify(data),
-			});
-
-			if (!response.ok) {
-				throw new Error("Failed to send message");
-			}
-
+	const mutation = useMutation({
+		mutationFn: submitContactForm,
+		onSuccess: () => {
 			setIsSuccess(true);
-		} catch (error) {
+			queryClient.invalidateQueries({ queryKey: ["contact-form"] });
+		},
+		onError: (error) => {
 			console.error("Contact form error:", error);
 			alert(
 				"Failed to send message. Please email directly at amenddin@gmail.com",
 			);
-		} finally {
-			setIsSubmitting(false);
-		}
+		},
+	});
+
+	const handleSubmit = async (data: ContactFormData) => {
+		await mutation.mutateAsync(data);
 	};
 
 	const handleReset = () => {
 		setIsSuccess(false);
+		contactFormActions.resetForm();
 	};
 
 	return (
 		<section
-			id="contact"
+			id={contactId}
 			style={{
 				padding: "100px 0",
 				minHeight: "100vh",
@@ -67,7 +73,7 @@ export function ContactSection() {
 						<>
 							<ContactForm
 								onSubmit={handleSubmit}
-								isSubmitting={isSubmitting}
+								isSubmitting={mutation.isPending}
 							/>
 							<div
 								style={{

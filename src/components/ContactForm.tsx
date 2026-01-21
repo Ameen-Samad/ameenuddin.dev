@@ -8,30 +8,84 @@ import {
 	Title,
 } from "@mantine/core";
 import { IconSend, IconX } from "@tabler/icons-react";
+import { useStore } from "@tanstack/react-store";
 import { motion } from "framer-motion";
-import { useState } from "react";
+import {
+	type ContactErrors,
+	type ContactFormData,
+	contactFormActions,
+	contactFormStore,
+} from "@/lib/contact-form-store";
 import { ContactInput } from "./ContactInput";
 
-interface ContactFormData {
-	name: string;
-	email: string;
-	subject: string;
-	message: string;
-}
+const validationRules = {
+	name: {
+		required: true,
+		minLength: 2,
+		maxLength: 50,
+		pattern: /^[a-zA-Z\s'-]+$/,
+	},
+	email: {
+		required: true,
+		pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+	},
+	subject: {
+		required: true,
+	},
+	message: {
+		required: true,
+		minLength: 10,
+		maxLength: 1000,
+	},
+} as const;
 
-interface ContactErrors {
-	name?: string;
-	email?: string;
-	subject?: string;
-	message?: string;
-}
+const validateField = (
+	field: keyof ContactFormData,
+	value: string,
+): { isValid: boolean; error?: string } => {
+	const rules = validationRules[field];
 
-interface ContactTouched {
-	name: boolean;
-	email: boolean;
-	subject: boolean;
-	message: boolean;
-}
+	if ("required" in rules && rules.required && !value.trim()) {
+		return { isValid: false, error: "This field is required" };
+	}
+
+	if ("minLength" in rules && value.length < rules.minLength) {
+		return {
+			isValid: false,
+			error: `Minimum ${rules.minLength} characters required`,
+		};
+	}
+
+	if ("maxLength" in rules && value.length > rules.maxLength) {
+		return {
+			isValid: false,
+			error: `Maximum ${rules.maxLength} characters allowed`,
+		};
+	}
+
+	if ("pattern" in rules && !rules.pattern.test(value)) {
+		return { isValid: false, error: "Invalid format" };
+	}
+
+	return { isValid: true };
+};
+
+const validateForm = (
+	data: ContactFormData,
+): { isValid: boolean; errors: ContactErrors } => {
+	const newErrors: ContactErrors = {};
+	let isValid = true;
+
+	(Object.keys(data) as Array<keyof ContactFormData>).forEach((field) => {
+		const result = validateField(field, data[field]);
+		if (!result.isValid) {
+			isValid = false;
+			newErrors[field] = result.error;
+		}
+	});
+
+	return { isValid, errors: newErrors };
+};
 
 interface ContactFormProps {
 	onSubmit: (data: ContactFormData) => Promise<void>;
@@ -39,20 +93,9 @@ interface ContactFormProps {
 }
 
 export function ContactForm({ onSubmit, isSubmitting }: ContactFormProps) {
-	const [formData, setFormData] = useState<ContactFormData>({
-		name: "",
-		email: "",
-		subject: "general",
-		message: "",
-	});
-
-	const [errors, setErrors] = useState<ContactErrors>({});
-	const [touched, setTouched] = useState<ContactTouched>({
-		name: false,
-		email: false,
-		subject: false,
-		message: false,
-	});
+	const formData = useStore(contactFormStore, (state) => state.formData);
+	const errors = useStore(contactFormStore, (state) => state.errors);
+	const touched = useStore(contactFormStore, (state) => state.touched);
 
 	const subjectOptions = [
 		{ value: "general", label: "General Inquiry" },
@@ -62,94 +105,23 @@ export function ContactForm({ onSubmit, isSubmitting }: ContactFormProps) {
 		{ value: "feedback", label: "Feedback" },
 	];
 
-	const validationRules = {
-		name: {
-			required: true,
-			minLength: 2,
-			maxLength: 50,
-			pattern: /^[a-zA-Z\s'-]+$/,
-		},
-		email: {
-			required: true,
-			pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-		},
-		subject: {
-			required: true,
-		},
-		message: {
-			required: true,
-			minLength: 10,
-			maxLength: 1000,
-		},
-	} as const;
-
-	type ValidationRules = typeof validationRules;
-
-	const validateField = (
-		field: keyof ContactFormData,
-		value: string,
-	): { isValid: boolean; error?: string } => {
-		const rules = validationRules[field];
-
-		if ("required" in rules && rules.required && !value.trim()) {
-			return { isValid: false, error: "This field is required" };
-		}
-
-		if ("minLength" in rules && value.length < rules.minLength) {
-			return {
-				isValid: false,
-				error: `Minimum ${rules.minLength} characters required`,
-			};
-		}
-
-		if ("maxLength" in rules && value.length > rules.maxLength) {
-			return {
-				isValid: false,
-				error: `Maximum ${rules.maxLength} characters allowed`,
-			};
-		}
-
-		if ("pattern" in rules && !rules.pattern.test(value)) {
-			return { isValid: false, error: "Invalid format" };
-		}
-
-		return { isValid: true };
-	};
-
-	const validateForm = (
-		data: ContactFormData,
-	): { isValid: boolean; errors: ContactErrors } => {
-		const newErrors: ContactErrors = {};
-		let isValid = true;
-
-		(Object.keys(data) as Array<keyof ContactFormData>).forEach((field) => {
-			const result = validateField(field, data[field]);
-			if (!result.isValid) {
-				isValid = false;
-				newErrors[field] = result.error;
-			}
-		});
-
-		return { isValid, errors: newErrors };
-	};
-
 	const handleBlur = (field: keyof ContactFormData) => {
-		setTouched((prev) => ({ ...prev, [field]: true }));
+		contactFormActions.setTouched(field, true);
 		const result = validateField(field, formData[field]);
 		if (!result.isValid) {
-			setErrors((prev) => ({ ...prev, [field]: result.error }));
+			contactFormActions.setError(field, result.error);
 		}
 	};
 
 	const handleChange = (field: keyof ContactFormData, value: string) => {
-		setFormData((prev) => ({ ...prev, [field]: value }));
+		contactFormActions.setField(field, value);
 
 		if (touched[field]) {
 			const result = validateField(field, value);
-			setErrors((prev) => ({
-				...prev,
-				[field]: result.isValid ? undefined : result.error,
-			}));
+			contactFormActions.setError(
+				field,
+				result.isValid ? undefined : result.error,
+			);
 		}
 	};
 
@@ -157,13 +129,8 @@ export function ContactForm({ onSubmit, isSubmitting }: ContactFormProps) {
 		e.preventDefault();
 
 		const { isValid, errors: validationErrors } = validateForm(formData);
-		setErrors(validationErrors);
-		setTouched({
-			name: true,
-			email: true,
-			subject: true,
-			message: true,
-		});
+		contactFormActions.setErrors(validationErrors);
+		contactFormActions.setAllTouched(true);
 
 		if (!isValid) return;
 
@@ -175,19 +142,7 @@ export function ContactForm({ onSubmit, isSubmitting }: ContactFormProps) {
 	};
 
 	const handleClear = () => {
-		setFormData({
-			name: "",
-			email: "",
-			subject: "general",
-			message: "",
-		});
-		setErrors({});
-		setTouched({
-			name: false,
-			email: false,
-			subject: false,
-			message: false,
-		});
+		contactFormActions.resetForm();
 	};
 
 	const isValidForm = () => {

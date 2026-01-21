@@ -1,49 +1,63 @@
-import { Container, SimpleGrid, Text } from "@mantine/core";
+import { Container, SimpleGrid, Text, UnstyledButton } from "@mantine/core";
+import { useStore } from "@tanstack/react-store";
+import {
+	type ColumnDef,
+	getCoreRowModel,
+	useReactTable,
+} from "@tanstack/react-table";
 import { motion } from "framer-motion";
-import { useEffect, useId, useMemo, useState } from "react";
-import { type FilterType, getFilters, projects } from "../lib/projects-data";
+import { useEffect, useId } from "react";
+import type { Project } from "../lib/projects-data";
+import { projectsActions, projectsStore } from "../lib/projects-store";
 import { AIRecommendations } from "./AIRecommendations";
 import { ProjectAIAssistant } from "./ProjectAIAssistant";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectFilter } from "./ProjectFilter";
 import { ProjectHero } from "./ProjectHero";
 
+const columns: ColumnDef<Project>[] = [
+	{
+		accessorKey: "title",
+		header: "Title",
+	},
+	{
+		accessorKey: "category",
+		header: "Category",
+	},
+	{
+		accessorKey: "status",
+		header: "Status",
+	},
+	{
+		accessorKey: "tags",
+		header: "Tags",
+	},
+];
+
 export function ProjectsSection() {
-	const [activeFilter, setActiveFilter] = useState<FilterType>("all");
-	const [searchQuery, setSearchQuery] = useState("");
-	const [selectedProject, setSelectedProject] = useState<string | null>(null);
+	const activeFilter = useStore(projectsStore, (state) => state.activeFilter);
+	const searchQuery = useStore(projectsStore, (state) => state.searchQuery);
+	const selectedProject = useStore(
+		projectsStore,
+		(state) => state.selectedProject,
+	);
 	const projectsId = useId();
 
-	const filters = useMemo(() => getFilters(projects), []);
+	const filters = projectsActions.getFilters();
+	const _featuredProject = projectsActions.getFeaturedProject();
+	const filteredProjects = projectsActions.getFilteredProjects();
+	const featuredProjects = projectsActions.getFeaturedProjectsCount();
 
-	const featuredProject = projects.find((p) => p.featured);
-
-	const filteredProjects = useMemo(() => {
-		let filtered = projects;
-
-		if (activeFilter !== "all") {
-			filtered = filtered.filter((p) => p.category === activeFilter);
-		}
-
-		if (searchQuery) {
-			const query = searchQuery.toLowerCase();
-			filtered = filtered.filter(
-				(project) =>
-					project.title.toLowerCase().includes(query) ||
-					project.description.toLowerCase().includes(query) ||
-					project.tags.some((tag) => tag.toLowerCase().includes(query)),
-			);
-		}
-
-		return filtered;
-	}, [activeFilter, searchQuery]);
-
-	const featuredProjects = projects.filter((p) => p.featured).length;
+	const _table = useReactTable({
+		data: filteredProjects,
+		columns,
+		getCoreRowModel: getCoreRowModel(),
+	});
 
 	useEffect(() => {
 		const handleKeyDown = (e: KeyboardEvent) => {
 			if (e.key === "Escape") {
-				setSearchQuery("");
+				projectsActions.setSearchQuery("");
 			}
 		};
 
@@ -52,23 +66,23 @@ export function ProjectsSection() {
 	}, []);
 
 	const handleProjectClick = (projectId: string) => {
-		setSelectedProject(projectId);
+		projectsActions.setSelectedProject(projectId);
 	};
 
 	return (
 		<section id={projectsId} style={{ padding: "100px 0" }}>
 			<Container size="xl">
 				<ProjectHero
-					totalProjects={projects.length}
+					totalProjects={filteredProjects.length}
 					featuredProjects={featuredProjects}
 					searchQuery={searchQuery}
-					onSearchChange={setSearchQuery}
+					onSearchChange={projectsActions.setSearchQuery}
 				/>
 
 				<ProjectFilter
 					filters={filters}
 					activeFilter={activeFilter}
-					onFilterChange={setActiveFilter}
+					onFilterChange={projectsActions.setActiveFilter}
 				/>
 
 				{!searchQuery && (
@@ -78,7 +92,11 @@ export function ProjectsSection() {
 						transition={{ delay: 0.3 }}
 						style={{ marginBottom: "60px" }}
 					>
-						<AIRecommendations type="trending" projects={projects} limit={4} />
+						<AIRecommendations
+							type="trending"
+							projects={projectsStore.state.projects}
+							limit={4}
+						/>
 					</motion.div>
 				)}
 
@@ -105,12 +123,12 @@ export function ProjectsSection() {
 							style={{ gap: "2rem" }}
 						>
 							{filteredProjects.map((project, index) => (
-								<div
+								<UnstyledButton
 									key={project.id}
 									onClick={() => handleProjectClick(project.id)}
 								>
 									<ProjectCard project={project} index={index} />
-								</div>
+								</UnstyledButton>
 							))}
 						</SimpleGrid>
 					</motion.div>
@@ -125,7 +143,7 @@ export function ProjectsSection() {
 						<AIRecommendations
 							type="similar"
 							projectId={filteredProjects[0]?.id}
-							projects={projects}
+							projects={projectsStore.state.projects}
 							limit={3}
 						/>
 					</motion.div>
@@ -133,25 +151,25 @@ export function ProjectsSection() {
 
 				{searchQuery && (
 					<Text c="dimmed" size="sm" mt="xl" style={{ textAlign: "center" }}>
-						Showing {filteredProjects.length} of {projects.length} projects
+						Showing {filteredProjects.length} of{" "}
+						{projectsStore.state.projects.length} projects
 					</Text>
 				)}
 			</Container>
 
-			{selectedProject && (
-				<ProjectAIAssistant
-					projectId={selectedProject}
-					projectTitle={
-						projects.find((p) => p.id === selectedProject)?.title || ""
-					}
-					projectDescription={
-						projects.find((p) => p.id === selectedProject)?.description || ""
-					}
-					projectTags={
-						projects.find((p) => p.id === selectedProject)?.tags || []
-					}
-				/>
-			)}
+			{selectedProject &&
+				(() => {
+					const projectData = projectsActions.getSelectedProjectData();
+					if (!projectData) return null;
+					return (
+						<ProjectAIAssistant
+							projectId={selectedProject}
+							projectTitle={projectData.title}
+							projectDescription={projectData.description}
+							projectTags={projectData.tags}
+						/>
+					);
+				})()}
 		</section>
 	);
 }
