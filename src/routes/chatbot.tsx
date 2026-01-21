@@ -14,18 +14,23 @@ import {
 	Textarea,
 	Title,
 } from "@mantine/core";
+import { notifications } from "@mantine/notifications";
 import {
+	IconBook,
 	IconBrain,
+	IconDatabase,
 	IconFileText,
 	IconMessage,
 	IconRefresh,
 	IconSend,
-	IconSettings,
+	IconSparkles,
 	IconTool,
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import ReactMarkdown from "react-markdown";
+import ReactMarkdown from "react-markdown";
 import ReactMarkdown from "react-markdown";
 
 export const Route = createFileRoute("/chatbot")({

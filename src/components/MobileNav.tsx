@@ -387,10 +387,6 @@ function MobileNavItem({
 									return (
 										<div
 											key={child.id}
-											onClick={() => {
-												downloadResumePDF();
-												onClose();
-											}}
 											className="no-underline cursor-pointer"
 										>
 											{ChildButton}

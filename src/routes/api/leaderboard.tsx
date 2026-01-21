@@ -1,17 +1,18 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from 'cloudflare:workers'
 import { json } from "@tanstack/react-start";
+import { createLeaderboardRepository } from "@/db/leaderboard.repository";
 
 export const Route = createFileRoute("/api/leaderboard")({
 	server: {
 		handlers: {
 			GET: async ({ context }) => {
-				if (!db) {
+				if (!env.DB) {
 					return json({ error: "Database not available" }, { status: 500 });
 				}
 
 				try {
-					const repo = createLeaderboardRepository(db);
+					const repo = createLeaderboardRepository(env.DB);
 					const scores = await repo.getTopScores(10);
 					return json(scores);
 				} catch (error) {
@@ -23,7 +24,7 @@ export const Route = createFileRoute("/api/leaderboard")({
 				}
 			},
 			POST: async ({ request}) => {
-				if (!db) {
+				if (!env.DB) {
 					return json({ error: "Database not available" }, { status: 500 });
 				}
 
@@ -35,7 +36,7 @@ export const Route = createFileRoute("/api/leaderboard")({
 						return json({ error: "Missing required fields" }, { status: 400 });
 					}
 
-					const repo = createLeaderboardRepository(db);
+					const repo = createLeaderboardRepository(env.DB);
 					await repo.saveScore({
 						name,
 						score,

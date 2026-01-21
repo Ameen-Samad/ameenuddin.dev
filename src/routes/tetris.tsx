@@ -328,6 +328,19 @@ function TetrisPage() {
 						</Title>
 					</Group>
 
+					<Paper p="md" style={{ background: "rgba(26, 26, 46, 0.8)", border: "1px solid rgba(74, 105, 255, 0.3)" }}>
+						<Group gap="xs" wrap="wrap">
+							<Badge color="cyan" variant="light">Next Piece Preview</Badge>
+							<Badge color="yellow" variant="light">Hold Piece (C/Shift)</Badge>
+							<Badge color="green" variant="light">Ghost Piece Shadow</Badge>
+							<Badge color="orange" variant="light">Combo System</Badge>
+							<Badge color="pink" variant="light">Particle Effects</Badge>
+							<Badge color="violet" variant="light">Dynamic Sounds</Badge>
+							<Badge color="red" variant="light">Screen Shake</Badge>
+							<Badge color="lime" variant="light">Score Animations</Badge>
+						</Group>
+					</Paper>
+
 					<div
 						style={{
 							display: "grid",
@@ -704,7 +717,13 @@ function ControlsPanel({
 									• Arrow Up: Rotate
 								</Text>
 								<Text size="sm" c="white">
+									• Arrow Down: Soft Drop
+								</Text>
+								<Text size="sm" c="white">
 									• Space: Hard Drop
+								</Text>
+								<Text size="sm" c="yellow" fw={700}>
+									• C or Shift: Hold Piece
 								</Text>
 							</Stack>
 						)}

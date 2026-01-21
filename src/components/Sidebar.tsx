@@ -413,7 +413,6 @@ function NavItemComponent({
 									return (
 										<div
 											key={child.id}
-											onClick={() => downloadResumePDF()}
 											className="no-underline cursor-pointer"
 										>
 											{ChildButton}

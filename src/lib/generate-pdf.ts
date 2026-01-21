@@ -32,25 +32,41 @@ export async function generateResumePDF(): Promise<Blob> {
 	const educations = allEducations;
 	const jobs = allJobs;
 
-	doc.setFontSize(16);
+	// ATS-friendly header with complete contact information
+	doc.setFontSize(20);
+	doc.setFont(undefined, "bold");
 	doc.setTextColor(40, 40, 40);
-	doc.text("Ameenuddin Bin Samad", pageWidth / 2, yPos);
-	yPos += 10;
+	doc.text("AMEENUDDIN BIN SAMAD", pageWidth / 2, yPos, { align: "center" });
+	yPos += 8;
 
 	doc.setFontSize(12);
+	doc.setFont(undefined, "normal");
 	doc.setTextColor(60, 60, 60);
-	doc.text("AI-Native Software Engineer", margin, yPos);
-	doc.text("ameenuddin.dev | Singapore", margin + contentWidth / 2, yPos);
-	yPos += 20;
+	doc.text("AI-Native Software Engineer", pageWidth / 2, yPos, { align: "center" });
+	yPos += 7;
+
+	doc.setFontSize(10);
+	doc.text("Singapore | +65 9649 4212 | amenddin@gmail.com", pageWidth / 2, yPos, { align: "center" });
+	yPos += 6;
+
+	doc.text("linkedin.com/in/ameenuddin-bin-abdul-samad-6b33722a0 | github.com/Ameen-Samad", pageWidth / 2, yPos, { align: "center" });
+	yPos += 15;
 
 	doc.setDrawColor(51, 51, 51);
 	doc.setFillColor(245, 245, 247);
 	doc.rect(margin, yPos, pageWidth - margin * 2, 0.5, "FD");
+	yPos += 10;
+
+	// Professional Summary Section
+	doc.setFontSize(14);
+	doc.setFont(undefined, "bold");
+	doc.setTextColor(40, 40, 40);
+	doc.text("PROFESSIONAL SUMMARY", margin, yPos);
 	yPos += 8;
 
-	doc.setDrawColor(0, 0, 0);
-	doc.setFontSize(12);
-	doc.setTextColor(80, 80, 80);
+	doc.setFont(undefined, "normal");
+	doc.setFontSize(10);
+	doc.setTextColor(60, 60, 60);
 
 	const summary =
 		"AI-Native Software Engineer who leverages Claude Code with latest " +
@@ -73,55 +89,53 @@ export async function generateResumePDF(): Promise<Blob> {
 	yPos += 10;
 
 	doc.setFontSize(14);
-	doc.setTextColor(80, 80, 80);
-	doc.text("SKILLS", margin, yPos);
-	yPos += 10;
-
-	const skills = new Set<string>();
-
-	educations.forEach((edu) => {
-		edu.tags.forEach((tag) => skills.add(tag));
-	});
-
-	jobs.forEach((job) => {
-		job.tags.forEach((tag) => skills.add(tag));
-	});
-
-	const skillsArray = Array.from(skills).sort();
-
-	skillsArray.forEach((skill) => {
-		doc.setFontSize(10);
-		doc.setTextColor(60, 60, 60);
-		doc.text(`• ${skill}`, margin, yPos);
-		yPos += 7;
-	});
-
-	if (yPos > pageHeight - 50) {
-		doc.addPage();
-		yPos = 20;
-	}
-
-	yPos += 15;
-
-	doc.setFontSize(14);
-	doc.setTextColor(80, 80, 80);
+	doc.setFont(undefined, "bold");
+	doc.setTextColor(40, 40, 40);
 	doc.text("TECHNICAL SKILLS", margin, yPos);
 	yPos += 10;
 
+	// ATS-friendly skills in grid format with clear categories
 	const techSkills = [
-		"Languages: Python, JavaScript, TypeScript, SQL",
-		"Frameworks: React, TanStack, Three.js, Mantine",
-		"AI & Tools: Claude Code, MCPs, Cursor, Vite",
-		"Platforms: Netlify, Cloudflare Pages, Cloudflare D1, Cloudflare Workers",
-		"Databases: SQLite, PostgreSQL, MySQL",
-		"Other: Git, Docker, REST APIs, GraphQL",
+		{ category: "Languages", items: ["Python", "JavaScript", "TypeScript", "SQL"] },
+		{ category: "Frameworks", items: ["React", "TanStack", "Three.js", "Mantine", "Phaser.js"] },
+		{ category: "AI & Tools", items: ["Claude Code", "MCPs", "Cursor", "Vite", "LLM Integration"] },
+		{ category: "Cloud Platforms", items: ["Cloudflare Workers", "Cloudflare Pages", "Cloudflare D1", "Netlify"] },
+		{ category: "Databases", items: ["SQLite", "PostgreSQL", "MySQL", "D1"] },
+		{ category: "Dev Tools", items: ["Git", "Docker", "REST APIs", "GraphQL", "WebSocket"] },
 	];
 
-	techSkills.forEach((skill) => {
+	techSkills.forEach((skillGroup) => {
+		doc.setFontSize(11);
+		doc.setFont(undefined, "bold");
+		doc.setTextColor(40, 40, 40);
+		doc.text(`${skillGroup.category}:`, margin, yPos);
+
+		doc.setFont(undefined, "normal");
 		doc.setFontSize(10);
 		doc.setTextColor(60, 60, 60);
-		doc.text(`${skill}`, margin, yPos);
-		yPos += 7;
+
+		// Create grid layout - 2 columns
+		const itemsPerRow = 2;
+		const colWidth = contentWidth / itemsPerRow;
+		let currentCol = 0;
+		let currentRow = 0;
+
+		skillGroup.items.forEach((item, index) => {
+			const xPos = margin + (currentCol * colWidth);
+			const itemYPos = yPos + 6 + (currentRow * 6);
+
+			doc.text(`• ${item}`, xPos + 10, itemYPos);
+
+			currentCol++;
+			if (currentCol >= itemsPerRow) {
+				currentCol = 0;
+				currentRow++;
+			}
+		});
+
+		// Move to next skill group
+		const rowsUsed = Math.ceil(skillGroup.items.length / itemsPerRow);
+		yPos += 6 + (rowsUsed * 6) + 4;
 	});
 
 	if (yPos > pageHeight - 50) {
@@ -132,8 +146,9 @@ export async function generateResumePDF(): Promise<Blob> {
 	yPos += 15;
 
 	doc.setFontSize(14);
-	doc.setTextColor(80, 80, 80);
-	doc.text("EXPERIENCE", margin, yPos);
+	doc.setFont(undefined, "bold");
+	doc.setTextColor(40, 40, 40);
+	doc.text("PROFESSIONAL EXPERIENCE", margin, yPos);
 	yPos += 10;
 
 	jobs.forEach((job, index) => {
@@ -225,7 +240,8 @@ export async function generateResumePDF(): Promise<Blob> {
 	yPos += 15;
 
 	doc.setFontSize(14);
-	doc.setTextColor(80, 80, 80);
+	doc.setFont(undefined, "bold");
+	doc.setTextColor(40, 40, 40);
 	doc.text("EDUCATION", margin, yPos);
 	yPos += 10;
 
@@ -302,7 +318,8 @@ export async function generateResumePDF(): Promise<Blob> {
 	yPos += 15;
 
 	doc.setFontSize(14);
-	doc.setTextColor(80, 80, 80);
+	doc.setFont(undefined, "bold");
+	doc.setTextColor(40, 40, 40);
 	doc.text("PROJECTS", margin, yPos);
 	yPos += 10;
 
@@ -388,8 +405,6 @@ export async function generateResumePDF(): Promise<Blob> {
 			yPos += 3;
 		}
 	});
-
-	doc.save("ameenuddin-resume.pdf");
 
 	const pdfOutput = doc.output("blob");
 	return pdfOutput;

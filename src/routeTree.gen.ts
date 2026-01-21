@@ -19,6 +19,7 @@ import { Route as DemoTrpcTodoRouteImport } from './routes/demo/trpc-todo'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as DemoTableRouteImport } from './routes/demo/table'
 import { Route as DemoStoreRouteImport } from './routes/demo/store'
+import { Route as DemoPacerRouteImport } from './routes/demo/pacer'
 import { Route as DemoAiVoiceRouteImport } from './routes/demo/ai-voice'
 import { Route as DemoAiTtsRouteImport } from './routes/demo/ai-tts'
 import { Route as DemoAiStructuredRouteImport } from './routes/demo/ai-structured'
@@ -107,6 +108,11 @@ const DemoTableRoute = DemoTableRouteImport.update({
 const DemoStoreRoute = DemoStoreRouteImport.update({
   id: '/demo/store',
   path: '/demo/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoPacerRoute = DemoPacerRouteImport.update({
+  id: '/demo/pacer',
+  path: '/demo/pacer',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoAiVoiceRoute = DemoAiVoiceRouteImport.update({
@@ -324,6 +330,7 @@ export interface FileRoutesByFullPath {
   '/demo/ai-structured': typeof DemoAiStructuredRoute
   '/demo/ai-tts': typeof DemoAiTtsRoute
   '/demo/ai-voice': typeof DemoAiVoiceRoute
+  '/demo/pacer': typeof DemoPacerRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -375,6 +382,7 @@ export interface FileRoutesByTo {
   '/demo/ai-structured': typeof DemoAiStructuredRoute
   '/demo/ai-tts': typeof DemoAiTtsRoute
   '/demo/ai-voice': typeof DemoAiVoiceRoute
+  '/demo/pacer': typeof DemoPacerRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -427,6 +435,7 @@ export interface FileRoutesById {
   '/demo/ai-structured': typeof DemoAiStructuredRoute
   '/demo/ai-tts': typeof DemoAiTtsRoute
   '/demo/ai-voice': typeof DemoAiVoiceRoute
+  '/demo/pacer': typeof DemoPacerRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -480,6 +489,7 @@ export interface FileRouteTypes {
     | '/demo/ai-structured'
     | '/demo/ai-tts'
     | '/demo/ai-voice'
+    | '/demo/pacer'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
@@ -531,6 +541,7 @@ export interface FileRouteTypes {
     | '/demo/ai-structured'
     | '/demo/ai-tts'
     | '/demo/ai-voice'
+    | '/demo/pacer'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
@@ -582,6 +593,7 @@ export interface FileRouteTypes {
     | '/demo/ai-structured'
     | '/demo/ai-tts'
     | '/demo/ai-voice'
+    | '/demo/pacer'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
@@ -634,6 +646,7 @@ export interface RootRouteChildren {
   DemoAiStructuredRoute: typeof DemoAiStructuredRoute
   DemoAiTtsRoute: typeof DemoAiTtsRoute
   DemoAiVoiceRoute: typeof DemoAiVoiceRoute
+  DemoPacerRoute: typeof DemoPacerRoute
   DemoStoreRoute: typeof DemoStoreRoute
   DemoTableRoute: typeof DemoTableRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
@@ -738,6 +751,13 @@ declare module '@tanstack/react-router' {
       path: '/demo/store'
       fullPath: '/demo/store'
       preLoaderRoute: typeof DemoStoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/pacer': {
+      id: '/demo/pacer'
+      path: '/demo/pacer'
+      fullPath: '/demo/pacer'
+      preLoaderRoute: typeof DemoPacerRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/ai-voice': {
@@ -1045,6 +1065,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoAiStructuredRoute: DemoAiStructuredRoute,
   DemoAiTtsRoute: DemoAiTtsRoute,
   DemoAiVoiceRoute: DemoAiVoiceRoute,
+  DemoPacerRoute: DemoPacerRoute,
   DemoStoreRoute: DemoStoreRoute,
   DemoTableRoute: DemoTableRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,

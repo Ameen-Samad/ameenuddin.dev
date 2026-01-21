@@ -66,7 +66,7 @@ function TanStackQueryDemo() {
 			]);
 			return { previousTodos };
 		},
-		onError: (err, newTodoName, context) => {
+		onError: (_err, _newTodoName, context) => {
 			if (context?.previousTodos) {
 				queryClient.setQueryData(["todos"], context.previousTodos);
 			}
@@ -106,7 +106,22 @@ function TanStackQueryDemo() {
 				method: "PUT",
 				body: JSON.stringify({ id, name }),
 			}).then((res) => res.json()),
-		onSuccess: () => refetch(),
+		onMutate: async ({ id, name }) => {
+			await queryClient.cancelQueries({ queryKey: ["todos"] });
+			const previousTodos = queryClient.getQueryData<Todo[]>(["todos"]);
+			queryClient.setQueryData<Todo[]>(["todos"], (old) =>
+				old?.map((todo) => (todo.id === id ? { ...todo, name } : todo)),
+			);
+			return { previousTodos };
+		},
+		onError: (_err, _variables, context) => {
+			if (context?.previousTodos) {
+				queryClient.setQueryData(["todos"], context.previousTodos);
+			}
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["todos"] });
+		},
 	});
 
 	const { mutate: generateBulkTodos } = useMutation({

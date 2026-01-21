@@ -259,12 +259,18 @@ export const socialLinks: SocialLink[] = [
 		id: "linkedin",
 		label: "LinkedIn",
 		icon: <IconBrandLinkedin size={20} />,
-		url: "https://www.linkedin.com/in/ameenuddin-bin-abdul-samad-6b33722a0/",
+		url: "https://sg.linkedin.com/in/ameenuddin-bin-abdul-samad-6b33722a0",
 	},
 	{
 		id: "github",
 		label: "GitHub",
 		icon: <IconBrandGithub size={20} />,
-		url: "https://github.com/Ameen-Samad",
+		url: "https://github.com/Ameen-Samad/ameenuddin.dev",
+	},
+	{
+		id: "email",
+		label: "Email",
+		icon: <IconMail size={20} />,
+		url: "mailto:amenddin@gmail.com",
 	},
 ];

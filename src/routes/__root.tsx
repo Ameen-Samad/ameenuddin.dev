@@ -12,6 +12,7 @@ import type { TRPCRouter } from "@/integrations/trpc/router";
 import { useState } from "react";
 import { Sidebar } from "../components/Sidebar";
 import { MobileNav } from "../components/MobileNav";
+import { WhatsAppButton } from "../components/WhatsAppButton";
 import appCss from "../styles.css?url";
 
 const theme = createTheme({
@@ -78,6 +79,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					<div className="ml-0 md:ml-[280px] min-h-dvh transition-all duration-300 ease-out" style={{ overflowX: "hidden" }}>
 						{children}
 					</div>
+					<WhatsAppButton />
 					<Scripts />
 				</MantineProvider>
 			</body>

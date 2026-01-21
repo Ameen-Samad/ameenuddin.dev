@@ -19,23 +19,16 @@ const socialLinks: SocialLink[] = [
 	{
 		id: "linkedin",
 		label: "LinkedIn",
-		url: "https://www.linkedin.com/in/ameenuddin-bin-abdul-samad-6b33722a0/",
+		url: "https://sg.linkedin.com/in/ameenuddin-bin-abdul-samad-6b33722a0",
 		icon: <IconBrandLinkedin size={24} />,
 		color: "#0077b5",
 	},
 	{
 		id: "github",
 		label: "GitHub",
-		url: "https://github.com/Ameen-Samad",
+		url: "https://github.com/Ameen-Samad/ameenuddin.dev",
 		icon: <IconBrandGithub size={24} />,
 		color: "#333333",
-	},
-	{
-		id: "twitter",
-		label: "Twitter/X",
-		url: "https://twitter.com/ameenuddin",
-		icon: <IconBrandX size={24} />,
-		color: "#1da1f2",
 	},
 	{
 		id: "email",
