@@ -100,8 +100,21 @@ export const Route = createFileRoute("/api/chat")({
 								);
 
 								for await (const chunk of response) {
-									controller.enqueue(encoder.encode(chunk));
+									const chunkText = typeof chunk === 'string' ? chunk : chunk?.response || '';
+									if (chunkText) {
+										controller.enqueue(
+											encoder.encode(
+												`data: ${JSON.stringify({ type: "content", content: chunkText })}\n\n`,
+											),
+										);
+									}
 								}
+
+								controller.enqueue(
+									encoder.encode(
+										`data: ${JSON.stringify({ type: "done" })}\n\n`,
+									),
+								);
 								controller.close();
 							} catch (error) {
 								controller.error(error);
