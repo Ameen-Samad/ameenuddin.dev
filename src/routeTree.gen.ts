@@ -50,6 +50,7 @@ import { Route as ApiWorkersCategorizeRouteImport } from './routes/api/workers/c
 import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
 import { Route as ApiTetrisLeaderboardRouteImport } from './routes/api/tetris/leaderboard'
 import { Route as ApiLeaderboardHistoryRouteImport } from './routes/api/leaderboard/history'
+import { Route as ApiGithubStatsRouteImport } from './routes/api/github/stats'
 import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
 import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode'
 import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
@@ -270,6 +271,11 @@ const ApiLeaderboardHistoryRoute = ApiLeaderboardHistoryRouteImport.update({
   path: '/history',
   getParentRoute: () => ApiLeaderboardRoute,
 } as any)
+const ApiGithubStatsRoute = ApiGithubStatsRouteImport.update({
+  id: '/api/github/stats',
+  path: '/api/github/stats',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoStartSsrIndexRoute = DemoStartSsrIndexRouteImport.update({
   id: '/demo/start/ssr/',
   path: '/demo/start/ssr/',
@@ -361,6 +367,7 @@ export interface FileRoutesByFullPath {
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
+  '/api/github/stats': typeof ApiGithubStatsRoute
   '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
   '/api/tetris/leaderboard': typeof ApiTetrisLeaderboardRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
@@ -417,6 +424,7 @@ export interface FileRoutesByTo {
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
+  '/api/github/stats': typeof ApiGithubStatsRoute
   '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
   '/api/tetris/leaderboard': typeof ApiTetrisLeaderboardRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
@@ -474,6 +482,7 @@ export interface FileRoutesById {
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
+  '/api/github/stats': typeof ApiGithubStatsRoute
   '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
   '/api/tetris/leaderboard': typeof ApiTetrisLeaderboardRouteWithChildren
   '/api/trpc/$': typeof ApiTrpcSplatRoute
@@ -532,6 +541,7 @@ export interface FileRouteTypes {
     | '/demo/table'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
+    | '/api/github/stats'
     | '/api/leaderboard/history'
     | '/api/tetris/leaderboard'
     | '/api/trpc/$'
@@ -588,6 +598,7 @@ export interface FileRouteTypes {
     | '/demo/table'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
+    | '/api/github/stats'
     | '/api/leaderboard/history'
     | '/api/tetris/leaderboard'
     | '/api/trpc/$'
@@ -644,6 +655,7 @@ export interface FileRouteTypes {
     | '/demo/table'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
+    | '/api/github/stats'
     | '/api/leaderboard/history'
     | '/api/tetris/leaderboard'
     | '/api/trpc/$'
@@ -701,6 +713,7 @@ export interface RootRouteChildren {
   DemoTableRoute: typeof DemoTableRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   DemoTrpcTodoRoute: typeof DemoTrpcTodoRoute
+  ApiGithubStatsRoute: typeof ApiGithubStatsRoute
   ApiTetrisLeaderboardRoute: typeof ApiTetrisLeaderboardRouteWithChildren
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
   ApiWorkersCategorizeRoute: typeof ApiWorkersCategorizeRoute
@@ -1022,6 +1035,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiLeaderboardHistoryRouteImport
       parentRoute: typeof ApiLeaderboardRoute
     }
+    '/api/github/stats': {
+      id: '/api/github/stats'
+      path: '/api/github/stats'
+      fullPath: '/api/github/stats'
+      preLoaderRoute: typeof ApiGithubStatsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/start/ssr/': {
       id: '/demo/start/ssr/'
       path: '/demo/start/ssr'
@@ -1162,6 +1182,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoTableRoute: DemoTableRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   DemoTrpcTodoRoute: DemoTrpcTodoRoute,
+  ApiGithubStatsRoute: ApiGithubStatsRoute,
   ApiTetrisLeaderboardRoute: ApiTetrisLeaderboardRouteWithChildren,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
   ApiWorkersCategorizeRoute: ApiWorkersCategorizeRoute,
