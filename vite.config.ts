@@ -35,6 +35,8 @@ export default defineConfig({
 		noExternal: ['react', 'react-dom'],
 	},
 	build: {
+		sourcemap: false, // Disable sourcemaps to reduce memory usage
+		minify: 'esbuild', // esbuild is faster and uses less memory than terser
 		rollupOptions: {
 			external: ["@cloudflare/ai", "cloudflare:ai"],
 			output: {

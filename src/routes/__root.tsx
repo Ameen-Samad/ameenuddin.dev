@@ -3,6 +3,7 @@ import "@mantine/notifications/styles.css";
 import { createTheme, MantineProvider } from "@mantine/core";
 import { Notifications } from "@mantine/notifications";
 import type { QueryClient } from "@tanstack/react-query";
+import { useQueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
 	HeadContent,
@@ -11,6 +12,8 @@ import {
 } from "@tanstack/react-router";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import { useState } from "react";
+import { trpcClient } from "@/integrations/tanstack-query/root-provider";
+import { TRPCProvider } from "@/integrations/trpc/react";
 import type { TRPCRouter } from "@/integrations/trpc/router";
 import { MobileNav } from "../components/MobileNav";
 import { Sidebar } from "../components/Sidebar";
@@ -69,28 +72,35 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 					theme={theme}
 					defaultColorScheme={isDarkMode ? "dark" : "light"}
 				>
-					<Sidebar
-						collapsed={isSidebarCollapsed}
-						onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
-						onMobileOpen={() => setIsMobileNavOpen(true)}
-						isDarkMode={isDarkMode}
-						onThemeToggle={() => setIsDarkMode(!isDarkMode)}
-					/>
-					<MobileNav
-						isOpen={isMobileNavOpen}
-						onClose={() => setIsMobileNavOpen(false)}
-						isDarkMode={isDarkMode}
-						onThemeToggle={() => setIsDarkMode(!isDarkMode)}
-					/>
-					<div
-						className="ml-0 md:ml-[280px] min-h-dvh transition-all duration-300 ease-out"
-						style={{ overflowX: "hidden" }}
+					<TRPCProvider
+						trpcClient={trpcClient}
+						queryClient={useTRPCQueryClient()}
 					>
-						{children}
-					</div>
-					<WhatsAppButton />
-					<Notifications position="top-right" zIndex={9999} />
-					<Scripts />
+						<Sidebar
+							collapsed={isSidebarCollapsed}
+							onToggleCollapse={() =>
+								setIsSidebarCollapsed(!isSidebarCollapsed)
+							}
+							onMobileOpen={() => setIsMobileNavOpen(true)}
+							isDarkMode={isDarkMode}
+							onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+						/>
+						<MobileNav
+							isOpen={isMobileNavOpen}
+							onClose={() => setIsMobileNavOpen(false)}
+							isDarkMode={isDarkMode}
+							onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+						/>
+						<div
+							className="ml-0 md:ml-[280px] min-h-dvh transition-all duration-300 ease-out"
+							style={{ overflowX: "hidden" }}
+						>
+							{children}
+						</div>
+						<WhatsAppButton />
+						<Notifications position="top-right" zIndex={9999} />
+						<Scripts />
+					</TRPCProvider>
 				</MantineProvider>
 			</body>
 		</html>
