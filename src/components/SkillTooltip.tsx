@@ -1,4 +1,4 @@
-import { Badge, Box, Stack, Text } from "@mantine/core";
+import { Badge, Box, Group, Stack, Text } from "@mantine/core";
 import type { Skill } from "../lib/skills-data";
 import { SkillBar } from "./SkillBar";
 

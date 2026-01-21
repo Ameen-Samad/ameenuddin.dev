@@ -3,8 +3,7 @@ import { allEducations, allJobs, allSkills } from "content-collections";
 import { marked } from "marked";
 import DownloadPDFButton from "@/components/DownloadPDFButton";
 import ResumeAssistant from "@/components/ResumeAssistant";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import { Paper, Title, Divider, Stack } from "@mantine/core";
 
 export const Route = createFileRoute("/index-resume")({
 	component: App,
@@ -32,17 +31,15 @@ function App() {
 								<div className="mt-6">
 									<DownloadPDFButton />
 								</div>
-								<Separator className="mt-8" />
+								<Divider className="mt-8" />
 							</div>
 
 							{/* Career Summary */}
-							<Card className="border-0 shadow-lg bg-white/50 backdrop-blur-sm">
-								<CardHeader>
-									<CardTitle className="text-2xl text-gray-900">
+							<Paper shadow="lg" p="xl" radius="md" className="bg-white/50 backdrop-blur-sm">
+								<Stack gap="md">
+									<Title order={2} className="text-2xl text-gray-900">
 										Career Summary
-									</CardTitle>
-								</CardHeader>
-								<CardContent>
+									</Title>
 									<p className="text-gray-700 leading-relaxed mb-4">
 										<strong className="text-blue-600">
 											AI-Native Software Engineer
@@ -70,8 +67,8 @@ function App() {
 										faster, solve problems more creatively, and deliver
 										exceptional results.
 									</p>
-								</CardContent>
-							</Card>
+								</Stack>
+							</Paper>
 
 							{/* Education */}
 							<section className="space-y-6">
@@ -80,16 +77,16 @@ function App() {
 								</h2>
 								<div className="space-y-6">
 									{allEducations.map((education) => (
-										<Card
+										<Paper
 											key={education.school}
-											className="border-0 shadow-md hover:shadow-lg transition-shadow"
+											shadow="md" p="lg" radius="md" className="hover:shadow-lg transition-shadow"
 										>
-											<CardHeader>
-												<CardTitle className="text-xl text-gray-900">
+											<div>
+												<Title order={3} className="text-xl text-gray-900">
 													{education.school}
-												</CardTitle>
-											</CardHeader>
-											<CardContent>
+												</Title>
+											</div>
+											<div>
 												<p className="text-gray-700 leading-relaxed">
 													{education.summary}
 												</p>
@@ -101,8 +98,8 @@ function App() {
 														}}
 													/>
 												)}
-											</CardContent>
-										</Card>
+											</div>
+										</Paper>
 									))}
 								</div>
 							</section>
@@ -114,16 +111,16 @@ function App() {
 								</h2>
 								<div className="space-y-6">
 									{allJobs.map((job) => (
-										<Card
+										<Paper
 											key={job.jobTitle}
-											className="border-0 shadow-md hover:shadow-lg transition-shadow"
+											shadow="md" p="lg" radius="md" className="hover:shadow-lg transition-shadow"
 										>
-											<CardHeader>
+											<div>
 												<div className="flex justify-between items-start">
 													<div>
-														<CardTitle className="text-xl text-gray-900">
+														<Title order={3} className="text-xl text-gray-900">
 															{job.jobTitle}
-														</CardTitle>
+														</Title>
 														<p className="text-lg text-gray-700 mt-1">
 															{job.company}
 														</p>
@@ -133,8 +130,8 @@ function App() {
 														</p>
 													</div>
 												</div>
-											</CardHeader>
-											<CardContent>
+											</div>
+											<div>
 												<p className="text-gray-700 leading-relaxed mb-4">
 													{job.summary}
 												</p>
@@ -158,8 +155,8 @@ function App() {
 														))}
 													</div>
 												)}
-											</CardContent>
-										</Card>
+											</div>
+										</Paper>
 									))}
 								</div>
 							</section>
@@ -171,16 +168,16 @@ function App() {
 								</h2>
 								<div className="space-y-6">
 									{allSkills.map((skill) => (
-										<Card
+										<Paper
 											key={skill.name}
-											className="border-0 shadow-md hover:shadow-lg transition-shadow"
+											shadow="md" p="lg" radius="md" className="hover:shadow-lg transition-shadow"
 										>
-											<CardHeader>
-												<CardTitle className="text-xl text-gray-900">
+											<div>
+												<Title order={3} className="text-xl text-gray-900">
 													{skill.name}
-												</CardTitle>
-											</CardHeader>
-											<CardContent>
+												</Title>
+											</div>
+											<div>
 												<p className="text-gray-700 leading-relaxed mb-4">
 													{skill.summary}
 												</p>
@@ -204,8 +201,8 @@ function App() {
 														))}
 													</div>
 												)}
-											</CardContent>
-										</Card>
+											</div>
+										</Paper>
 									))}
 								</div>
 							</section>

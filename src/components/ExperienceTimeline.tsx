@@ -5,6 +5,7 @@ import {
 	getFilteredRowModel,
 	getSortedRowModel,
 	type SortingState,
+	useReactTable,
 } from "@tanstack/react-table";
 import { Store } from "@tanstack/store";
 import { motion } from "framer-motion";

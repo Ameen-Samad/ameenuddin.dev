@@ -15,6 +15,9 @@ export default defineConfig({
 		contentCollections(),
 		tailwindcss(),
 	],
+	resolve: {
+		dedupe: ['react', 'react-dom'],
+	},
 	server: {
 		watch: {
 			// Ignore generated files to prevent watch loops
@@ -26,36 +29,27 @@ export default defineConfig({
 		},
 	},
 	optimizeDeps: {
-		exclude: ['@cloudflare/ai', 'cloudflare:ai'],
+		exclude: ['@cloudflare/ai', 'cloudflare:ai', '@tanstack/react-router-ssr-query'],
+	},
+	ssr: {
+		noExternal: ['react', 'react-dom'],
 	},
 	build: {
 		rollupOptions: {
 			external: ["@cloudflare/ai", "cloudflare:ai"],
 			output: {
 				manualChunks(id) {
-					// Split large vendor chunks for better caching
+					// Only split out the truly massive libraries (>1MB each)
+					// Let Vite handle everything else to avoid circular dependencies
 					if (id.includes('node_modules')) {
-						// Heavy dependencies go into their own chunks
 						if (id.includes('mermaid')) return 'vendor-mermaid';
-						if (id.includes('three') || id.includes('@react-three')) return 'vendor-three';
 						if (id.includes('phaser')) return 'vendor-phaser';
 						if (id.includes('cytoscape')) return 'vendor-cytoscape';
-
-						// Core React libraries
-						if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
-
-						// TanStack ecosystem
-						if (id.includes('@tanstack')) return 'vendor-tanstack';
-
-						// UI libraries
-						if (id.includes('@mantine') || id.includes('@radix-ui')) return 'vendor-ui';
-
-						// Everything else goes into vendor
-						return 'vendor';
+						if (id.includes('three') || id.includes('@react-three')) return 'vendor-three';
 					}
 				},
 			},
 		},
-		chunkSizeWarningLimit: 1500, // Some chunks are necessarily large (vendor-phaser, vendor-mermaid)
+		chunkSizeWarningLimit: 2000, // Some chunks are necessarily large (vendor-phaser, vendor-mermaid)
 	},
 });

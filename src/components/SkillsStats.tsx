@@ -14,10 +14,10 @@ interface SkillsStats {
 }
 
 interface SkillsStatsProps {
-	allSkills: Skill[];
+	allSkills: any[];
 }
 
-export function getSkillsStats(skills: Skill[]): SkillsStats {
+export function getSkillsStats(skills: any[]): SkillsStats {
 	const allSkills = skills;
 
 	return {
@@ -30,7 +30,8 @@ export function getSkillsStats(skills: Skill[]): SkillsStats {
 		},
 		byCategory: allSkills.reduce(
 			(acc, skill) => {
-				acc[skill.category.name] = (acc[skill.category.name] || 0) + 1;
+				const catName = skill.categoryName || skill.category?.name || "Other";
+				acc[catName] = (acc[catName] || 0) + 1;
 				return acc;
 			},
 			{} as Record<string, number>,

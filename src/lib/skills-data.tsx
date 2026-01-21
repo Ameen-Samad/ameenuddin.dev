@@ -7,13 +7,13 @@ import {
 	Wrench,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import type {
+import {
 	FaAws,
 	FaGitAlt,
 	FaNodeJs as FaNode,
 	FaReact,
 } from "react-icons/fa";
-import type {
+import {
 	SiCloudflareworkers,
 	SiDigitalocean,
 	SiDocker,
@@ -24,7 +24,6 @@ import type {
 	SiTailwindcss,
 	SiTensorflow,
 	SiTypescript,
-	SiVisualstudiocode,
 } from "react-icons/si";
 
 export type SkillLevel = "expert" | "advanced" | "intermediate" | "beginner";
@@ -247,7 +246,7 @@ export const skillCategories: SkillCategory[] = [
 				level: "expert",
 				years: 5,
 				proficiency: 95,
-				icon: <SiVisualstudiocode size={32} />,
+				icon: <Wrench size={32} />,
 				projects: ["all"],
 				lastUsed: "Jan 2025",
 			} as Skill,

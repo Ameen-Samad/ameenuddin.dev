@@ -3,9 +3,7 @@ import { Sparkles, Star, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
 import { PacerAI } from "@/lib/pacer-ai-utils";
 import type { Project } from "@/lib/projects-data";
-import { Badge } from "./ui/badge";
-import { Button } from "./ui/button";
-import { Card } from "./ui/card";
+import { Badge, Button, Paper } from "@mantine/core";
 
 interface AIRecommendationsProps {
 	type: "trending" | "similar" | "personalized";
@@ -146,7 +144,7 @@ export function AIRecommendations({
 							exit={{ opacity: 0, y: -20 }}
 							transition={{ delay: index * 0.1 }}
 						>
-							<Card className="h-full bg-slate-900/50 border-slate-700 hover:border-cyan-500/50 transition-all hover:shadow-lg hover:shadow-cyan-500/10 overflow-hidden group">
+							<Paper className="h-full bg-slate-900/50 border-slate-700 hover:border-cyan-500/50 transition-all hover:shadow-lg hover:shadow-cyan-500/10 overflow-hidden group">
 								<div className="p-4 space-y-3">
 									<div className="flex items-start gap-3">
 										<div
@@ -221,7 +219,7 @@ export function AIRecommendations({
 										<a href={project.link}>View Project</a>
 									</Button>
 								</div>
-							</Card>
+							</Paper>
 						</motion.div>
 					))}
 				</AnimatePresence>

@@ -12,8 +12,8 @@ export const Route = createFileRoute("/api/workers/embeddings")({
 				return new Response("Text is required", { status: 400 });
 			}
 
-			const AI = await import("@cloudflare/ai");
-
+			// TODO: Implement actual Cloudflare AI embedding when deployed
+			// In development, return mock embeddings
 			return new Response(
 				JSON.stringify({
 					embedding: [0.1, 0.2, 0.3],
