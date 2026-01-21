@@ -7,12 +7,7 @@ import {
 	Wrench,
 } from "lucide-react";
 import type { ReactNode } from "react";
-import {
-	FaAws,
-	FaGitAlt,
-	FaNodeJs as FaNode,
-	FaReact,
-} from "react-icons/fa";
+import { FaAws, FaGitAlt, FaNodeJs as FaNode, FaReact } from "react-icons/fa";
 import {
 	SiCloudflareworkers,
 	SiDigitalocean,
@@ -21,6 +16,7 @@ import {
 	SiGooglecloud,
 	SiMantine,
 	SiNextdotjs,
+	SiPython,
 	SiTailwindcss,
 	SiTensorflow,
 	SiTypescript,
@@ -110,6 +106,15 @@ export const skillCategories: SkillCategory[] = [
 				lastUsed: "Dec 2025",
 			} as Skill,
 			{
+				name: "Python (FastAPI, Flask)",
+				level: "advanced",
+				years: 2,
+				proficiency: 75,
+				icon: <SiPython size={32} />,
+				certifications: ["FastAPI", "Flask", "OpenAI SDK", "Claude SDK"],
+				lastUsed: "Dec 2025",
+			} as Skill,
+			{
 				name: "Cloudflare Workers",
 				level: "advanced",
 				years: 2,
@@ -133,6 +138,21 @@ export const skillCategories: SkillCategory[] = [
 				proficiency: 85,
 				icon: <SiCloudflareworkers size={32} />,
 				projects: ["ai-chatbot"],
+				lastUsed: "Dec 2025",
+			} as Skill,
+			{
+				name: "Python Data Science",
+				level: "advanced",
+				years: 2,
+				proficiency: 75,
+				icon: <SiPython size={32} />,
+				certifications: [
+					"Streamlit",
+					"Pandas",
+					"Polars",
+					"NumPy",
+					"Scikit-learn",
+				],
 				lastUsed: "Dec 2025",
 			} as Skill,
 			{
@@ -271,5 +291,3 @@ export const skillCategories: SkillCategory[] = [
 		],
 	},
 ];
-
-export type { Skill, SkillCategory, SkillLevel };

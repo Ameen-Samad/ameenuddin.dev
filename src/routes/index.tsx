@@ -22,6 +22,7 @@ import { motion } from "framer-motion";
 import { ContactSection } from "../components/ContactSection";
 import { DemosSection } from "../components/DemosSection";
 import { ExperienceTimeline } from "../components/ExperienceTimeline";
+import { ProjectCarousel } from "../components/ProjectCarousel";
 import { ProjectsSection } from "../components/ProjectsSection";
 import { SkillsDashboard } from "../components/SkillsDashboard";
 
@@ -34,8 +35,8 @@ function Home() {
 		<>
 			<Hero />
 			<About />
-			<SkillsDashboard />
 			<DemosSection />
+			<SkillsDashboard />
 			<ExperienceTimeline />
 			<ProjectsSection />
 			<ContactSection />
@@ -115,7 +116,7 @@ function Hero() {
 					<Group gap="md">
 						<Button
 							component="a"
-							href="#projects"
+							href="#demos"
 							size="lg"
 							variant="filled"
 							style={{
@@ -135,6 +136,7 @@ function Hero() {
 							Get In Touch
 						</Button>
 					</Group>
+					<ProjectCarousel />
 					<motion.div
 						animate={{ y: [0, 10, 0] }}
 						transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
@@ -517,4 +519,3 @@ function AINativeAdvantage() {
 		</section>
 	);
 }
-

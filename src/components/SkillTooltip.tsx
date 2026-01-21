@@ -1,9 +1,10 @@
 import { Badge, Box, Group, Stack, Text } from "@mantine/core";
 import type { Skill } from "../lib/skills-data";
+import type { SkillItem } from "../lib/skills-store";
 import { SkillBar } from "./SkillBar";
 
 interface SkillTooltipProps {
-	skill: Skill;
+	skill: Skill | SkillItem;
 }
 
 export function SkillTooltip({ skill }: SkillTooltipProps) {
@@ -76,7 +77,7 @@ export function SkillTooltip({ skill }: SkillTooltipProps) {
 					<SkillBar
 						proficiency={skill.proficiency}
 						level={skill.level}
-						color={skill.category.color}
+						color={'categoryColor' in skill ? skill.categoryColor : skill.category?.color || '#3b82f6'}
 						animate={false}
 					/>
 				</Box>
