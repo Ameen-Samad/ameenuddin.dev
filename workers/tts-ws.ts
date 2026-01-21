@@ -137,14 +137,11 @@ ws.onmessage = (event) => {
       // Build AI Gateway WebSocket URL for Aura-2-EN
       const aiGatewayUrl = `wss://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/workers-ai?model=@cf/deepgram/aura-2-en`;
 
-      console.log('Connecting to AI Gateway (TTS):', aiGatewayUrl.replace(env.CLOUDFLARE_API_TOKEN, '***'));
+      console.log('Connecting to AI Gateway (TTS):', aiGatewayUrl);
 
-      // Connect to Cloudflare AI Gateway
-      const aiWebSocket = new WebSocket(aiGatewayUrl, {
-        headers: {
-          'cf-aig-authorization': env.CLOUDFLARE_API_TOKEN,
-        },
-      } as any);
+      // In Cloudflare Workers, outbound WebSocket connections use the subprotocol for authentication
+      // This is the same pattern as browser-based connections
+      const aiWebSocket = new WebSocket(aiGatewayUrl, [`cf-aig-authorization.${env.CLOUDFLARE_API_TOKEN}`]);
 
       // Track connection state
       let aiConnected = false;

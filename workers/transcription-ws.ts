@@ -109,22 +109,13 @@ ws.onmessage = (event) => {
       // Build AI Gateway WebSocket URL
       const aiGatewayUrl = `wss://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/workers-ai?model=@cf/deepgram/flux&encoding=linear16&sample_rate=16000&interim_results=true`;
 
-      console.log('Connecting to AI Gateway:', aiGatewayUrl.replace(env.CLOUDFLARE_API_TOKEN, '***'));
+      console.log('Connecting to AI Gateway:', aiGatewayUrl);
 
-      // Connect to Cloudflare AI Gateway using fetch API
-      // In Cloudflare Workers, outbound WebSocket connections with custom headers require fetch()
-      const aiGatewayResponse = await fetch(aiGatewayUrl, {
-        headers: {
-          'Upgrade': 'websocket',
-          'cf-aig-authorization': env.CLOUDFLARE_API_TOKEN,
-        },
-      });
-
-      const aiWebSocket = aiGatewayResponse.webSocket;
-      if (!aiWebSocket) {
-        throw new Error('Failed to establish WebSocket connection to AI Gateway');
-      }
-      aiWebSocket.accept();
+      // In Cloudflare Workers, outbound WebSocket connections use the subprotocol for authentication
+      // Format: "cf-aig-authorization.<your-token>"
+      const authProtocol = `cf-aig-authorization.${env.CLOUDFLARE_API_TOKEN}`;
+      console.log('Auth protocol format:', authProtocol.substring(0, 40) + '...');
+      const aiWebSocket = new WebSocket(aiGatewayUrl, [authProtocol]);
 
       // Track connection state
       let aiConnected = false;
