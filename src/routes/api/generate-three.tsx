@@ -1,22 +1,25 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { json } from "@tanstack/react-start";
 
 export const Route = createFileRoute("/api/generate-three")({
-	component: () => null,
-});
+	server: {
+		handlers: {
+			POST: async ({ request, context }) => {
+				const ai = context.cloudflare?.env.AI;
 
-export async function action({ request }: { request: Request }) {
-	const body = await request.json();
+				if (!ai) {
+					return json({ error: "AI not available" }, { status: 500 });
+				}
 
-	const { prompt } = body as { prompt: string };
+				try {
+					const body = await request.json();
+					const { prompt } = body as { prompt: string };
 
-	if (!prompt || prompt.trim().length === 0) {
-		return new Response(JSON.stringify({ error: "Prompt is required" }), {
-			status: 400,
-			headers: { "Content-Type": "application/json" },
-		});
-	}
+					if (!prompt || prompt.trim().length === 0) {
+						return json({ error: "Prompt is required" }, { status: 400 });
+					}
 
-	const systemPrompt = `You are a Three.js expert. Generate complete, working Three.js code based on user descriptions.
+					const systemPrompt = `You are a Three.js expert. Generate complete, working Three.js code based on user descriptions.
 
 IMPORTANT: Return ONLY the code, no explanations, no markdown formatting.
 
@@ -38,72 +41,53 @@ export async function createScene(canvas) {
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(75, canvas.width / canvas.height, 0.1, 1000);
   const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
-  
+
   // Add objects, lights, materials...
-  
+
   return { scene, camera, renderer };
 }`;
 
-	try {
-		const response = await fetch(
-			"https://api.cloudflare.com/client/v4/accounts/REPLACE_WITH_ACCOUNT_ID/ai/run/@cf/qwen/qwen2.5-coder-32b-instruct",
-			{
-				method: "POST",
-				headers: {
-					Authorization: `Bearer ${process.env.CLOUDFLARE_API_KEY}`,
-					"Content-Type": "application/json",
-				},
-				body: JSON.stringify({
-					model: "@cf/qwen/qwen2.5-coder-32b-instruct",
-					messages: [
-						{ role: "system", content: systemPrompt },
-						{
-							role: "user",
-							content: `Create a Three.js scene with: ${prompt}`,
-						},
-					],
-					max_tokens: 3000,
-					temperature: 0.7,
-				}),
+					// Use Workers AI binding (secure, server-side only)
+					const response = await ai.run("@cf/qwen/qwen2.5-coder-32b-instruct", {
+						messages: [
+							{ role: "system", content: systemPrompt },
+							{
+								role: "user",
+								content: `Create a Three.js scene with: ${prompt}`,
+							},
+						],
+						max_tokens: 3000,
+						temperature: 0.7,
+					});
+
+					// Extract generated code from AI response
+					let generatedCode = "";
+
+					if (typeof response === "string") {
+						generatedCode = response;
+					} else if (response && typeof response === "object") {
+						// Handle different response formats from Workers AI
+						generatedCode = (response as any).response || (response as any).result || "";
+					}
+
+					// Clean up markdown formatting
+					generatedCode = generatedCode
+						.replace(/```javascript/g, "")
+						.replace(/```js/g, "")
+						.replace(/```/g, "")
+						.trim();
+
+					// Ensure imports are present
+					if (!generatedCode.startsWith("import")) {
+						generatedCode = `import * as THREE from 'https://cdn.skypack.dev/three@0.182.0';\n\n${generatedCode}`;
+					}
+
+					return json({ code: generatedCode });
+				} catch (error) {
+					console.error("Generation Error:", error);
+					return json({ error: "Internal server error" }, { status: 500 });
+				}
 			},
-		);
-
-		if (!response.ok) {
-			const errorText = await response.text();
-			console.error("Cloudflare AI Error:", errorText);
-			return new Response(
-				JSON.stringify({
-					error: "Failed to generate code",
-					details: errorText,
-				}),
-				{
-					status: 500,
-					headers: { "Content-Type": "application/json" },
-				},
-			);
-		}
-
-		const data = await response.json();
-		let generatedCode = data.response?.result || data.response || "";
-
-		generatedCode = generatedCode
-			.replace(/```javascript/g, "")
-			.replace(/```/g, "")
-			.replace(/```js/g, "")
-			.trim();
-
-		if (!generatedCode.startsWith("import")) {
-			generatedCode = `import * as THREE from 'https://cdn.skypack.dev/three@0.182.0';\n\n${generatedCode}`;
-		}
-
-		return new Response(JSON.stringify({ code: generatedCode }), {
-			headers: { "Content-Type": "application/json" },
-		});
-	} catch (error) {
-		console.error("Generation Error:", error);
-		return new Response(JSON.stringify({ error: "Internal server error" }), {
-			status: 500,
-			headers: { "Content-Type": "application/json" },
-		});
-	}
-}
+		},
+	},
+});
