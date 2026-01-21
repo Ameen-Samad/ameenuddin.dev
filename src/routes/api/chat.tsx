@@ -34,10 +34,11 @@ export const Route = createFileRoute("/api/chat")({
 					}> = [];
 
 					if (documents.length > 0 && userQuery) {
-						const embeddings = await ai.run("@cf/baai/bge-base-en-v1.5", {
+						const embeddingsResponse = await ai.run("@cf/baai/bge-base-en-v1.5", {
 							text: [userQuery, ...documents.map((doc) => doc.content)],
 						});
 
+						const embeddings = (embeddingsResponse as { data: number[][] }).data;
 						const queryEmbedding = embeddings[0];
 						const docEmbeddings = embeddings.slice(1);
 
