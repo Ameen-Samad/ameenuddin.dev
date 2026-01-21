@@ -51,13 +51,38 @@ export const Route = createFileRoute("/demo/api/ai/image")({
 							},
 						);
 
+						// Log response for debugging
+						console.log("AI Response type:", typeof response);
+						console.log("Is Uint8Array:", response instanceof Uint8Array);
+						console.log("Response:", response);
+
 						// Convert Uint8Array to base64 string
-						const base64String =
-							response instanceof Uint8Array
-								? btoa(String.fromCharCode(...response))
-								: typeof response === "string"
-									? response
-									: "";
+						let base64String = "";
+						if (response instanceof Uint8Array) {
+							if (response.length === 0) {
+								console.error("Received empty Uint8Array from AI");
+								throw new Error("AI returned empty image data");
+							}
+							base64String = btoa(String.fromCharCode(...response));
+						} else if (typeof response === "string") {
+							base64String = response;
+						} else if (response && typeof response === "object") {
+							// Handle object response (might have image property)
+							console.log("Response keys:", Object.keys(response));
+							if ("image" in response) {
+								const imgData = (response as any).image;
+								if (imgData instanceof Uint8Array) {
+									base64String = btoa(String.fromCharCode(...imgData));
+								} else if (typeof imgData === "string") {
+									base64String = imgData;
+								}
+							}
+						}
+
+						if (!base64String) {
+							console.error("Failed to extract image data from response");
+							throw new Error("Could not generate image - empty response from AI");
+						}
 
 						images.push({
 							b64Json: base64String,
