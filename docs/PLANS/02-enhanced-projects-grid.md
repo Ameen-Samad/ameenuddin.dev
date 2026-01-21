@@ -371,12 +371,16 @@ interface QuickActions {
 - Card hover interaction rate
 - Filter change frequency
 - Search query completion rate
+- Workers AI response time
+- KV cache hit rate
+- D1 query performance
+- Cloudflare Analytics: User behavior, AI feature usage
 
-## GA (Generative AI) Integration
+## GA (Generative AI) Integration with Cloudflare Workers AI
 
 ### AI-Powered Features
 
-#### 1. Intelligent Search
+#### 1. Intelligent Search (Cloudflare Workers AI)
 ```typescript
 interface AISearchQuery {
   query: string;
@@ -385,11 +389,20 @@ interface AISearchQuery {
   similarProjects: string[];
 }
 
-// Semantic search using embeddings
+// Semantic search using Cloudflare Workers AI embeddings
 const performSemanticSearch = async (query: string): Promise<Project[]> => {
   const embedding = await generateEmbedding(query);
   const similarProjects = await findSimilarProjects(embedding);
   return similarProjects;
+};
+
+// Call to Cloudflare Workers AI
+const generateEmbedding = async (text: string): Promise<number[]> => {
+  const response = await fetch('/api/workers/embeddings', {
+    method: 'POST',
+    body: JSON.stringify({ text, model: '@cf/baai/bge-base-en-v1.5' }),
+  });
+  return response.json();
 };
 ```
 
@@ -401,9 +414,18 @@ interface RecommendationEngine {
   getPersonalizedRecommendations(userInterests: string[]): Project[];
   getProjectsBySkillLevel(level: 'beginner' | 'intermediate' | 'advanced'): Project[];
 }
+
+// Cloudflare Worker for recommendations
+const getRecommendations = async (projectId: string) => {
+  const response = await fetch('/api/workers/recommendations', {
+    method: 'POST',
+    body: JSON.stringify({ projectId }),
+  });
+  return response.json();
+};
 ```
 
-#### 3. AI-Generated Summaries
+#### 3. AI-Generated Summaries (Cloudflare Workers AI LLaMA/Mistral)
 ```typescript
 interface AIContent {
   summary: string;
@@ -412,13 +434,14 @@ interface AIContent {
   learningPath: string[];
 }
 
-// Generate concise summaries
+// Generate concise summaries using Cloudflare Workers AI
 const generateSummary = async (project: Project): Promise<AIContent> => {
-  const summary = await aiService.summarize({
-    input: project.description + '\n' + project.tags.join(', '),
-    maxLength: 150
+  const summary = await cloudflareAI.generateText({
+    model: '@cf/meta/llama-2-7b-chat-int8',
+    prompt: `Summarize this project in 150 words or less:\n\n${project.description}\n\nTags: ${project.tags.join(', ')}`,
+    maxTokens: 200,
   });
-  
+
   return {
     summary,
     keyFeatures: await extractKeyFeatures(project),
@@ -428,32 +451,39 @@ const generateSummary = async (project: Project): Promise<AIContent> => {
 };
 ```
 
-#### 4. Smart Categorization
+#### 4. Smart Categorization (Cloudflare Workers AI)
 ```typescript
-// Auto-categorize projects using ML
+// Auto-categorize projects using Cloudflare Workers AI
 const categorizeProject = async (project: Partial<Project>): Promise<ProjectCategory> => {
   const features = extractFeatures(project);
-  const prediction = await mlModel.predict(features);
+  const prediction = await cloudflareAI.predict({
+    model: '@cf/meta/llama-2-7b-chat-int8',
+    input: `Categorize this project into one of: ai-ml, web-apps, 3d-graphics, tools\n\nProject: ${JSON.stringify(features)}`,
+  });
   return prediction.category;
 };
 
 // Suggest tags
 const suggestTags = async (description: string): Promise<string[]> => {
-  const keywords = await nlpService.extractKeywords(description);
-  const tags = await aiService.suggestTags(keywords);
-  return tags;
+  const tags = await cloudflareAI.generateText({
+    model: '@cf/mistral/mistral-7b-instruct-v0.1',
+    prompt: `Suggest 5 relevant tech stack tags for this project:\n\n${description}`,
+    maxTokens: 100,
+  });
+  return tags.split(',').map(t => t.trim());
 };
 ```
 
-#### 5. Natural Language Query
+#### 5. Natural Language Query (Cloudflare Workers AI)
 ```typescript
-// Support natural language queries like:
-// "Show me React projects with AI features"
-// "Projects using Python and machine learning"
-// "Beginner-friendly web applications"
-
+// Support natural language queries using Cloudflare Workers AI
 const parseNaturalLanguage = async (query: string): ParsedQuery => {
-  return await nlpService.parseQuery(query);
+  const result = await cloudflareAI.generateText({
+    model: '@cf/meta/llama-2-7b-chat-int8',
+    prompt: `Parse this query into JSON format:\n\n"${query}"\n\nReturn structure: {\n  "technologies": [],\n  "categories": [],\n  "complexity": "",\n  "features": [],\n  "status": ""\n}`,
+    maxTokens: 300,
+  });
+  return JSON.parse(result);
 };
 
 interface ParsedQuery {
@@ -465,7 +495,7 @@ interface ParsedQuery {
 }
 ```
 
-#### 6. AI Chat Assistant
+#### 6. AI Chat Assistant (Cloudflare Workers AI)
 ```typescript
 interface ProjectChatAssistant {
   chat(projectId: string, userMessage: string): Promise<string>;
@@ -474,47 +504,174 @@ interface ProjectChatAssistant {
   getNextSteps(projectId: string): Promise<string[]>;
 }
 
+// Chat assistant using Cloudflare Workers AI
+const chatWithProject = async (projectId: string, message: string) => {
+  const response = await fetch('/api/workers/chat', {
+    method: 'POST',
+    body: JSON.stringify({ projectId, message }),
+  });
+  return response.json();
+};
+
 // Example interactions:
 // "How do I set up this project?"
 // "What technologies do I need to learn first?"
 // "Can you explain the AI algorithm used here?"
 ```
 
-### GA Implementation Plan
+### GA Implementation Plan with Cloudflare
 
 #### Phase 1: Basic AI Features (Days 1-3)
-- [ ] Set up OpenAI/Anthropic API integration
-- [ ] Implement semantic search with embeddings
+- [ ] Set up Cloudflare Workers AI account and API keys
+- [ ] Create Cloudflare KV namespace for caching
+- [ ] Create Cloudflare D1 database for embeddings
+- [ ] Implement semantic search with Workers AI embeddings
 - [ ] Add AI-generated project summaries
 - [ ] Create smart tag suggestions
 
 #### Phase 2: Advanced AI Features (Days 4-6)
-- [ ] Build recommendation engine
-- [ ] Implement natural language query parsing
-- [ ] Add similarity detection
-- [ ] Create learning path generator
+- [ ] Build recommendation engine with Workers AI
+- [ ] Implement natural language query parsing with LLaMA
+- [ ] Add similarity detection with vector search
+- [ ] Create learning path generator with Mistral
+- [ ] Set up Cloudflare Workers for AI endpoints
 
 #### Phase 3: AI Chat (Days 7-9)
-- [ ] Develop project-specific chat assistant
+- [ ] Develop project-specific chat assistant with Workers AI
 - [ ] Integrate with project documentation
 - [ ] Add code explanation features
 - [ ] Implement interactive tutorials
+- [ ] Set up rate limiting and caching
 
-### GA Tech Stack
+### GA Tech Stack (Cloudflare)
 
 ```json
 {
-  "aiServices": {
-    "llm": "openai/gpt-4-turbo | anthropic/claude-3",
-    "embeddings": "openai/text-embedding-3-small",
-    "vectorStore": "pinecone | weaviate | chromadb",
-    "nlp": "spacy | transformers.js"
+  "cloudflare": {
+    "workersAI": {
+      "llm": [
+        "@cf/meta/llama-2-7b-chat-int8",
+        "@cf/mistral/mistral-7b-instruct-v0.1",
+        "@hf/thebloke/deepseek-coder-6.7b-instruct-awq"
+      ],
+      "embeddings": "@cf/baai/bge-base-en-v1.5",
+      "imageGeneration": "@cf/stabilityai/stable-diffusion-xl-base-1.0"
+    },
+    "kv": "Project metadata caching",
+    "d1": "Vector embeddings storage",
+    "r2": "Project screenshots and assets"
   },
   "ml": {
-    "classification": "tensorflow.js | onnx-runtime",
-    "recommendations": "custom collaborative filtering"
+    "classification": "cloudflare-ai/text-classification",
+    "recommendations": "custom collaborative filtering with Workers AI"
   }
 }
+```
+
+### Cloudflare Workers Implementation
+
+#### Worker: AI Search
+```typescript
+// workers/ai-search.worker.ts
+import { Ai } from '@cloudflare/ai';
+
+export default {
+  async fetch(request: Request, env: Env) {
+    const ai = new Ai(env.AI);
+
+    const { query } = await request.json();
+
+    // Generate embedding
+    const embedding = await ai.run('@cf/baai/bge-base-en-v1.5', {
+      text: [query],
+    });
+
+    // Query D1 for similar projects
+    const results = await env.DB.prepare(`
+      SELECT *, vector_distance(embedding, ?) as distance
+      FROM projects
+      ORDER BY distance
+      LIMIT 10
+    `).bind(JSON.stringify(embedding)).all();
+
+    return Response.json(results.results);
+  }
+};
+
+interface Env {
+  AI: any;
+  DB: D1Database;
+  KV: KVNamespace;
+}
+```
+
+#### Worker: AI Chat
+```typescript
+// workers/ai-chat.worker.ts
+import { Ai } from '@cloudflare/ai';
+
+export default {
+  async fetch(request: Request, env: Env) {
+    const ai = new Ai(env.AI);
+    const { projectId, message, history } = await request.json();
+
+    // Get project context
+    const project = await env.KV.get(`project:${projectId}`, { type: 'json' });
+
+    // Check cache first
+    const cacheKey = `chat:${projectId}:${message}`;
+    const cached = await env.KV.get(cacheKey);
+    if (cached) return Response.json(cached);
+
+    // Generate response
+    const response = await ai.run('@cf/meta/llama-2-7b-chat-int8', {
+      messages: [
+        { role: 'system', content: `You are a helpful assistant for the project "${project.title}".\n\n${project.description}\n\nTech Stack: ${project.tags.join(', ')}` },
+        ...history,
+        { role: 'user', content: message }
+      ],
+      max_tokens: 500,
+    });
+
+    // Cache response
+    await env.KV.put(cacheKey, JSON.stringify(response), {
+      expirationTtl: 3600
+    });
+
+    return Response.json(response);
+  }
+};
+```
+
+#### Worker: Recommendations
+```typescript
+// workers/recommendations.worker.ts
+import { Ai } from '@cloudflare/ai';
+
+export default {
+  async fetch(request: Request, env: Env) {
+    const ai = new Ai(env.AI);
+    const { projectId, userInterests } = await request.json();
+
+    // Get project embedding
+    const project = await env.KV.get(`project:${projectId}`, { type: 'json' });
+
+    // Generate recommendations based on similarity and user interests
+    const results = await ai.run('@cf/baai/bge-base-en-v1.5', {
+      text: [userInterests.join(' ')],
+    });
+
+    const similarProjects = await env.DB.prepare(`
+      SELECT *, vector_distance(embedding, ?) as distance
+      FROM projects
+      WHERE id != ?
+      ORDER BY distance
+      LIMIT 5
+    `).bind(JSON.stringify(results), projectId).all();
+
+    return Response.json(similarProjects.results);
+  }
+};
 ```
 
 ### GA Components

@@ -1,9 +1,11 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { allEducations } from "content-collections";
-import { marked } from "marked";
+import { allEducations, allJobs, allSkills } from "content-collections";
+import { marked, marked } from "marked";
+import DownloadPDFButton from "@/components/DownloadPDFButton";
 import ResumeAssistant from "@/components/ResumeAssistant";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { Separator } from "@/components/ui/separator";
+import ResumeAssistant from "@/components/ResumeAssistant";
+import { Card, Card, CardContent, CardContent, CardHeader, CardHeader, CardTitle, CardTitle } from "@/components/ui/card";
+import { Separator, Separator } from "@/components/ui/separator";
 
 export const Route = createFileRoute("/index-resume")({
 	component: App,
@@ -13,7 +15,10 @@ function App() {
 	return (
 		<>
 			<ResumeAssistant />
-			<div className="min-h-screen bg-linear-to-b from-gray-50 to-gray-100">
+			<div
+				id="resume-content"
+				className="min-h-screen bg-linear-to-b from-gray-50 to-gray-100"
+			>
 				<div className="flex">
 					{/* Main content */}
 					<div className="flex-1 p-8 lg:p-12">
@@ -22,7 +27,10 @@ function App() {
 								<h1 className="text-5xl font-bold bg-linear-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
 									My Resume
 								</h1>
-								<p className="text-gray-600 text-lg">Education</p>
+								<p className="text-gray-600 text-lg">Education, Experience & Skills</p>
+								<div className="mt-6">
+									<DownloadPDFButton />
+								</div>
 								<Separator className="mt-8" />
 							</div>
 
@@ -54,7 +62,7 @@ function App() {
 										testing standards.
 									</p>
 									<p className="text-gray-700 leading-relaxed">
-										In a competitive job market, I offer the{" "}
+										In a competitive job market, I offer to{" "}
 										<strong className="text-blue-600">unique advantage</strong>{" "}
 										of combining strong engineering fundamentals with
 										cutting-edge AI development workflows to ship features
@@ -91,6 +99,109 @@ function App() {
 															__html: marked(education.content),
 														}}
 													/>
+												)}
+											</CardContent>
+										</Card>
+									))}
+								</div>
+							</section>
+
+							{/* Work Experience */}
+							<section className="space-y-6">
+								<h2 className="text-3xl font-semibold text-gray-900">
+									Work Experience
+								</h2>
+								<div className="space-y-6">
+									{allJobs.map((job) => (
+										<Card
+											key={job.jobTitle}
+											className="border-0 shadow-md hover:shadow-lg transition-shadow"
+										>
+											<CardHeader>
+												<div className="flex justify-between items-start">
+													<div>
+														<CardTitle className="text-xl text-gray-900">
+															{job.jobTitle}
+														</CardTitle>
+														<p className="text-lg text-gray-700 mt-1">
+															{job.company}
+														</p>
+														<p className="text-sm text-gray-500 mt-1">
+															{job.location} · {job.startDate}
+															{job.endDate && ` - ${job.endDate}`}
+														</p>
+													</div>
+												</div>
+											</CardHeader>
+											<CardContent>
+												<p className="text-gray-700 leading-relaxed mb-4">
+													{job.summary}
+												</p>
+												{job.content && (
+													<div
+														className="text-gray-700 prose prose-sm max-w-none"
+														dangerouslySetInnerHTML={{
+															__html: marked(job.content),
+														}}
+													/>
+												)}
+												{job.tags && job.tags.length > 0 && (
+													<div className="flex flex-wrap gap-2 mt-4">
+														{job.tags.map((tag) => (
+															<span
+																key={tag}
+																className="px-3 py-1 bg-blue-100 text-blue-700 text-sm rounded-full"
+															>
+																{tag}
+															</span>
+														))}
+													</div>
+												)}
+											</CardContent>
+										</Card>
+									))}
+								</div>
+							</section>
+
+							{/* Skills */}
+							<section className="space-y-6">
+								<h2 className="text-3xl font-semibold text-gray-900">
+									Skills & Expertise
+								</h2>
+								<div className="space-y-6">
+									{allSkills.map((skill) => (
+										<Card
+											key={skill.name}
+											className="border-0 shadow-md hover:shadow-lg transition-shadow"
+										>
+											<CardHeader>
+												<CardTitle className="text-xl text-gray-900">
+													{skill.name}
+												</CardTitle>
+											</CardHeader>
+											<CardContent>
+												<p className="text-gray-700 leading-relaxed mb-4">
+													{skill.summary}
+												</p>
+												{skill.content && (
+													<div
+														className="text-gray-700 prose prose-sm max-w-none"
+														dangerouslySetInnerHTML={{
+															__html: marked(skill.content),
+														}}
+													/>
+												)}
+												{skill.tags && skill.tags.length > 0 && (
+													<div className="flex flex-wrap gap-2 mt-4">
+														{skill.tags.map((tag) => (
+															<span
+																key={tag}
+																className="px-3 py-1 bg-purple-100 text-purple-700 text-sm rounded-full"
+															>
+																{tag}
+															</span>
+														))}
+													</div>
 												)}
 											</CardContent>
 										</Card>
