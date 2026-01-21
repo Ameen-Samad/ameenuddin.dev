@@ -1,0 +1,401 @@
+import { createFileRoute } from "@tanstack/react-router";
+import { allEducations, allJobs } from "content-collections";
+
+const SYSTEM_PROMPT = `You are a helpful resume assistant helping recruiters and hiring managers evaluate if this candidate is a good fit for their job requirements.
+
+CAPABILITIES:
+- Use available tools to search and retrieve information about the candidate's experience
+- You have access to the candidate's work history, skills, and education
+- Search for specific skills, technologies, or roles to provide accurate information
+
+INSTRUCTIONS:
+- When asked about specific technologies or skills, use the search tools to find relevant experience
+- When asked about overall experience, get all jobs and provide a summary
+- When asked about education, get all education information
+- Be professional, concise, and helpful in your responses
+- Provide specific details from the resume when available
+- When calculating years of experience, consider the date ranges provided
+- Highlight specific roles, companies, and time periods for relevant experience
+- If the candidate lacks certain experience, be honest but constructive
+
+CONTEXT: You are helping evaluate this candidate's qualifications for potential job opportunities.`;
+
+// Tool definitions for Cloudflare AI
+const tools = [
+	{
+		type: "function" as const,
+		function: {
+			name: "search_jobs_by_skill",
+			description:
+				"Find all jobs where the candidate used a specific technology or skill. Use this to check if the candidate has experience with particular technologies.",
+			parameters: {
+				type: "object",
+				properties: {
+					skill: {
+						type: "string",
+						description:
+							'The skill or technology to search for (e.g., "React", "TypeScript", "Leadership")',
+					},
+				},
+				required: ["skill"],
+			},
+		},
+	},
+	{
+		type: "function" as const,
+		function: {
+			name: "get_all_jobs",
+			description:
+				"Get a complete list of all work experience with full details including job titles, companies, dates, summaries, and skills. Use this to get an overview of the candidate's entire work history.",
+			parameters: {
+				type: "object",
+				properties: {},
+			},
+		},
+	},
+	{
+		type: "function" as const,
+		function: {
+			name: "get_all_education",
+			description:
+				"Get a complete list of all education history including schools, programs, dates, and skills learned. Use this to understand the candidate's educational background.",
+			parameters: {
+				type: "object",
+				properties: {},
+			},
+		},
+	},
+	{
+		type: "function" as const,
+		function: {
+			name: "search_experience",
+			description:
+				"Search for jobs by keywords in the job title, company name, summary, or content. Use this to find specific types of experience or roles.",
+			parameters: {
+				type: "object",
+				properties: {
+					query: {
+						type: "string",
+						description:
+							'The search query (e.g., "senior", "lead", "frontend", "startup")',
+					},
+				},
+				required: ["query"],
+			},
+		},
+	},
+];
+
+// Tool implementations
+async function executeToolCall(toolName: string, args: any) {
+	switch (toolName) {
+		case "search_jobs_by_skill":
+			return allJobs.filter((job) =>
+				job.tags.some((tag) =>
+					tag.toLowerCase().includes(args.skill.toLowerCase()),
+				),
+			);
+		case "get_all_jobs":
+			return allJobs.map((job) => ({
+				jobTitle: job.jobTitle,
+				company: job.company,
+				location: job.location,
+				startDate: job.startDate,
+				endDate: job.endDate,
+				summary: job.summary,
+				tags: job.tags,
+			}));
+		case "get_all_education":
+			return allEducations.map((education) => ({
+				school: education.school,
+				summary: education.summary,
+				startDate: education.startDate,
+				endDate: education.endDate,
+				tags: education.tags,
+			}));
+		case "search_experience": {
+			const lowerQuery = args.query.toLowerCase();
+			return allJobs
+				.filter((job) => {
+					return (
+						job.jobTitle.toLowerCase().includes(lowerQuery) ||
+						job.company.toLowerCase().includes(lowerQuery) ||
+						job.summary.toLowerCase().includes(lowerQuery) ||
+						job.content.toLowerCase().includes(lowerQuery)
+					);
+				})
+				.map((job) => ({
+					jobTitle: job.jobTitle,
+					company: job.company,
+					location: job.location,
+					startDate: job.startDate,
+					endDate: job.endDate,
+					summary: job.summary,
+					tags: job.tags,
+				}));
+		}
+		default:
+			throw new Error(`Unknown tool: ${toolName}`);
+	}
+}
+
+// RAG: Retrieve relevant context based on the query
+async function retrieveContext(query: string) {
+	const lowerQuery = query.toLowerCase();
+	const relevantJobs = allJobs.filter((job) => {
+		return (
+			job.jobTitle.toLowerCase().includes(lowerQuery) ||
+			job.company.toLowerCase().includes(lowerQuery) ||
+			job.summary.toLowerCase().includes(lowerQuery) ||
+			job.content.toLowerCase().includes(lowerQuery) ||
+			job.tags.some((tag) => tag.toLowerCase().includes(lowerQuery))
+		);
+	});
+
+	return {
+		relevantJobs: relevantJobs.map((job) => ({
+			jobTitle: job.jobTitle,
+			company: job.company,
+			location: job.location,
+			startDate: job.startDate,
+			endDate: job.endDate,
+			summary: job.summary,
+			tags: job.tags,
+		})),
+	};
+}
+
+export const Route = createFileRoute("/api/resume-chat-stream")({
+	server: {
+		handlers: {
+			POST: async ({ request, context }) => {
+				const requestSignal = request.signal;
+
+				if (requestSignal.aborted) {
+					return new Response(null, { status: 499 });
+				}
+
+				try {
+					const body = await request.json();
+					const { messages } = body;
+
+					const env = (context as any)?.cloudflare?.env;
+					if (!env?.AI) {
+						return new Response(
+							JSON.stringify({
+								error: "Cloudflare AI binding not available",
+							}),
+							{
+								status: 500,
+								headers: { "Content-Type": "application/json" },
+							},
+						);
+					}
+
+					// Convert messages to Cloudflare AI format
+					const aiMessages = [
+						{ role: "system", content: SYSTEM_PROMPT },
+						...messages.map((m: any) => ({
+							role: m.role,
+							content: m.content,
+						})),
+					];
+
+					// RAG: Retrieve context before processing
+					const lastUserMessage = messages[messages.length - 1]?.content || "";
+					const retrievedContext = await retrieveContext(lastUserMessage);
+
+					// Add retrieved context to system prompt if relevant
+					if (retrievedContext.relevantJobs.length > 0) {
+						const contextMessage = `\n\nRETRIEVED CONTEXT (RAG):\nThe following information was retrieved from the resume:\n${JSON.stringify(
+							retrievedContext.relevantJobs,
+							null,
+							2,
+						)}`;
+						aiMessages[0].content += contextMessage;
+					}
+
+					// Create SSE stream
+					const encoder = new TextEncoder();
+					const stream = new ReadableStream({
+						async start(controller) {
+							try {
+								let fullResponse = "";
+								const toolCalls: any[] = [];
+								const toolResults: any[] = [];
+
+								// Generate initial response with tool calls
+								const response = await env.AI.run(
+									"@cf/meta/llama-4-scout-17b-16e-instruct",
+									{
+										messages: aiMessages,
+										tools,
+										tool_choice: "auto",
+										stream: true,
+									},
+								);
+
+								// Process the stream
+								for await (const chunk of response) {
+									if (requestSignal.aborted) {
+										controller.close();
+										return;
+									}
+
+									// Handle different response formats
+									if (chunk.response) {
+										const content = chunk.response;
+										fullResponse += content;
+
+										// Send SSE event
+										const event = `data: ${JSON.stringify({
+											type: "content",
+											content,
+										})}\n\n`;
+										controller.enqueue(encoder.encode(event));
+									}
+
+									// Handle tool calls (if Cloudflare AI supports this)
+									if (chunk.tool_calls) {
+										for (const toolCall of chunk.tool_calls) {
+											// Send tool call event
+											const event = `data: ${JSON.stringify({
+												type: "tool_call",
+												toolCall,
+											})}\n\n`;
+											controller.enqueue(encoder.encode(event));
+											toolCalls.push(toolCall);
+										}
+									}
+								}
+
+								// Execute tool calls if any
+								if (toolCalls.length > 0) {
+									for (const toolCall of toolCalls) {
+										const toolName = toolCall.function?.name;
+										const toolArgs = JSON.parse(
+											toolCall.function?.arguments || "{}",
+										);
+
+										// Send tool execution start event
+										const startEvent = `data: ${JSON.stringify({
+											type: "tool_start",
+											toolName,
+											toolArgs,
+										})}\n\n`;
+										controller.enqueue(encoder.encode(startEvent));
+
+										try {
+											// Execute the tool
+											const result = await executeToolCall(toolName, toolArgs);
+
+											toolResults.push({
+												tool_call_id: toolCall.id,
+												output: JSON.stringify(result),
+											});
+
+											// Send tool execution complete event
+											const completeEvent = `data: ${JSON.stringify({
+												type: "tool_complete",
+												toolName,
+												result,
+											})}\n\n`;
+											controller.enqueue(encoder.encode(completeEvent));
+										} catch (error: any) {
+											const errorEvent = `data: ${JSON.stringify({
+												type: "tool_error",
+												toolName,
+												error: error.message,
+											})}\n\n`;
+											controller.enqueue(encoder.encode(errorEvent));
+										}
+									}
+
+									// Generate follow-up response with tool results
+									const followUpMessages = [
+										...aiMessages,
+										{
+											role: "assistant" as const,
+											content: fullResponse,
+											tool_calls: toolCalls,
+										},
+										...toolResults,
+									];
+
+									const followUpResponse = await env.AI.run(
+										"@cf/meta/llama-4-scout-17b-16e-instruct",
+										{
+											messages: followUpMessages,
+											stream: true,
+										},
+									);
+
+									let followUpContent = "";
+									for await (const chunk of followUpResponse) {
+										if (requestSignal.aborted) {
+											controller.close();
+											return;
+										}
+
+										if (chunk.response) {
+											const content = chunk.response;
+											followUpContent += content;
+
+											const event = `data: ${JSON.stringify({
+												type: "content",
+												content,
+											})}\n\n`;
+											controller.enqueue(encoder.encode(event));
+										}
+									}
+
+									// Send final event
+									const finalEvent = `data: ${JSON.stringify({
+										type: "done",
+									})}\n\n`;
+									controller.enqueue(encoder.encode(finalEvent));
+								} else {
+									// Send final event if no tool calls
+									const finalEvent = `data: ${JSON.stringify({
+										type: "done",
+									})}\n\n`;
+									controller.enqueue(encoder.encode(finalEvent));
+								}
+
+								controller.close();
+							} catch (error: any) {
+								console.error("Stream error:", error);
+								const errorEvent = `data: ${JSON.stringify({
+									type: "error",
+									error: error.message,
+								})}\n\n`;
+								controller.enqueue(encoder.encode(errorEvent));
+								controller.close();
+							}
+						},
+					});
+
+					return new Response(stream, {
+						headers: {
+							"Content-Type": "text/event-stream",
+							"Cache-Control": "no-cache",
+							Connection: "keep-alive",
+						},
+					});
+				} catch (error: any) {
+					console.error("Resume chat error:", error);
+					return new Response(
+						JSON.stringify({
+							error: "Failed to process chat request",
+							message: error.message,
+						}),
+						{
+							status: 500,
+							headers: { "Content-Type": "application/json" },
+						},
+					);
+				}
+			},
+		},
+	},
+});

@@ -1,12 +1,28 @@
-import { ActionIcon, Badge, Button, Code, Container, Group, Paper, Stack, Title } from '@mantine/core';
-import { IconPlayerPlay, IconRefresh, IconRobot, IconTrash, IconTrophy } from '@tabler/icons-react';
-import { createFileRoute, Link } from '@tanstack/react-router';
-import { motion } from 'framer-motion';
-import { Phaser } from 'phaser';
-import { useCallback, useEffect, useRef, useState } from 'react';
-import { TetrisGame } from '@/services/tetris-game';
+import {
+	ActionIcon,
+	Badge,
+	Button,
+	Code,
+	Container,
+	Group,
+	Paper,
+	Stack,
+	Title,
+} from "@mantine/core";
+import {
+	IconPlayerPlay,
+	IconRefresh,
+	IconRobot,
+	IconTrash,
+	IconTrophy,
+} from "@tabler/icons-react";
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { motion } from "framer-motion";
+import { Phaser } from "phaser";
+import { useCallback, useEffect, useRef, useState } from "react";
+import { TetrisGame } from "@/services/tetris-game";
 
-export const Route = createFileRoute('/tetris')({
+export const Route = createFileRoute("/tetris")({
 	component: TetrisGame,
 });
 
@@ -19,15 +35,17 @@ function TetrisGame() {
 	const [gameOver, setGameOver] = useState(false);
 	const [gameInstance, setGameInstance] = useState<Phaser.Game | null>(null);
 	const canvasRef = useRef<HTMLDivElement>(null);
-	const highScoresRef = useRef<Array<{ name: string; score: number; date: string }>>([]);
+	const highScoresRef = useRef<
+		Array<{ name: string; score: number; date: string }>
+	>([]);
 
 	useEffect(() => {
-		const scores = localStorage.getItem('tetris-high-scores');
+		const scores = localStorage.getItem("tetris-high-scores");
 		if (scores) {
 			try {
 				highScoresRef.current = JSON.parse(scores);
 			} catch (e) {
-				console.error('Failed to parse high scores:', e);
+				console.error("Failed to parse high scores:", e);
 			}
 		}
 	}, []);
@@ -44,9 +62,9 @@ function TetrisGame() {
 			width: 300,
 			height: 600,
 			parent: canvasRef.current,
-			background: '#000',
+			background: "#000",
 			physics: {
-				default: 'arcade',
+				default: "arcade",
 				arcade: {
 					debug: false,
 					gravity: { x: 0, y: 0 },
@@ -58,10 +76,12 @@ function TetrisGame() {
 		setGameInstance(game);
 
 		const scene = new TetrisGame();
-		game.scene.add('TetrisGame', scene);
+		game.scene.add("TetrisGame", scene);
 
 		const handleScoreChange = (event: Event) => {
-			const customEvent = event as CustomEvent<{ detail: { score: number; lines: number; level: number } }>;
+			const customEvent = event as CustomEvent<{
+				detail: { score: number; lines: number; level: number };
+			}>;
 			if (customEvent.detail) {
 				setScore(customEvent.detail.score);
 				setLines(customEvent.detail.lines);
@@ -69,37 +89,40 @@ function TetrisGame() {
 			}
 		};
 
-		window.addEventListener('tetris-score', handleScoreChange);
+		window.addEventListener("tetris-score", handleScoreChange);
 
 		return () => {
-			window.removeEventListener('tetris-score', handleScoreChange);
+			window.removeEventListener("tetris-score", handleScoreChange);
 			if (gameInstance) {
 				gameInstance.destroy(true);
 			}
 		};
 	}, [gameStarted, canvasRef]);
 
-	const handleKeyPress = useCallback((e: KeyboardEvent) => {
-		if (!gameInstance || gameOver || useAI) return;
+	const handleKeyPress = useCallback(
+		(e: KeyboardEvent) => {
+			if (!gameInstance || gameOver || useAI) return;
 
-		switch (e.key) {
-			case 'ArrowLeft':
-				gameInstance.scene.keys['TetrisGame'].moveLeft();
-				break;
-			case 'ArrowRight':
-				gameInstance.scene.keys['TetrisGame'].moveRight();
-				break;
-			case 'ArrowDown':
-				gameInstance.scene.keys['TetrisGame'].moveDown();
-				break;
-			case 'ArrowUp':
-				gameInstance.scene.keys['TetrisGame'].rotate();
-				break;
-			case ' ':
-				gameInstance.scene.keys['TetrisGame'].hardDrop();
-				break;
-		}
-	}, [gameInstance, gameOver, useAI]);
+			switch (e.key) {
+				case "ArrowLeft":
+					gameInstance.scene.keys["TetrisGame"].moveLeft();
+					break;
+				case "ArrowRight":
+					gameInstance.scene.keys["TetrisGame"].moveRight();
+					break;
+				case "ArrowDown":
+					gameInstance.scene.keys["TetrisGame"].moveDown();
+					break;
+				case "ArrowUp":
+					gameInstance.scene.keys["TetrisGame"].rotate();
+					break;
+				case " ":
+					gameInstance.scene.keys["TetrisGame"].hardDrop();
+					break;
+			}
+		},
+		[gameInstance, gameOver, useAI],
+	);
 
 	const handleStartGame = () => {
 		setGameOver(false);
@@ -109,21 +132,21 @@ function TetrisGame() {
 	const handleRestart = () => {
 		setGameOver(false);
 		if (gameInstance) {
-			gameInstance.scene.keys['TetrisGame'].spawnPiece();
+			gameInstance.scene.keys["TetrisGame"].spawnPiece();
 		}
 	};
 
 	const handleToggleAI = () => {
 		setUseAI(!useAI);
 		if (gameInstance) {
-			gameInstance.scene.keys['TetrisGame'].setUseAI(!useAI);
+			gameInstance.scene.keys["TetrisGame"].setUseAI(!useAI);
 		}
 	};
 
 	const handleSaveScore = () => {
 		if (score === 0) return;
 
-		const name = prompt('Enter your name for the leaderboard:') || 'Anonymous';
+		const name = prompt("Enter your name for the leaderboard:") || "Anonymous";
 		if (!name) return;
 
 		const newScore = {
@@ -136,14 +159,14 @@ function TetrisGame() {
 		scores.sort((a, b) => b.score - a.score);
 
 		highScoresRef.current = scores.slice(0, 10);
-		localStorage.setItem('tetris-high-scores', JSON.stringify(scores));
+		localStorage.setItem("tetris-high-scores", JSON.stringify(scores));
 
 		setGameOver(true);
 		setGameStarted(false);
 	};
 
 	return (
-		<div style={{ minHeight: '100vh', background: '#0a0a0a' }}>
+		<div style={{ minHeight: "100vh", background: "#0a0a0a" }}>
 			<Container size="xl" py="xl">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
@@ -152,7 +175,10 @@ function TetrisGame() {
 				>
 					<Group justify="space-between" mb="xl">
 						<Link to="/">
-							<Button variant="outline" style={{ borderColor: '#00f3ff', color: '#00f3ff' }}>
+							<Button
+								variant="outline"
+								style={{ borderColor: "#00f3ff", color: "#00f3ff" }}
+							>
 								← Back to Portfolio
 							</Button>
 						</Link>
@@ -161,7 +187,13 @@ function TetrisGame() {
 						</Title>
 					</Group>
 
-					<div style={{ display: 'grid', gridTemplateColumns: '400px 1fr 1fr', gap: 'lg' }}>
+					<div
+						style={{
+							display: "grid",
+							gridTemplateColumns: "400px 1fr 1fr",
+							gap: "lg",
+						}}
+					>
 						<GamePanel
 							gameStarted={gameStarted}
 							gameOver={gameOver}
@@ -223,21 +255,34 @@ function GamePanel({
 			radius="lg"
 			p={0}
 			style={{
-				background: 'rgba(26, 26, 26, 0.8)',
-				border: '1px solid rgba(0, 243, 255, 0.2)',
+				background: "rgba(26, 26, 26, 0.8)",
+				border: "1px solid rgba(0, 243, 255, 0.2)",
 			}}
 		>
-			<Group justify="space-between" p="md" style={{ borderBottom: '1px solid rgba(0, 243, 255, 0.1)' }}>
+			<Group
+				justify="space-between"
+				p="md"
+				style={{ borderBottom: "1px solid rgba(0, 243, 255, 0.1)" }}
+			>
 				<Group gap="md">
-					<Badge size="lg" color={useAI ? 'neonMagenta' : 'neonCyan'} variant="filled">
-						{useAI ? '🤖 AI Mode' : '🎮 Play Mode'}
+					<Badge
+						size="lg"
+						color={useAI ? "neonMagenta" : "neonCyan"}
+						variant="filled"
+					>
+						{useAI ? "🤖 AI Mode" : "🎮 Play Mode"}
 					</Badge>
 					{!gameOver && (
 						<Stack gap="xs">
 							<Badge color="white" variant="light" size="sm">
 								Level {level}
 							</Badge>
-							<Badge color="white" variant="light" size="sm" style={{ marginLeft: 'auto' }}>
+							<Badge
+								color="white"
+								variant="light"
+								size="sm"
+								style={{ marginLeft: "auto" }}
+							>
 								Lines {lines}
 							</Badge>
 						</Stack>
@@ -251,30 +296,30 @@ function GamePanel({
 			<div
 				ref={canvasRef}
 				style={{
-					height: '600px',
-					background: '#000',
-					borderBottom: '1px solid rgba(0, 243, 255, 0.2)',
-					position: 'relative',
+					height: "600px",
+					background: "#000",
+					borderBottom: "1px solid rgba(0, 243, 255, 0.2)",
+					position: "relative",
 				}}
 			>
 				{!gameStarted && (
 					<div
 						style={{
-							position: 'absolute',
+							position: "absolute",
 							top: 0,
 							left: 0,
 							right: 0,
 							bottom: 0,
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'center',
-							background: 'rgba(0, 0, 0, 0.7)',
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							background: "rgba(0, 0, 0, 0.7)",
 						}}
 					>
 						<Stack align="center" gap="md">
 							{useAI ? (
 								<>
-									<IconRobot size={48} style={{ color: '#00f3ff' }} />
+									<IconRobot size={48} style={{ color: "#00f3ff" }} />
 									<Text size="xl" c="white">
 										AI Agent Ready
 									</Text>
@@ -284,7 +329,7 @@ function GamePanel({
 								</>
 							) : (
 								<>
-									<IconPlayerPlay size={48} style={{ color: '#00f3ff' }} />
+									<IconPlayerPlay size={48} style={{ color: "#00f3ff" }} />
 									<Text size="xl" c="white">
 										Press Start to Play
 									</Text>
@@ -300,19 +345,19 @@ function GamePanel({
 				{gameOver && (
 					<div
 						style={{
-							position: 'absolute',
+							position: "absolute",
 							top: 0,
 							left: 0,
 							right: 0,
 							bottom: 0,
-							display: 'flex',
-							alignItems: 'center',
-							justifyContent: 'center',
-							background: 'rgba(0, 0, 0, 0.8)',
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							background: "rgba(0, 0, 0, 0.8)",
 						}}
 					>
 						<Stack align="center" gap="lg">
-							<IconTrophy size={64} style={{ color: '#ffd700' }} />
+							<IconTrophy size={64} style={{ color: "#ffd700" }} />
 							<Text size="2xl" c="white" fw={700}>
 								Game Over!
 							</Text>
@@ -346,8 +391,8 @@ function ControlsPanel({
 			radius="lg"
 			p="xl"
 			style={{
-				background: 'rgba(26, 26, 26, 0.8)',
-				border: '1px solid rgba(255, 0, 255, 0.1)',
+				background: "rgba(26, 26, 26, 0.8)",
+				border: "1px solid rgba(255, 0, 255, 0.1)",
 			}}
 		>
 			<Title order={3} c="white" mb="md">
@@ -361,28 +406,32 @@ function ControlsPanel({
 					onClick={onStart}
 					disabled={gameStarted}
 					style={{
-						background: gameStarted ? '#404040' : 'linear-gradient(45deg, #00f3ff, #0066ff)',
-						border: 'none',
+						background: gameStarted
+							? "#404040"
+							: "linear-gradient(45deg, #00f3ff, #0066ff)",
+						border: "none",
 					}}
 				>
-					{gameStarted ? 'Game Running' : 'Start Game'}
+					{gameStarted ? "Game Running" : "Start Game"}
 				</Button>
 
 				<Button
 					fullWidth
 					size="lg"
-					variant={useAI ? 'filled' : 'outline'}
+					variant={useAI ? "filled" : "outline"}
 					onClick={onToggleAI}
 					disabled={gameStarted}
 					style={{
-						background: useAI ? 'linear-gradient(45deg, #ff00ff, #ff66aa)' : 'transparent',
-						border: useAI ? 'none' : '1px solid #ff00ff',
-						color: useAI ? 'white' : '#ff00ff',
+						background: useAI
+							? "linear-gradient(45deg, #ff00ff, #ff66aa)"
+							: "transparent",
+						border: useAI ? "none" : "1px solid #ff00ff",
+						color: useAI ? "white" : "#ff00ff",
 					}}
 				>
 					<Group gap="sm" justify="center">
 						<IconRobot size={20} />
-						{useAI ? 'AI Playing' : 'Play Yourself'}
+						{useAI ? "AI Playing" : "Play Yourself"}
 					</Group>
 				</Button>
 
@@ -392,7 +441,7 @@ function ControlsPanel({
 						size="lg"
 						variant="outline"
 						onClick={onRestart}
-						style={{ borderColor: '#00f3ff', color: '#00f3ff' }}
+						style={{ borderColor: "#00f3ff", color: "#00f3ff" }}
 					>
 						<Group gap="sm" justify="center">
 							<IconRefresh size={20} />
@@ -402,37 +451,95 @@ function ControlsPanel({
 				)}
 
 				{!gameStarted && (
-					<Paper p="md" radius="md" style={{ background: 'rgba(0, 0, 0, 0.3)' }}>
+					<Paper
+						p="md"
+						radius="md"
+						style={{ background: "rgba(0, 0, 0, 0.3)" }}
+					>
 						<Text size="sm" c="white" fw={600} mb="sm">
-							{useAI ? 'AI Agent Controls:' : 'Manual Controls:'}
+							{useAI ? "AI Agent Controls:" : "Manual Controls:"}
 						</Text>
 						{useAI ? (
 							<Stack gap="xs">
-								<Text size="sm" c="white">• Agent plays automatically</Text>
-								<Text size="sm" c="white">• Heuristics: Maximize score, minimize holes</Text>
-								<Text size="sm" c="white">• Watch it learn!</Text>
+								<Text size="sm" c="white">
+									• Agent plays automatically
+								</Text>
+								<Text size="sm" c="white">
+									• Heuristics: Maximize score, minimize holes
+								</Text>
+								<Text size="sm" c="white">
+									• Watch it learn!
+								</Text>
 							</Stack>
 						) : (
 							<Stack gap="xs">
-								<Text size="sm" c="white">• Arrow Left/Right: Move</Text>
-								<Text size="sm" c="white">• Arrow Up: Rotate</Text>
-								<Text size="sm" c="white">• Space: Hard Drop</Text>
+								<Text size="sm" c="white">
+									• Arrow Left/Right: Move
+								</Text>
+								<Text size="sm" c="white">
+									• Arrow Up: Rotate
+								</Text>
+								<Text size="sm" c="white">
+									• Space: Hard Drop
+								</Text>
 							</Stack>
+						)}
+					</Paper>
 				)}
 			</Stack>
-			</Group>
-								<Text fw={700} c={idx === 0 ? '#ffd700' : 'white'}>
+		</Paper>
+	);
+}
+
+function LeaderboardPanel({
+	highScores,
+	onSaveScore,
+}: {
+	highScores: Array<{ name: string; score: number; date: string }>;
+	onSaveScore: () => void;
+}) {
+	return (
+		<Paper
+			shadow="xl"
+			radius="lg"
+			p="xl"
+			style={{
+				background: "rgba(26, 26, 26, 0.8)",
+				border: "1px solid rgba(0, 243, 255, 0.1)",
+			}}
+		>
+			<Title order={3} c="white" mb="md">
+				Leaderboard
+			</Title>
+			{highScores.length > 0 && (
+				<Stack gap="sm">
+					{highScores.map((entry, idx) => (
+						<Paper
+							key={`${entry.name}-${entry.score}`}
+							p="sm"
+							radius="sm"
+							style={{ background: "rgba(0, 0, 0, 0.3)" }}
+						>
+							<Group justify="space-between">
+								<Group gap="sm">
+									<Text size="lg" fw={700} c={idx === 0 ? "#ffd700" : "dimmed"}>
+										#{idx + 1}
+									</Text>
+									<Text fw={600} c="white">
+										{entry.name}
+									</Text>
+								</Group>
+								<Text fw={700} c={idx === 0 ? "#ffd700" : "white"}>
 									{entry.score}
 								</Text>
 							</Group>
 							<Text size="xs" c="dimmed">
 								{new Date(entry.date).toLocaleDateString()}
 							</Text>
-							</Paper>
-						))}
-					</Stack>
-				)}
-			</Group>
+						</Paper>
+					))}
+				</Stack>
+			)}
 
 			{highScores.length > 0 && (
 				<Button
@@ -440,18 +547,16 @@ function ControlsPanel({
 					size="sm"
 					variant="light"
 					onClick={onSaveScore}
-					disabled={!highScores || highScores[0].score === 0}
-					style={{ background: 'rgba(0, 243, 255, 0.1)' }}
+					style={{ background: "rgba(0, 243, 255, 0.1)" }}
 				>
-					<Group gap="sm" justify="center">
-						<ActionIcon size={16} style={{ color: '#ff5555' }}>
-							<IconTrash size={14} />
-						</ActionIcon>
-						<Text size="sm" c="white">
-							Clear Leaderboard
-						</Text>
-					</Group>
+					Save Score
 				</Button>
+			)}
+
+			{highScores.length === 0 && (
+				<Text c="dimmed" ta="center">
+					No scores yet. Play to get on the leaderboard!
+				</Text>
 			)}
 		</Paper>
 	);

@@ -1,4 +1,14 @@
 import Phaser from "phaser";
+import init, { TetrisAI as WasmTetrisAI } from "../wasm/tetris_wasm.js";
+
+let wasmAI: WasmTetrisAI | null = null;
+
+async function initWasm() {
+	if (!wasmAI) {
+		await init();
+		wasmAI = new WasmTetrisAI();
+	}
+}
 
 export interface AIMove {
 	x: number;
@@ -87,131 +97,52 @@ export class Tetromino {
 }
 
 export class TetrisAI {
-	static getBestMove(grid: (number | null)[][], piece: Tetromino): AIMove {
-		let bestMove: AIMove = {
-			x: 0,
-			y: 0,
-			rotation: 0,
-			score: -Infinity,
-		};
-
-		for (let rotation = 0; rotation < 4; rotation++) {
-			const testPiece = new Tetromino("I", piece.color);
-
-			for (let r = 0; r < rotation; r++) {
-				testPiece.rotate();
-			}
-
-			for (let y = 0; y < 20; y++) {
-				for (let x = 0; x < 10; x++) {
-					if (TetrisAI.canPlace(grid, testPiece, x, y)) {
-						const moveScore = TetrisAI.evaluatePosition(grid, testPiece, x, y);
-
-						if (moveScore > bestMove.score) {
-							bestMove = {
-								x,
-								y,
-								rotation: testPiece.rotation,
-								score: moveScore,
-							};
-						}
-					}
-				}
-			}
-		}
-
-		return bestMove;
-	}
-
-	private static canPlace(
+	static async getBestMove(
 		grid: (number | null)[][],
 		piece: Tetromino,
-		x: number,
-		y: number,
-	): boolean {
-		for (let py = 0; py < piece.shape.length; py++) {
-			for (let px = 0; px < piece.shape[py].length; px++) {
-				if (piece.shape[py][px]) {
-					const gridY = y + py;
-					const gridX = x + px;
+	): Promise<AIMove> {
+		await initWasm();
 
-					if (
-						gridX < 0 ||
-						gridX >= 10 ||
-						gridY >= 20 ||
-						(gridY >= 0 && grid[gridY] && grid[gridY][gridX])
-					) {
-						return false;
-					}
-				}
+		if (!wasmAI) {
+			throw new Error("WASM AI not initialized");
+		}
+
+		// Convert 2D grid to 1D Int32Array
+		const flatGrid = new Int32Array(20 * 10);
+		for (let y = 0; y < 20; y++) {
+			for (let x = 0; x < 10; x++) {
+				flatGrid[y * 10 + x] = grid[y][x] ?? 0;
 			}
 		}
 
-		return true;
-	}
-
-	private static evaluatePosition(
-		grid: (number | null)[][],
-		piece: Tetromino,
-		x: number,
-		y: number,
-	): number {
-		let aggregateHeight = 0;
-		let completeLines = 0;
-		let holes = 0;
-		let bumpiness = 0;
-
-		const tempGrid = grid.map((row, i) => {
-			if (i < y || i >= y + piece.shape.length) {
-				return row;
-			}
-
-			const newRow = [...row];
-			for (let px = 0; px < piece.shape[px].length; px++) {
-				if (piece.shape[px][px]) {
-					newRow[x + px] = piece.color;
-				}
-			}
-
-			return newRow;
-		});
-
-		for (let row = 0; row < 20; row++) {
-			if (tempGrid[row].every((cell) => cell !== null)) {
-				completeLines++;
+		// Convert piece shape to flat Int32Array
+		const pieceHeight = piece.shape.length;
+		const pieceWidth = piece.shape[0].length;
+		const flatPiece = new Int32Array(pieceHeight * pieceWidth);
+		for (let y = 0; y < pieceHeight; y++) {
+			for (let x = 0; x < pieceWidth; x++) {
+				flatPiece[y * 10 + x] = piece.shape[y][x];
 			}
 		}
 
-		for (let col = 0; col < 10; col++) {
-			let colHeight = 0;
-			let blockFound = false;
-
-			for (let row = 0; row < 20; row++) {
-				if (tempGrid[row][col] !== null) {
-					if (!blockFound) {
-						colHeight = row - col;
-						blockFound = true;
-					}
-				} else if (blockFound && tempGrid[row][col] === null) {
-					holes++;
-				}
-			}
-
-			aggregateHeight += colHeight;
-
-			if (col > 0) {
-				const prevHeight = colHeight;
-				colHeight = colHeight;
-				bumpiness += Math.abs(colHeight - prevHeight);
-			}
-		}
-
-		return (
-			completeLines * 0.76 +
-			aggregateHeight * -0.51 +
-			holes * -0.36 +
-			bumpiness * -0.18
+		// Call WASM function
+		const result = wasmAI.get_best_move(
+			flatGrid,
+			10,
+			20,
+			flatPiece,
+			pieceWidth,
+			pieceHeight,
 		);
+
+		const resultArray = result as unknown as [number, number, number, number];
+
+		return {
+			x: resultArray[0],
+			y: resultArray[1],
+			rotation: resultArray[2],
+			score: resultArray[3] / 100.0,
+		};
 	}
 }
 
@@ -490,14 +421,14 @@ export class TetrisGame extends Phaser.Scene {
 			await new Promise((resolve) => setTimeout(resolve, 100));
 		}
 
-		const bestMove = TetrisAI.getBestMove(this.grid, this.currentPiece!);
+		const bestMove = await TetrisAI.getBestMove(this.grid, this.currentPiece!);
 
 		while (
 			this.currentX !== bestMove.x ||
 			this.currentY !== bestMove.y ||
-			this.currentPiece.rotation !== bestMove.rotation
+			this.currentPiece!.rotation !== bestMove.rotation
 		) {
-			if (bestMove.rotation !== this.currentPiece.rotation) {
+			if (bestMove.rotation !== this.currentPiece!.rotation) {
 				this.rotate();
 			} else if (bestMove.x < this.currentX) {
 				this.moveLeft();

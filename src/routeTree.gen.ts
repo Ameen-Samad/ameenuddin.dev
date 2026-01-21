@@ -21,7 +21,9 @@ import { Route as DemoStoreRouteImport } from './routes/demo/store'
 import { Route as DemoAiStructuredRouteImport } from './routes/demo/ai-structured'
 import { Route as DemoAiImageRouteImport } from './routes/demo/ai-image'
 import { Route as DemoAiChatRouteImport } from './routes/demo/ai-chat'
+import { Route as ApiResumeChatStreamRouteImport } from './routes/api.resume-chat-stream'
 import { Route as ApiResumeChatRouteImport } from './routes/api.resume-chat'
+import { Route as ApiLeaderboardRouteImport } from './routes/api/leaderboard'
 import { Route as ApiGenerateThreeRouteImport } from './routes/api/generate-three'
 import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as DemoGuitarsIndexRouteImport } from './routes/demo/guitars/index'
@@ -33,6 +35,7 @@ import { Route as DemoFormAddressRouteImport } from './routes/demo/form.address'
 import { Route as DemoApiTqTodosRouteImport } from './routes/demo/api.tq-todos'
 import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
+import { Route as ApiLeaderboardHistoryRouteImport } from './routes/api/leaderboard/history'
 import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
 import { Route as DemoStartSsrSpaModeRouteImport } from './routes/demo/start.ssr.spa-mode'
 import { Route as DemoStartSsrFullSsrRouteImport } from './routes/demo/start.ssr.full-ssr'
@@ -103,9 +106,19 @@ const DemoAiChatRoute = DemoAiChatRouteImport.update({
   path: '/demo/ai-chat',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiResumeChatStreamRoute = ApiResumeChatStreamRouteImport.update({
+  id: '/api/resume-chat-stream',
+  path: '/api/resume-chat-stream',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiResumeChatRoute = ApiResumeChatRouteImport.update({
   id: '/api/resume-chat',
   path: '/api/resume-chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiLeaderboardRoute = ApiLeaderboardRouteImport.update({
+  id: '/api/leaderboard',
+  path: '/api/leaderboard',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiGenerateThreeRoute = ApiGenerateThreeRouteImport.update({
@@ -163,6 +176,11 @@ const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   path: '/api/trpc/$',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiLeaderboardHistoryRoute = ApiLeaderboardHistoryRouteImport.update({
+  id: '/history',
+  path: '/history',
+  getParentRoute: () => ApiLeaderboardRoute,
+} as any)
 const DemoStartSsrIndexRoute = DemoStartSsrIndexRouteImport.update({
   id: '/demo/start/ssr/',
   path: '/demo/start/ssr/',
@@ -217,7 +235,9 @@ export interface FileRoutesByFullPath {
   '/tetris': typeof TetrisRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-three': typeof ApiGenerateThreeRoute
+  '/api/leaderboard': typeof ApiLeaderboardRouteWithChildren
   '/api/resume-chat': typeof ApiResumeChatRoute
+  '/api/resume-chat-stream': typeof ApiResumeChatStreamRoute
   '/demo/ai-chat': typeof DemoAiChatRoute
   '/demo/ai-image': typeof DemoAiImageRoute
   '/demo/ai-structured': typeof DemoAiStructuredRoute
@@ -225,6 +245,7 @@ export interface FileRoutesByFullPath {
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
+  '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
@@ -252,7 +273,9 @@ export interface FileRoutesByTo {
   '/tetris': typeof TetrisRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-three': typeof ApiGenerateThreeRoute
+  '/api/leaderboard': typeof ApiLeaderboardRouteWithChildren
   '/api/resume-chat': typeof ApiResumeChatRoute
+  '/api/resume-chat-stream': typeof ApiResumeChatStreamRoute
   '/demo/ai-chat': typeof DemoAiChatRoute
   '/demo/ai-image': typeof DemoAiImageRoute
   '/demo/ai-structured': typeof DemoAiStructuredRoute
@@ -260,6 +283,7 @@ export interface FileRoutesByTo {
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
+  '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
@@ -288,7 +312,9 @@ export interface FileRoutesById {
   '/tetris': typeof TetrisRoute
   '/api/chat': typeof ApiChatRoute
   '/api/generate-three': typeof ApiGenerateThreeRoute
+  '/api/leaderboard': typeof ApiLeaderboardRouteWithChildren
   '/api/resume-chat': typeof ApiResumeChatRoute
+  '/api/resume-chat-stream': typeof ApiResumeChatStreamRoute
   '/demo/ai-chat': typeof DemoAiChatRoute
   '/demo/ai-image': typeof DemoAiImageRoute
   '/demo/ai-structured': typeof DemoAiStructuredRoute
@@ -296,6 +322,7 @@ export interface FileRoutesById {
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
+  '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
@@ -325,7 +352,9 @@ export interface FileRouteTypes {
     | '/tetris'
     | '/api/chat'
     | '/api/generate-three'
+    | '/api/leaderboard'
     | '/api/resume-chat'
+    | '/api/resume-chat-stream'
     | '/demo/ai-chat'
     | '/demo/ai-image'
     | '/demo/ai-structured'
@@ -333,6 +362,7 @@ export interface FileRouteTypes {
     | '/demo/table'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
+    | '/api/leaderboard/history'
     | '/api/trpc/$'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
@@ -360,7 +390,9 @@ export interface FileRouteTypes {
     | '/tetris'
     | '/api/chat'
     | '/api/generate-three'
+    | '/api/leaderboard'
     | '/api/resume-chat'
+    | '/api/resume-chat-stream'
     | '/demo/ai-chat'
     | '/demo/ai-image'
     | '/demo/ai-structured'
@@ -368,6 +400,7 @@ export interface FileRouteTypes {
     | '/demo/table'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
+    | '/api/leaderboard/history'
     | '/api/trpc/$'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
@@ -395,7 +428,9 @@ export interface FileRouteTypes {
     | '/tetris'
     | '/api/chat'
     | '/api/generate-three'
+    | '/api/leaderboard'
     | '/api/resume-chat'
+    | '/api/resume-chat-stream'
     | '/demo/ai-chat'
     | '/demo/ai-image'
     | '/demo/ai-structured'
@@ -403,6 +438,7 @@ export interface FileRouteTypes {
     | '/demo/table'
     | '/demo/tanstack-query'
     | '/demo/trpc-todo'
+    | '/api/leaderboard/history'
     | '/api/trpc/$'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
@@ -431,7 +467,9 @@ export interface RootRouteChildren {
   TetrisRoute: typeof TetrisRoute
   ApiChatRoute: typeof ApiChatRoute
   ApiGenerateThreeRoute: typeof ApiGenerateThreeRoute
+  ApiLeaderboardRoute: typeof ApiLeaderboardRouteWithChildren
   ApiResumeChatRoute: typeof ApiResumeChatRoute
+  ApiResumeChatStreamRoute: typeof ApiResumeChatStreamRoute
   DemoAiChatRoute: typeof DemoAiChatRoute
   DemoAiImageRoute: typeof DemoAiImageRoute
   DemoAiStructuredRoute: typeof DemoAiStructuredRoute
@@ -545,11 +583,25 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoAiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/resume-chat-stream': {
+      id: '/api/resume-chat-stream'
+      path: '/api/resume-chat-stream'
+      fullPath: '/api/resume-chat-stream'
+      preLoaderRoute: typeof ApiResumeChatStreamRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/resume-chat': {
       id: '/api/resume-chat'
       path: '/api/resume-chat'
       fullPath: '/api/resume-chat'
       preLoaderRoute: typeof ApiResumeChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/leaderboard': {
+      id: '/api/leaderboard'
+      path: '/api/leaderboard'
+      fullPath: '/api/leaderboard'
+      preLoaderRoute: typeof ApiLeaderboardRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/generate-three': {
@@ -629,6 +681,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTrpcSplatRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/leaderboard/history': {
+      id: '/api/leaderboard/history'
+      path: '/history'
+      fullPath: '/api/leaderboard/history'
+      preLoaderRoute: typeof ApiLeaderboardHistoryRouteImport
+      parentRoute: typeof ApiLeaderboardRoute
+    }
     '/demo/start/ssr/': {
       id: '/demo/start/ssr/'
       path: '/demo/start/ssr'
@@ -695,6 +754,18 @@ declare module '@tanstack/react-router' {
   }
 }
 
+interface ApiLeaderboardRouteChildren {
+  ApiLeaderboardHistoryRoute: typeof ApiLeaderboardHistoryRoute
+}
+
+const ApiLeaderboardRouteChildren: ApiLeaderboardRouteChildren = {
+  ApiLeaderboardHistoryRoute: ApiLeaderboardHistoryRoute,
+}
+
+const ApiLeaderboardRouteWithChildren = ApiLeaderboardRoute._addFileChildren(
+  ApiLeaderboardRouteChildren,
+)
+
 const rootRouteChildren: RootRouteChildren = {
   IndexRoute: IndexRoute,
   BuilderRoute: BuilderRoute,
@@ -703,7 +774,9 @@ const rootRouteChildren: RootRouteChildren = {
   TetrisRoute: TetrisRoute,
   ApiChatRoute: ApiChatRoute,
   ApiGenerateThreeRoute: ApiGenerateThreeRoute,
+  ApiLeaderboardRoute: ApiLeaderboardRouteWithChildren,
   ApiResumeChatRoute: ApiResumeChatRoute,
+  ApiResumeChatStreamRoute: ApiResumeChatStreamRoute,
   DemoAiChatRoute: DemoAiChatRoute,
   DemoAiImageRoute: DemoAiImageRoute,
   DemoAiStructuredRoute: DemoAiStructuredRoute,
@@ -733,12 +806,3 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
-
-import type { getRouter } from './router.tsx'
-import type { createStart } from '@tanstack/react-start'
-declare module '@tanstack/react-start' {
-  interface Register {
-    ssr: true
-    router: Awaited<ReturnType<typeof getRouter>>
-  }
-}

@@ -33,21 +33,41 @@ export const Route = createFileRoute("/")({
 function Home() {
 	const skills = [
 		{
-			category: "Programming",
-			items: ["Python", "JavaScript", "TypeScript"],
-			icon: <IconCode size={24} />,
+			category: "AI-Native Development",
+			items: [
+				"Claude Code",
+				"Cursor",
+				"MCPs",
+				"GitHub Copilot",
+				"Latest Plugins",
+			],
+			icon: <IconRobot size={24} />,
 			color: "#00f3ff",
 		},
 		{
-			category: "Tools",
-			items: ["VS Code", "Jira", "PowerBI", "Tableau"],
-			icon: <IconDevices size={24} />,
+			category: "Programming",
+			items: [
+				"Python",
+				"JavaScript",
+				"TypeScript",
+				"React",
+				"Three.js",
+				"Phaser",
+			],
+			icon: <IconCode size={24} />,
 			color: "#ff00ff",
 		},
 		{
-			category: "AI Tools",
-			items: ["Cursor", "Claude Code", "GitHub Copilot"],
-			icon: <IconRobot size={24} />,
+			category: "Tools & Platforms",
+			items: [
+				"VS Code",
+				"Jira",
+				"PowerBI",
+				"Tableau",
+				"TanStack",
+				"Cloudflare Workers",
+			],
+			icon: <IconDevices size={24} />,
 			color: "#0066ff",
 		},
 		{
@@ -93,6 +113,7 @@ function Home() {
 			<Hero />
 			<About />
 			<Skills skills={skills} />
+			<AINativeAdvantage />
 			<Projects projects={projects} />
 			<Contact />
 		</>
@@ -150,22 +171,23 @@ function Hero() {
 						Software Engineer
 					</Title>
 					<Text size="xl" c="dimmed" mb="xl">
-						Building the future with{" "}
+						Delivering{" "}
 						<motion.span
-							style={{ color: "#ff00ff" }}
-							animate={{ opacity: [1, 0.5, 1] }}
+							style={{ color: "#ff00ff", fontWeight: 700 }}
+							animate={{ scale: [1, 1.1, 1] }}
 							transition={{ duration: 2, repeat: Infinity }}
 						>
-							Cursor
+							100x productivity
 						</motion.span>{" "}
-						and{" "}
+						with AI-powered development using{" "}
 						<motion.span
-							style={{ color: "#00f3ff" }}
-							animate={{ opacity: [1, 0.5, 1] }}
-							transition={{ duration: 2, repeat: Infinity, delay: 0.3 }}
+							style={{ color: "#00f3ff", fontWeight: 600 }}
+							animate={{ opacity: [1, 0.7, 1] }}
+							transition={{ duration: 2, repeat: Infinity }}
 						>
 							Claude Code
 						</motion.span>
+						, MCPs, and latest plugins
 					</Text>
 					<Group gap="md">
 						<Button
@@ -258,8 +280,27 @@ function About() {
 								<span style={{ color: "#00f3ff", fontWeight: 700 }}>
 									Ameen Samad
 								</span>
-								, a Junior Software Engineer with a passion for AI-native
-								development.
+								, an AI-Native Software Engineer who leverages cutting-edge AI
+								tools to deliver exceptional results.
+							</Text>
+							<Text c="dimmed" mb="md">
+								Using{" "}
+								<span style={{ color: "#ff00ff", fontWeight: 600 }}>
+									Claude Code
+								</span>{" "}
+								with the latest plugins and MCPs (Model Context Protocols), I
+								build production-ready features at{" "}
+								<span style={{ color: "#00f3ff", fontWeight: 700 }}>
+									100x speed
+								</span>{" "}
+								while maintaining code quality, proper testing, and strong
+								engineering fundamentals.
+							</Text>
+							<Text c="dimmed">
+								Pursuing a Diploma in IT at{" "}
+								<span style={{ fontWeight: 600 }}>Ngee Ann Polytechnic</span>{" "}
+								while building real-world applications that demonstrate my
+								ability to ship quickly without compromising on quality.
 							</Text>
 							<Text c="dimmed" mb="md">
 								Using tools like{" "}
@@ -270,13 +311,13 @@ function About() {
 								<span style={{ color: "#00f3ff", fontWeight: 600 }}>
 									Claude Code
 								</span>
-								, I build and ship features faster than ever before while
+								, I build and ship features quickly while learning and
 								maintaining strong engineering fundamentals.
 							</Text>
 							<Text c="dimmed">
-								Graduated from{" "}
-								<span style={{ fontWeight: 600 }}>Ngee Ann Polytechnic</span>{" "}
-								with a Diploma in Information Technology, specializing in
+								Currently a Year 2 student at{" "}
+								<span style={{ fontWeight: 600 }}>Ngee Ann Polytechnic</span>,
+								pursuing a Diploma in Information Technology with an elective in
 								Enterprise Computing.
 							</Text>
 						</Paper>
@@ -290,29 +331,32 @@ function About() {
 							}}
 						>
 							<Title order={3} c="white" mb="md">
-								My Approach
+								My Superpower
 							</Title>
 							<Stack gap="md">
 								<Group gap="sm">
-									<div style={{ color: "#00f3ff", fontSize: "24px" }}>⚡</div>
+									<div style={{ color: "#00f3ff", fontSize: "24px" }}>🚀</div>
 									<Text c="dimmed">
-										<b>Speed without Sacrifice</b> - Use AI tools to accelerate
-										development while maintaining code quality and testing
-										standards
+										<b>100x Productivity with AI</b> - Claude Code + MCPs +
+										Latest Plugins = Rapid development without sacrificing
+										quality. I ship features faster than traditional developers
+										while maintaining proper testing and code standards.
 									</Text>
 								</Group>
 								<Group gap="sm">
-									<div style={{ color: "#ff00ff", fontSize: "24px" }}>🧪</div>
+									<div style={{ color: "#ff00ff", fontSize: "24px" }}>🤖</div>
 									<Text c="dimmed">
-										<b>Grounded Fundamentals</b> - Strong foundation in Python,
-										JavaScript/TypeScript, with proper testing practices
+										<b>AI-Native Development Stack</b> - Deep expertise in
+										Cursor, Claude Code, and AI tooling ecosystem. I don't just
+										use AI tools—I master them to maximize efficiency.
 									</Text>
 								</Group>
 								<Group gap="sm">
-									<div style={{ color: "#0066ff", fontSize: "24px" }}>🎯</div>
+									<div style={{ color: "#0066ff", fontSize: "24px" }}>💎</div>
 									<Text c="dimmed">
-										<b>User-Focused</b> - Build features that solve real
-										problems with excellent UX
+										<b>Quality at Speed</b> - Strong fundamentals in Python,
+										JavaScript, TypeScript with rigorous testing practices. Fast
+										doesn't mean sloppy—it means efficient.
 									</Text>
 								</Group>
 							</Stack>
@@ -509,6 +553,150 @@ function Projects({
 								</Paper>
 							</motion.div>
 						))}
+					</SimpleGrid>
+				</motion.div>
+			</Container>
+		</section>
+	);
+}
+
+function AINativeAdvantage() {
+	return (
+		<section
+			id="ai-advantage"
+			style={{ padding: "100px 0", background: "rgba(0, 102, 255, 0.05)" }}
+		>
+			<Container size="xl">
+				<motion.div
+					initial={{ opacity: 0, y: 50 }}
+					whileInView={{ opacity: 1, y: 0 }}
+					viewport={{ once: true }}
+					transition={{ duration: 0.6 }}
+				>
+					<Title
+						order={2}
+						c="white"
+						mb="xl"
+						style={{
+							textAlign: "center",
+							position: "relative",
+							display: "inline-block",
+						}}
+					>
+						My AI-Native Advantage
+						<div
+							style={{
+								position: "absolute",
+								bottom: "-8px",
+								left: "50%",
+								transform: "translateX(-50%)",
+								width: "150px",
+								height: "4px",
+								background: "linear-gradient(90deg, #00f3ff, #0066ff)",
+							}}
+						/>
+					</Title>
+					<SimpleGrid cols={{ base: 1, md: 3 }} spacing="xl">
+						<Paper
+							shadow="xl"
+							radius="lg"
+							p="xl"
+							style={{
+								background: "rgba(26, 26, 26, 0.8)",
+								border: "1px solid rgba(0, 243, 255, 0.2)",
+							}}
+						>
+							<Stack gap="md">
+								<div
+									style={{
+										width: 60,
+										height: 60,
+										background:
+											"linear-gradient(45deg, rgba(0, 243, 255, 0.2), rgba(0, 102, 255, 0.2))",
+										borderRadius: "md",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									<span style={{ fontSize: "30px" }}>⚡</span>
+								</div>
+								<Title order={4} c="white">
+									100x Productivity
+								</Title>
+								<Text c="dimmed">
+									Claude Code + MCPs + Latest Plugins = Unprecedented
+									development speed. I ship features in hours, not weeks.
+								</Text>
+							</Stack>
+						</Paper>
+						<Paper
+							shadow="xl"
+							radius="lg"
+							p="xl"
+							style={{
+								background: "rgba(26, 26, 26, 0.8)",
+								border: "1px solid rgba(255, 0, 255, 0.2)",
+							}}
+						>
+							<Stack gap="md">
+								<div
+									style={{
+										width: 60,
+										height: 60,
+										background:
+											"linear-gradient(45deg, rgba(255, 0, 255, 0.2), rgba(255, 102, 170, 0.2))",
+										borderRadius: "md",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									<span style={{ fontSize: "30px" }}>🎯</span>
+								</div>
+								<Title order={4} c="white">
+									Quality at Speed
+								</Title>
+								<Text c="dimmed">
+									Fast doesn't mean sloppy. I maintain proper testing, code
+									quality, and best practices while delivering rapidly.
+								</Text>
+							</Stack>
+						</Paper>
+						<Paper
+							shadow="xl"
+							radius="lg"
+							p="xl"
+							style={{
+								background: "rgba(26, 26, 26, 0.8)",
+								border: "1px solid rgba(255, 0, 255, 0.2)",
+							}}
+						>
+							<Stack gap="md">
+								<div
+									style={{
+										width: 60,
+										height: 60,
+										background:
+											"linear-gradient(45deg, rgba(255, 0, 255, 0.2), rgba(0, 243, 255, 0.2))",
+										borderRadius: "md",
+										display: "flex",
+										alignItems: "center",
+										justifyContent: "center",
+									}}
+								>
+									<span style={{ fontSize: "30px" }}>🚀</span>
+								</div>
+								<Title order={4} c="white">
+									Future-Ready
+								</Title>
+								<Text c="dimmed">
+									Already equipped with the tools and workflows that will define
+									software development tomorrow. Ready to hit the ground
+									running.
+								</Text>
+							</Stack>
+						</Paper>
 					</SimpleGrid>
 				</motion.div>
 			</Container>
