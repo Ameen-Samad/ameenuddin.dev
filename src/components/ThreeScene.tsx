@@ -1,9 +1,13 @@
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Canvas } from "@react-three/fiber";
 import { Grid, OrbitControls, Sky } from "@react-three/drei";
 
 interface MaterialProps {
 	color: string;
+	metalness?: number;
+	roughness?: number;
+	transparent?: boolean;
+	opacity?: number;
 }
 
 interface GeometryData {
@@ -19,6 +23,7 @@ interface SceneObject {
 	position?: [number, number, number];
 	rotation?: [number, number, number];
 	scale?: [number, number, number];
+	animate?: boolean;
 }
 
 interface ThreeSceneProps {
@@ -29,84 +34,197 @@ function parseGeneratedCode(code: string): SceneObject[] {
 	const objects: SceneObject[] = [];
 
 	try {
-		// Extract geometry creations
-		const geometryRegex = /new THREE\.(Box|Sphere|Cylinder|Cone|Torus|Plane)Geometry\(([\d.,\s]*)\)/g;
-		const materialRegex = /new THREE\.MeshStandardMaterial\(\{([^}]+)\}\)/g;
-		const positionRegex = /\.position\.set\(([-\d.,\s]+)\)/g;
+		// More comprehensive parsing for various Three.js geometry types
+		const geometryRegex = /new THREE\.(Box|Sphere|Cylinder|Cone|Torus|TorusKnot|Dodecahedron|Icosahedron|Octahedron|Tetrahedron|Plane|Circle|Ring)Geometry\(([\d.,\s]*)\)/gi;
+		const materialRegex = /new THREE\.(MeshStandard|MeshPhong|MeshBasic|MeshLambert)Material\(\{([^}]+)\}\)/gi;
+		const meshRegex = /const\s+(\w+)\s*=\s*new THREE\.Mesh\(/g;
+		const positionRegex = /(\w+)\.position\.set\(([-\d.,\s]+)\)/g;
+		const rotationRegex = /(\w+)\.rotation\.[xyz]\s*[+\-*/]?=\s*([-\d.]+)/g;
+		const scaleRegex = /(\w+)\.scale\.set\(([-\d.,\s]+)\)/g;
 
-		const geometries: GeometryData[] = [];
-		const materials: MaterialProps[] = [];
-		const positions: number[][] = [];
+		const geometries: Map<string, GeometryData> = new Map();
+		const materials: Map<string, MaterialProps> = new Map();
+		const meshNames: string[] = [];
+		const positions: Map<string, number[]> = new Map();
+		const scales: Map<string, number[]> = new Map();
+		const hasAnimation = /rotation\.[xyz]\s*[+\-*/]?=/.test(code);
 
-		let geometryMatch = geometryRegex.exec(code);
-		while (geometryMatch !== null) {
+		// Extract geometries
+		let geometryMatch: RegExpExecArray | null;
+		let geomIndex = 0;
+		while ((geometryMatch = geometryRegex.exec(code)) !== null) {
 			const [, type, params] = geometryMatch;
-			geometries.push({
+			const geomKey = `geom_${geomIndex++}`;
+			geometries.set(geomKey, {
 				type,
-				params: params.split(",").map(p => parseFloat(p.trim()))
+				params: params.split(",").map(p => parseFloat(p.trim())).filter(n => !isNaN(n))
 			});
-			geometryMatch = geometryRegex.exec(code);
 		}
 
-		let materialMatch = materialRegex.exec(code);
-		while (materialMatch !== null) {
-			const [, props] = materialMatch;
-			// Parse material properties (simplified)
-			const colorMatch = props.match(/color:\s*(?:0x([0-9a-f]+)|new THREE\.Color\((.*?)\))/i);
-			materials.push({
-				color: colorMatch ? `#${colorMatch[1] || "ffffff"}` : "#ffffff",
+		// Extract materials
+		let materialMatch: RegExpExecArray | null;
+		let matIndex = 0;
+		while ((materialMatch = materialRegex.exec(code)) !== null) {
+			const [, materialType, props] = materialMatch;
+			const matKey = `mat_${matIndex++}`;
+
+			// Parse material properties
+			const colorMatch = props.match(/color:\s*(?:0x([0-9a-f]+)|'([^']+)'|"([^"]+)")/i);
+			const metalnessMatch = props.match(/metalness:\s*([\d.]+)/i);
+			const roughnessMatch = props.match(/roughness:\s*([\d.]+)/i);
+			const transparentMatch = props.match(/transparent:\s*(true|false)/i);
+			const opacityMatch = props.match(/opacity:\s*([\d.]+)/i);
+
+			materials.set(matKey, {
+				color: colorMatch ? `#${colorMatch[1] || colorMatch[2] || colorMatch[3] || "ffffff"}` : "#ffffff",
+				metalness: metalnessMatch ? parseFloat(metalnessMatch[1]) : undefined,
+				roughness: roughnessMatch ? parseFloat(roughnessMatch[1]) : undefined,
+				transparent: transparentMatch ? transparentMatch[1] === "true" : undefined,
+				opacity: opacityMatch ? parseFloat(opacityMatch[1]) : undefined,
 			});
-			materialMatch = materialRegex.exec(code);
 		}
 
-		let positionMatch = positionRegex.exec(code);
-		while (positionMatch !== null) {
-			const [, coords] = positionMatch;
-			positions.push(coords.split(",").map(c => parseFloat(c.trim())));
-			positionMatch = positionRegex.exec(code);
+		// Extract mesh names
+		let meshMatch: RegExpExecArray | null;
+		while ((meshMatch = meshRegex.exec(code)) !== null) {
+			meshNames.push(meshMatch[1]);
 		}
 
-		// Combine geometries with materials and positions
-		for (let i = 0; i < geometries.length; i++) {
+		// Extract positions
+		let positionMatch: RegExpExecArray | null;
+		while ((positionMatch = positionRegex.exec(code)) !== null) {
+			const [, meshName, coords] = positionMatch;
+			positions.set(meshName, coords.split(",").map(c => parseFloat(c.trim())));
+		}
+
+		// Extract scales
+		let scaleMatch: RegExpExecArray | null;
+		while ((scaleMatch = scaleRegex.exec(code)) !== null) {
+			const [, meshName, coords] = scaleMatch;
+			scales.set(meshName, coords.split(",").map(c => parseFloat(c.trim())));
+		}
+
+		// Combine everything into scene objects
+		const geomArray = Array.from(geometries.values());
+		const matArray = Array.from(materials.values());
+
+		for (let i = 0; i < Math.max(geomArray.length, 1); i++) {
+			const geom = geomArray[i] || { type: "Sphere", params: [1, 32, 32] };
+			const mat = matArray[i] || { color: "#ff0000" };
+			const meshName = meshNames[i];
+
 			objects.push({
 				id: `object-${Date.now()}-${i}`,
-				type: geometries[i].type,
-				geometry: geometries[i].params,
-				material: materials[i] || { color: "#ffffff" },
-				position: (positions[i] as [number, number, number]) || [0, 0, 0],
+				type: geom.type,
+				geometry: geom.params,
+				material: mat,
+				position: meshName && positions.has(meshName)
+					? (positions.get(meshName) as [number, number, number])
+					: [0, 1, 0],
+				scale: meshName && scales.has(meshName)
+					? (scales.get(meshName) as [number, number, number])
+					: undefined,
+				animate: hasAnimation,
+			});
+		}
+
+		// If nothing was parsed, create a default red sphere
+		if (objects.length === 0) {
+			objects.push({
+				id: `object-${Date.now()}-0`,
+				type: "Sphere",
+				geometry: [1, 32, 32],
+				material: { color: "#ff0000", metalness: 0.5, roughness: 0.2 },
+				position: [0, 1, 0],
+				animate: false,
 			});
 		}
 	} catch (error) {
 		console.error("Error parsing generated code:", error);
+		// Return a default object on error
+		objects.push({
+			id: `object-${Date.now()}-0`,
+			type: "Sphere",
+			geometry: [1, 32, 32],
+			material: { color: "#ff0000" },
+			position: [0, 1, 0],
+			animate: false,
+		});
 	}
 
 	return objects;
 }
 
 function DynamicMesh({ obj }: { obj: SceneObject }) {
+	const meshRef = useRef<any>(null);
+
+	// Add rotation animation if requested
+	useEffect(() => {
+		if (obj.animate && meshRef.current) {
+			let animationId: number;
+			const animate = () => {
+				if (meshRef.current) {
+					meshRef.current.rotation.x += 0.01;
+					meshRef.current.rotation.y += 0.01;
+				}
+				animationId = requestAnimationFrame(animate);
+			};
+			animate();
+			return () => cancelAnimationFrame(animationId);
+		}
+	}, [obj.animate]);
+
 	const geometry = (() => {
-		switch (obj.type) {
-			case "Box":
+		const type = obj.type.toLowerCase();
+		switch (type) {
+			case "box":
 				return <boxGeometry args={obj.geometry as [number, number, number]} />;
-			case "Sphere":
+			case "sphere":
 				return <sphereGeometry args={obj.geometry as [number, number, number]} />;
-			case "Cylinder":
-				return <cylinderGeometry args={obj.geometry as [number, number, number]} />;
-			case "Cone":
-				return <coneGeometry args={obj.geometry as [number, number, number]} />;
-			case "Torus":
-				return <torusGeometry args={obj.geometry as [number, number, number]} />;
-			case "Plane":
-				return <planeGeometry args={obj.geometry as [number, number]} />;
+			case "cylinder":
+				return <cylinderGeometry args={obj.geometry as [number, number, number, number?, number?]} />;
+			case "cone":
+				return <coneGeometry args={obj.geometry as [number, number, number?]} />;
+			case "torus":
+				return <torusGeometry args={obj.geometry as [number, number, number?, number?]} />;
+			case "torusknot":
+				return <torusKnotGeometry args={obj.geometry as [number, number, number?, number?]} />;
+			case "dodecahedron":
+				return <dodecahedronGeometry args={obj.geometry as [number?, number?]} />;
+			case "icosahedron":
+				return <icosahedronGeometry args={obj.geometry as [number?, number?]} />;
+			case "octahedron":
+				return <octahedronGeometry args={obj.geometry as [number?, number?]} />;
+			case "tetrahedron":
+				return <tetrahedronGeometry args={obj.geometry as [number?, number?]} />;
+			case "plane":
+				return <planeGeometry args={obj.geometry as [number, number, number?, number?]} />;
+			case "circle":
+				return <circleGeometry args={obj.geometry as [number?, number?]} />;
+			case "ring":
+				return <ringGeometry args={obj.geometry as [number, number, number?, number?]} />;
 			default:
 				return <boxGeometry args={[1, 1, 1]} />;
 		}
 	})();
 
 	return (
-		<mesh position={obj.position} rotation={obj.rotation} scale={obj.scale}>
+		<mesh
+			ref={meshRef}
+			position={obj.position}
+			rotation={obj.rotation}
+			scale={obj.scale}
+			castShadow
+			receiveShadow
+		>
 			{geometry}
-			<meshStandardMaterial color={obj.material.color} />
+			<meshStandardMaterial
+				color={obj.material.color}
+				metalness={obj.material.metalness ?? 0.5}
+				roughness={obj.material.roughness ?? 0.5}
+				transparent={obj.material.transparent}
+				opacity={obj.material.opacity}
+			/>
 		</mesh>
 	);
 }

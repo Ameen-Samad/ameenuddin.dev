@@ -8,6 +8,7 @@ import {
 	Divider,
 	Drawer,
 	Group,
+	Modal,
 	Paper,
 	ScrollArea,
 	Stack,
@@ -19,15 +20,18 @@ import { notifications } from "@mantine/notifications";
 import {
 	IconBook,
 	IconBrain,
+	IconCheck,
 	IconChevronDown,
 	IconChevronUp,
 	IconDatabase,
+	IconEdit,
 	IconFileText,
 	IconMessage,
 	IconRefresh,
 	IconSend,
 	IconSparkles,
 	IconTool,
+	IconX,
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
@@ -74,6 +78,8 @@ function Chatbot() {
 	const [showRagDescription, setShowRagDescription] = useState(false);
 	const [drawerOpened, setDrawerOpened] = useState(false);
 	const [drawerContent, setDrawerContent] = useState<ContextDoc | null>(null);
+	const [editingDocument, setEditingDocument] = useState<{ id: string; content: string } | null>(null);
+	const [editingContent, setEditingContent] = useState("");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const isStreamingRef = useRef(false);
 
@@ -282,6 +288,23 @@ function Chatbot() {
 		setDocuments((prev) => prev.filter((doc) => doc.id !== id));
 	};
 
+	const openEditModal = (doc: { id: string; content: string }) => {
+		setEditingDocument(doc);
+		setEditingContent(doc.content);
+	};
+
+	const closeEditModal = () => {
+		setEditingDocument(null);
+		setEditingContent("");
+	};
+
+	const saveEditedDocument = () => {
+		if (editingDocument) {
+			updateDocument(editingDocument.id, editingContent);
+			closeEditModal();
+		}
+	};
+
 	return (
 		<div style={{ minHeight: "100vh", background: "#0a0a0a" }}>
 			<Container size="xl" py="xl">
@@ -458,6 +481,7 @@ function Chatbot() {
 							onAdd={addDocument}
 							onUpdate={updateDocument}
 							onRemove={removeDocument}
+						onEdit={openEditModal}
 						/>
 
 						<ChatArea
@@ -467,6 +491,8 @@ function Chatbot() {
 							onSendMessage={handleSendMessage}
 							onSimulate={handleSimulate}
 							messagesEndRef={messagesEndRef}
+						input={input}
+						setInput={setInput}
 						/>
 					</Stack>
 				</motion.div>
