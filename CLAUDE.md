@@ -55,6 +55,98 @@ This project leverages the **complete TanStack ecosystem** for type-safe, perfor
 
 ---
 
+## ⚠️ CRITICAL: TanStack Start + Cloudflare Workers Deployment
+
+### TanStack Start Auto-Generates Wrangler Configuration
+
+**DO NOT** manually create post-build scripts or copy server files. TanStack Start has built-in Cloudflare Workers support.
+
+#### How It Works
+
+1. **You configure**: `wrangler.jsonc` with your bindings (D1, AI, KV)
+2. **TanStack Start generates**: `dist/server/wrangler.json` during `vite build`
+3. **Deploy with**: `wrangler deploy --config dist/server/wrangler.json`
+
+#### What TanStack Start Does Automatically
+
+```bash
+npm run build
+# TanStack Start:
+# 1. Builds server code → dist/server/index.js + assets/worker-entry-*.js
+# 2. Builds client assets → dist/client/
+# 3. GENERATES dist/server/wrangler.json (merges your wrangler.jsonc + TanStack defaults)
+```
+
+**Generated `dist/server/wrangler.json`**:
+```json
+{
+  "name": "ameenuddin",
+  "main": "index.js",              // Points to dist/server/index.js
+  "assets": {
+    "directory": "../client",       // Points to dist/client/
+    "binding": "ASSETS"
+  },
+  "d1_databases": [...],            // From your wrangler.jsonc
+  "ai": {...},                      // From your wrangler.jsonc
+  "kv_namespaces": [...]            // From your wrangler.jsonc
+}
+```
+
+#### Your Configuration (`wrangler.jsonc`)
+
+```jsonc
+{
+  "name": "ameenuddin",
+  "compatibility_date": "2025-09-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "@tanstack/react-start/server-entry",  // TanStack's Worker entry
+  "assets": {
+    "directory": "dist/client",
+    "binding": "ASSETS"
+  },
+  "d1_databases": [{ "binding": "DB", ... }],
+  "ai": { "binding": "AI" },
+  "kv_namespaces": [{ "binding": "PROJECT_CACHE", ... }]
+}
+```
+
+#### Deployment Commands
+
+```bash
+# Development (hot reload, client-only)
+npm run dev
+
+# Worker dev (full SSR + API + bindings)
+npm run dev:worker    # Uses dist/server/wrangler.json
+
+# Deploy to production
+npm run deploy        # Uses dist/server/wrangler.json
+```
+
+#### Common Mistakes to Avoid
+
+❌ **DON'T**: Create custom post-build scripts to copy files
+❌ **DON'T**: Manually edit `dist/server/wrangler.json` (it's auto-generated)
+❌ **DON'T**: Try to use `wrangler deploy` without `--config dist/server/wrangler.json`
+❌ **DON'T**: Create `_worker.js` files manually (TanStack uses `index.js` + assets)
+
+✅ **DO**: Configure `wrangler.jsonc` with your bindings
+✅ **DO**: Let TanStack Start generate the final config
+✅ **DO**: Use `wrangler deploy --config dist/server/wrangler.json`
+✅ **DO**: Trust the `@tanstack/react-start/server-entry` pattern
+
+#### Why This Matters
+
+TanStack Start is designed for **pure Cloudflare Workers** deployment (not Pages). It:
+- Generates optimized Worker bundles
+- Merges configurations correctly
+- Handles asset serving via ASSETS binding
+- Sets up SSR + API routes automatically
+
+**See `DEPLOYMENT.md` for complete deployment guide.**
+
+---
+
 ## 🎯 How We Use Each Package
 
 ### 1. TanStack Start (Full-Stack Framework)

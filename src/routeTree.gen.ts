@@ -18,6 +18,8 @@ import { Route as DemoTrpcTodoRouteImport } from './routes/demo/trpc-todo'
 import { Route as DemoTanstackQueryRouteImport } from './routes/demo/tanstack-query'
 import { Route as DemoTableRouteImport } from './routes/demo/table'
 import { Route as DemoStoreRouteImport } from './routes/demo/store'
+import { Route as DemoAiVoiceRouteImport } from './routes/demo/ai-voice'
+import { Route as DemoAiTtsRouteImport } from './routes/demo/ai-tts'
 import { Route as DemoAiStructuredRouteImport } from './routes/demo/ai-structured'
 import { Route as DemoAiImageRouteImport } from './routes/demo/ai-image'
 import { Route as DemoAiChatRouteImport } from './routes/demo/ai-chat'
@@ -51,6 +53,7 @@ import { Route as DemoStartSsrDataOnlyRouteImport } from './routes/demo/start.ss
 import { Route as DemoApiAiTtsRouteImport } from './routes/demo/api.ai.tts'
 import { Route as DemoApiAiTranscriptionRouteImport } from './routes/demo/api.ai.transcription'
 import { Route as DemoApiAiStructuredRouteImport } from './routes/demo/api.ai.structured'
+import { Route as DemoApiAiSpeechRouteImport } from './routes/demo/api.ai.speech'
 import { Route as DemoApiAiImageRouteImport } from './routes/demo/api.ai.image'
 import { Route as DemoApiAiChatRouteImport } from './routes/demo/api.ai.chat'
 import { Route as ApiWorkersEmbeddingsProtectedExampleRouteImport } from './routes/api/workers/embeddings-protected.example'
@@ -98,6 +101,16 @@ const DemoTableRoute = DemoTableRouteImport.update({
 const DemoStoreRoute = DemoStoreRouteImport.update({
   id: '/demo/store',
   path: '/demo/store',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoAiVoiceRoute = DemoAiVoiceRouteImport.update({
+  id: '/demo/ai-voice',
+  path: '/demo/ai-voice',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoAiTtsRoute = DemoAiTtsRouteImport.update({
+  id: '/demo/ai-tts',
+  path: '/demo/ai-tts',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoAiStructuredRoute = DemoAiStructuredRouteImport.update({
@@ -266,6 +279,11 @@ const DemoApiAiStructuredRoute = DemoApiAiStructuredRouteImport.update({
   path: '/demo/api/ai/structured',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoApiAiSpeechRoute = DemoApiAiSpeechRouteImport.update({
+  id: '/demo/api/ai/speech',
+  path: '/demo/api/ai/speech',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoApiAiImageRoute = DemoApiAiImageRouteImport.update({
   id: '/demo/api/ai/image',
   path: '/demo/api/ai/image',
@@ -297,6 +315,8 @@ export interface FileRoutesByFullPath {
   '/demo/ai-chat': typeof DemoAiChatRoute
   '/demo/ai-image': typeof DemoAiImageRoute
   '/demo/ai-structured': typeof DemoAiStructuredRoute
+  '/demo/ai-tts': typeof DemoAiTtsRoute
+  '/demo/ai-voice': typeof DemoAiVoiceRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -322,6 +342,7 @@ export interface FileRoutesByFullPath {
   '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
   '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
+  '/demo/api/ai/speech': typeof DemoApiAiSpeechRoute
   '/demo/api/ai/structured': typeof DemoApiAiStructuredRoute
   '/demo/api/ai/transcription': typeof DemoApiAiTranscriptionRoute
   '/demo/api/ai/tts': typeof DemoApiAiTtsRoute
@@ -344,6 +365,8 @@ export interface FileRoutesByTo {
   '/demo/ai-chat': typeof DemoAiChatRoute
   '/demo/ai-image': typeof DemoAiImageRoute
   '/demo/ai-structured': typeof DemoAiStructuredRoute
+  '/demo/ai-tts': typeof DemoAiTtsRoute
+  '/demo/ai-voice': typeof DemoAiVoiceRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -369,6 +392,7 @@ export interface FileRoutesByTo {
   '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
   '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
+  '/demo/api/ai/speech': typeof DemoApiAiSpeechRoute
   '/demo/api/ai/structured': typeof DemoApiAiStructuredRoute
   '/demo/api/ai/transcription': typeof DemoApiAiTranscriptionRoute
   '/demo/api/ai/tts': typeof DemoApiAiTtsRoute
@@ -392,6 +416,8 @@ export interface FileRoutesById {
   '/demo/ai-chat': typeof DemoAiChatRoute
   '/demo/ai-image': typeof DemoAiImageRoute
   '/demo/ai-structured': typeof DemoAiStructuredRoute
+  '/demo/ai-tts': typeof DemoAiTtsRoute
+  '/demo/ai-voice': typeof DemoAiVoiceRoute
   '/demo/store': typeof DemoStoreRoute
   '/demo/table': typeof DemoTableRoute
   '/demo/tanstack-query': typeof DemoTanstackQueryRoute
@@ -417,6 +443,7 @@ export interface FileRoutesById {
   '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
   '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
+  '/demo/api/ai/speech': typeof DemoApiAiSpeechRoute
   '/demo/api/ai/structured': typeof DemoApiAiStructuredRoute
   '/demo/api/ai/transcription': typeof DemoApiAiTranscriptionRoute
   '/demo/api/ai/tts': typeof DemoApiAiTtsRoute
@@ -441,6 +468,8 @@ export interface FileRouteTypes {
     | '/demo/ai-chat'
     | '/demo/ai-image'
     | '/demo/ai-structured'
+    | '/demo/ai-tts'
+    | '/demo/ai-voice'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
@@ -466,6 +495,7 @@ export interface FileRouteTypes {
     | '/api/workers/embeddings-protected/example'
     | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
+    | '/demo/api/ai/speech'
     | '/demo/api/ai/structured'
     | '/demo/api/ai/transcription'
     | '/demo/api/ai/tts'
@@ -488,6 +518,8 @@ export interface FileRouteTypes {
     | '/demo/ai-chat'
     | '/demo/ai-image'
     | '/demo/ai-structured'
+    | '/demo/ai-tts'
+    | '/demo/ai-voice'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
@@ -513,6 +545,7 @@ export interface FileRouteTypes {
     | '/api/workers/embeddings-protected/example'
     | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
+    | '/demo/api/ai/speech'
     | '/demo/api/ai/structured'
     | '/demo/api/ai/transcription'
     | '/demo/api/ai/tts'
@@ -535,6 +568,8 @@ export interface FileRouteTypes {
     | '/demo/ai-chat'
     | '/demo/ai-image'
     | '/demo/ai-structured'
+    | '/demo/ai-tts'
+    | '/demo/ai-voice'
     | '/demo/store'
     | '/demo/table'
     | '/demo/tanstack-query'
@@ -560,6 +595,7 @@ export interface FileRouteTypes {
     | '/api/workers/embeddings-protected/example'
     | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
+    | '/demo/api/ai/speech'
     | '/demo/api/ai/structured'
     | '/demo/api/ai/transcription'
     | '/demo/api/ai/tts'
@@ -583,6 +619,8 @@ export interface RootRouteChildren {
   DemoAiChatRoute: typeof DemoAiChatRoute
   DemoAiImageRoute: typeof DemoAiImageRoute
   DemoAiStructuredRoute: typeof DemoAiStructuredRoute
+  DemoAiTtsRoute: typeof DemoAiTtsRoute
+  DemoAiVoiceRoute: typeof DemoAiVoiceRoute
   DemoStoreRoute: typeof DemoStoreRoute
   DemoTableRoute: typeof DemoTableRoute
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
@@ -607,6 +645,7 @@ export interface RootRouteChildren {
   ApiWorkersEmbeddingsProtectedExampleRoute: typeof ApiWorkersEmbeddingsProtectedExampleRoute
   DemoApiAiChatRoute: typeof DemoApiAiChatRoute
   DemoApiAiImageRoute: typeof DemoApiAiImageRoute
+  DemoApiAiSpeechRoute: typeof DemoApiAiSpeechRoute
   DemoApiAiStructuredRoute: typeof DemoApiAiStructuredRoute
   DemoApiAiTranscriptionRoute: typeof DemoApiAiTranscriptionRoute
   DemoApiAiTtsRoute: typeof DemoApiAiTtsRoute
@@ -679,6 +718,20 @@ declare module '@tanstack/react-router' {
       path: '/demo/store'
       fullPath: '/demo/store'
       preLoaderRoute: typeof DemoStoreRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/ai-voice': {
+      id: '/demo/ai-voice'
+      path: '/demo/ai-voice'
+      fullPath: '/demo/ai-voice'
+      preLoaderRoute: typeof DemoAiVoiceRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/ai-tts': {
+      id: '/demo/ai-tts'
+      path: '/demo/ai-tts'
+      fullPath: '/demo/ai-tts'
+      preLoaderRoute: typeof DemoAiTtsRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/ai-structured': {
@@ -912,6 +965,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoApiAiStructuredRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/api/ai/speech': {
+      id: '/demo/api/ai/speech'
+      path: '/demo/api/ai/speech'
+      fullPath: '/demo/api/ai/speech'
+      preLoaderRoute: typeof DemoApiAiSpeechRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/api/ai/image': {
       id: '/demo/api/ai/image'
       path: '/demo/api/ai/image'
@@ -962,6 +1022,8 @@ const rootRouteChildren: RootRouteChildren = {
   DemoAiChatRoute: DemoAiChatRoute,
   DemoAiImageRoute: DemoAiImageRoute,
   DemoAiStructuredRoute: DemoAiStructuredRoute,
+  DemoAiTtsRoute: DemoAiTtsRoute,
+  DemoAiVoiceRoute: DemoAiVoiceRoute,
   DemoStoreRoute: DemoStoreRoute,
   DemoTableRoute: DemoTableRoute,
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
@@ -987,6 +1049,7 @@ const rootRouteChildren: RootRouteChildren = {
     ApiWorkersEmbeddingsProtectedExampleRoute,
   DemoApiAiChatRoute: DemoApiAiChatRoute,
   DemoApiAiImageRoute: DemoApiAiImageRoute,
+  DemoApiAiSpeechRoute: DemoApiAiSpeechRoute,
   DemoApiAiStructuredRoute: DemoApiAiStructuredRoute,
   DemoApiAiTranscriptionRoute: DemoApiAiTranscriptionRoute,
   DemoApiAiTtsRoute: DemoApiAiTtsRoute,

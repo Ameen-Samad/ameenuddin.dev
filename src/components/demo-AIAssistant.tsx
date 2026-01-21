@@ -1,6 +1,6 @@
 import { useStore } from "@tanstack/react-store";
 import { Store } from "@tanstack/store";
-import { BotIcon, ChevronRight, Send, X } from "lucide-react";
+import { BotIcon, ChevronRight, Mic, MicOff, Send, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
 import { Streamdown } from "streamdown";
 
@@ -86,6 +86,74 @@ export default function AIAssistant() {
 	const isOpen = useStore(showAIAssistant);
 	const { messages, sendMessage, isLoading } = useDemoChat();
 	const [input, setInput] = useState("");
+	const [isRecording, setIsRecording] = useState(false);
+	const [isProcessing, setIsProcessing] = useState(false);
+	const mediaRecorderRef = useRef<MediaRecorder | null>(null);
+	const audioChunksRef = useRef<Blob[]>([]);
+
+	const startRecording = async () => {
+		try {
+			const stream = await navigator.mediaDevices.getUserMedia({ audio: true });
+			const mediaRecorder = new MediaRecorder(stream);
+			mediaRecorderRef.current = mediaRecorder;
+			audioChunksRef.current = [];
+
+			mediaRecorder.ondataavailable = (event) => {
+				if (event.data.size > 0) {
+					audioChunksRef.current.push(event.data);
+				}
+			};
+
+			mediaRecorder.onstop = async () => {
+				const audioBlob = new Blob(audioChunksRef.current, {
+					type: "audio/webm",
+				});
+
+				// Stop all tracks to release the microphone
+				stream.getTracks().forEach((track) => track.stop());
+
+				// Send to speech recognition API
+				setIsProcessing(true);
+				try {
+					const formData = new FormData();
+					formData.append("audio", audioBlob);
+
+					const response = await fetch("/demo/api/ai/speech", {
+						method: "POST",
+						body: formData,
+					});
+
+					if (!response.ok) {
+						throw new Error("Speech recognition failed");
+					}
+
+					const result = await response.json();
+					const transcribedText = result.text || "";
+
+					// Set the transcribed text to the input
+					setInput(transcribedText);
+				} catch (error) {
+					console.error("Speech recognition error:", error);
+					alert("Failed to transcribe audio. Please try again.");
+				} finally {
+					setIsProcessing(false);
+				}
+			};
+
+			mediaRecorder.start();
+			setIsRecording(true);
+		} catch (error) {
+			console.error("Error accessing microphone:", error);
+			alert("Failed to access microphone. Please check permissions.");
+		}
+	};
+
+	const stopRecording = () => {
+		if (mediaRecorderRef.current && isRecording) {
+			mediaRecorderRef.current.stop();
+			setIsRecording(false);
+		}
+	};
 
 	return (
 		<div className="relative z-50">
@@ -128,9 +196,15 @@ export default function AIAssistant() {
 								<textarea
 									value={input}
 									onChange={(e) => setInput(e.target.value)}
-									placeholder="Type your message..."
-									disabled={isLoading}
-									className="w-full rounded-lg border border-orange-500/20 bg-gray-800/50 pl-3 pr-10 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent resize-none overflow-hidden disabled:opacity-50"
+									placeholder={
+										isRecording
+											? "Recording..."
+											: isProcessing
+												? "Processing speech..."
+												: "Type your message or use voice..."
+									}
+									disabled={isLoading || isRecording || isProcessing}
+									className="w-full rounded-lg border border-orange-500/20 bg-gray-800/50 pl-3 pr-20 py-2 text-sm text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-orange-500/50 focus:border-transparent resize-none overflow-hidden disabled:opacity-50"
 									rows={1}
 									style={{ minHeight: "36px", maxHeight: "120px" }}
 									onInput={(e) => {
@@ -152,13 +226,32 @@ export default function AIAssistant() {
 										}
 									}}
 								/>
-								<button
-									type="submit"
-									disabled={!input.trim() || isLoading}
-									className="absolute right-2 top-1/2 -translate-y-1/2 p-1.5 text-orange-500 hover:text-orange-400 disabled:text-gray-500 transition-colors focus:outline-none"
-								>
-									<Send className="w-4 h-4" />
-								</button>
+								<div className="absolute right-2 top-1/2 -translate-y-1/2 flex gap-1">
+									<button
+										type="button"
+										onClick={isRecording ? stopRecording : startRecording}
+										disabled={isLoading || isProcessing}
+										className={`p-1.5 transition-colors focus:outline-none ${
+											isRecording
+												? "text-red-500 hover:text-red-400 animate-pulse"
+												: "text-gray-400 hover:text-orange-400 disabled:text-gray-600"
+										}`}
+										title={isRecording ? "Stop recording" : "Start recording"}
+									>
+										{isRecording ? (
+											<MicOff className="w-4 h-4" />
+										) : (
+											<Mic className="w-4 h-4" />
+										)}
+									</button>
+									<button
+										type="submit"
+										disabled={!input.trim() || isLoading || isRecording || isProcessing}
+										className="p-1.5 text-orange-500 hover:text-orange-400 disabled:text-gray-500 transition-colors focus:outline-none"
+									>
+										<Send className="w-4 h-4" />
+									</button>
+								</div>
 							</div>
 						</form>
 					</div>

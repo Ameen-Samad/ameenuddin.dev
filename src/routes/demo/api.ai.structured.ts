@@ -1,6 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { chat } from '@tanstack/ai'
-import { openaiText } from '@tanstack/ai-openai'
 import { z } from 'zod'
 
 // Schema for structured recipe output
@@ -40,7 +38,7 @@ export type Recipe = z.infer<typeof RecipeSchema>
 export const Route = createFileRoute('/demo/api/ai/structured')({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({ request, context }) => {
         const body = await request.json()
         const { recipeName, mode = 'structured' } = body
 
@@ -56,26 +54,92 @@ export const Route = createFileRoute('/demo/api/ai/structured')({
           )
         }
 
+        const env = (context as any)?.cloudflare?.env
+        if (!env?.AI) {
+          return new Response(
+            JSON.stringify({
+              error: 'Cloudflare AI binding not available',
+            }),
+            {
+              status: 500,
+              headers: { 'Content-Type': 'application/json' },
+            },
+          )
+        }
+
         try {
           if (mode === 'structured') {
             // Structured output mode - returns validated object
-            const result = await chat({
-              adapter: openaiText('gpt-4o'),
-              messages: [
+            const structuredPrompt = `Generate a complete recipe for: ${recipeName}.
+
+IMPORTANT: You must respond with a valid JSON object matching this exact structure:
+{
+  "name": "recipe name",
+  "description": "brief description",
+  "prepTime": "time string (e.g., '15 minutes')",
+  "cookTime": "time string (e.g., '30 minutes')",
+  "servings": number,
+  "difficulty": "easy" | "medium" | "hard",
+  "ingredients": [
+    {
+      "item": "ingredient name",
+      "amount": "amount with unit",
+      "notes": "optional notes"
+    }
+  ],
+  "instructions": ["step 1", "step 2", ...],
+  "tips": ["tip 1", "tip 2", ...],
+  "nutritionPerServing": {
+    "calories": number (optional),
+    "protein": "amount string" (optional),
+    "carbs": "amount string" (optional),
+    "fat": "amount string" (optional)
+  }
+}
+
+Include all ingredients with amounts, step-by-step instructions, prep/cook times, difficulty level, and nutritional info. Respond ONLY with valid JSON, no markdown formatting.`
+
+            const aiResponse = await env.AI.run(
+              '@cf/meta/llama-4-scout-17b-16e-instruct',
+              {
+                messages: [
+                  { role: 'system', content: 'You are a helpful recipe generator. Always respond with valid JSON.' },
+                  { role: 'user', content: structuredPrompt },
+                ],
+              },
+            )
+
+            // Parse and validate the response
+            let recipeData: Recipe
+            try {
+              // Extract JSON from response (in case AI adds extra text)
+              const responseText = aiResponse.response || JSON.stringify(aiResponse)
+              const jsonMatch = responseText.match(/\{[\s\S]*\}/)
+              const jsonString = jsonMatch ? jsonMatch[0] : responseText
+
+              const parsedData = JSON.parse(jsonString)
+              recipeData = RecipeSchema.parse(parsedData)
+            } catch (parseError: any) {
+              console.error('Failed to parse AI response:', parseError)
+              return new Response(
+                JSON.stringify({
+                  error: 'Failed to parse structured recipe data',
+                  details: parseError.message,
+                  rawResponse: aiResponse,
+                }),
                 {
-                  role: 'user',
-                  content: `Generate a complete recipe for: ${recipeName}. Include all ingredients with amounts, step-by-step instructions, prep/cook times, and difficulty level.`,
+                  status: 500,
+                  headers: { 'Content-Type': 'application/json' },
                 },
-              ],
-              outputSchema: RecipeSchema,
-            } as any)
+              )
+            }
 
             return new Response(
               JSON.stringify({
                 mode: 'structured',
-                recipe: result,
-                provider: 'openai',
-                model: 'gpt-4o',
+                recipe: recipeData,
+                provider: 'cloudflare',
+                model: '@cf/meta/llama-4-scout-17b-16e-instruct',
               }),
               {
                 status: 200,
@@ -84,13 +148,7 @@ export const Route = createFileRoute('/demo/api/ai/structured')({
             )
           } else {
             // One-shot markdown mode - returns text
-            const markdown = await chat({
-              adapter: openaiText('gpt-4o'),
-              stream: false,
-              messages: [
-                {
-                  role: 'user',
-                  content: `Generate a complete recipe for: ${recipeName}.
+            const markdownPrompt = `Generate a complete recipe for: ${recipeName}.
 
 Format the recipe in beautiful markdown with:
 - A title with the recipe name
@@ -101,17 +159,26 @@ Format the recipe in beautiful markdown with:
 - Optional tips section
 - Nutritional info if applicable
 
-Make it detailed and easy to follow.`,
-                },
-              ],
-            } as any)
+Make it detailed and easy to follow.`
+
+            const aiResponse = await env.AI.run(
+              '@cf/meta/llama-4-scout-17b-16e-instruct',
+              {
+                messages: [
+                  { role: 'system', content: 'You are a helpful recipe generator that creates well-formatted markdown recipes.' },
+                  { role: 'user', content: markdownPrompt },
+                ],
+              },
+            )
+
+            const markdown = aiResponse.response || JSON.stringify(aiResponse)
 
             return new Response(
               JSON.stringify({
                 mode: 'oneshot',
                 markdown,
-                provider: 'openai',
-                model: 'gpt-4o',
+                provider: 'cloudflare',
+                model: '@cf/meta/llama-4-scout-17b-16e-instruct',
               }),
               {
                 status: 200,
@@ -120,9 +187,10 @@ Make it detailed and easy to follow.`,
             )
           }
         } catch (error: any) {
+          console.error('Recipe generation error:', error)
           return new Response(
             JSON.stringify({
-              error: error.message || 'An error occurred',
+              error: error.message || 'An error occurred during recipe generation',
             }),
             {
               status: 500,
