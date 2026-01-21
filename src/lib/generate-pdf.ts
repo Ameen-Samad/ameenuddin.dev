@@ -1,5 +1,4 @@
 import { allEducations, allJobs } from "content-collections";
-import html2canvas from "html2canvas";
 import jsPDF from "jspdf";
 
 export interface Education {
@@ -30,8 +29,8 @@ export async function generateResumePDF(): Promise<Blob> {
 	const margin = 20;
 	const contentWidth = pageWidth - margin * 2;
 
-	const educations = allEducations();
-	const jobs = allJobs();
+	const educations = allEducations;
+	const jobs = allJobs;
 
 	doc.setFontSize(16);
 	doc.setTextColor(40, 40, 40);

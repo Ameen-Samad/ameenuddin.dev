@@ -41,8 +41,8 @@ export const ExperienceStats = ({
 	if (layout === "compact") {
 		return (
 			<div className="flex items-center gap-6 mb-8">
-				{statsData.map((stat, index) => (
-					<div key={index} className="flex items-center gap-2">
+				{statsData.map((stat) => (
+					<div key={stat.label} className="flex items-center gap-2">
 						<stat.icon size={18} className={`text-${stat.color}-400`} />
 						<span className="text-slate-300 text-sm">
 							{stat.label}:{" "}

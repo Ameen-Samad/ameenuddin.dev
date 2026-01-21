@@ -75,12 +75,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						isDarkMode={isDarkMode}
 						onThemeToggle={() => setIsDarkMode(!isDarkMode)}
 					/>
-					<div
-						style={{
-							marginLeft: "0",
-						}}
-						className="md:ml-[280px]"
-					>
+					<div className="ml-0 md:ml-[280px] min-h-dvh transition-all duration-300 ease-out">
 						{children}
 					</div>
 					<Scripts />

@@ -11,9 +11,12 @@ import { ProjectHero } from "./ProjectHero";
 export function ProjectsSection() {
 	const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 	const [searchQuery, setSearchQuery] = useState("");
+	const [selectedProject, setSelectedProject] = useState<string | null>(null);
 	const projectsId = useId();
 
 	const filters = useMemo(() => getFilters(projects), []);
+
+	const featuredProject = projects.find((p) => p.featured);
 
 	const filteredProjects = useMemo(() => {
 		let filtered = projects;
@@ -48,6 +51,10 @@ export function ProjectsSection() {
 		return () => window.removeEventListener("keydown", handleKeyDown);
 	}, []);
 
+	const handleProjectClick = (projectId: string) => {
+		setSelectedProject(projectId);
+	};
+
 	return (
 		<section id={projectsId} style={{ padding: "100px 0" }}>
 			<Container size="xl">
@@ -63,6 +70,17 @@ export function ProjectsSection() {
 					activeFilter={activeFilter}
 					onFilterChange={setActiveFilter}
 				/>
+
+				{!searchQuery && (
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ delay: 0.3 }}
+						style={{ marginBottom: "60px" }}
+					>
+						<AIRecommendations type="trending" projects={projects} limit={4} />
+					</motion.div>
+				)}
 
 				{filteredProjects.length === 0 ? (
 					<motion.div
@@ -87,9 +105,29 @@ export function ProjectsSection() {
 							style={{ gap: "2rem" }}
 						>
 							{filteredProjects.map((project, index) => (
-								<ProjectCard key={project.id} project={project} index={index} />
+								<div
+									key={project.id}
+									onClick={() => handleProjectClick(project.id)}
+								>
+									<ProjectCard project={project} index={index} />
+								</div>
 							))}
 						</SimpleGrid>
+					</motion.div>
+				)}
+
+				{searchQuery && filteredProjects.length > 0 && (
+					<motion.div
+						initial={{ opacity: 0 }}
+						animate={{ opacity: 1 }}
+						style={{ marginTop: "60px" }}
+					>
+						<AIRecommendations
+							type="similar"
+							projectId={filteredProjects[0]?.id}
+							projects={projects}
+							limit={3}
+						/>
 					</motion.div>
 				)}
 
@@ -99,6 +137,21 @@ export function ProjectsSection() {
 					</Text>
 				)}
 			</Container>
+
+			{selectedProject && (
+				<ProjectAIAssistant
+					projectId={selectedProject}
+					projectTitle={
+						projects.find((p) => p.id === selectedProject)?.title || ""
+					}
+					projectDescription={
+						projects.find((p) => p.id === selectedProject)?.description || ""
+					}
+					projectTags={
+						projects.find((p) => p.id === selectedProject)?.tags || []
+					}
+				/>
+			)}
 		</section>
 	);
 }
