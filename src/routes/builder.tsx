@@ -24,6 +24,7 @@ import {
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useRef, useState } from "react";
+import { ThreeScene } from "@/components/ThreeScene";
 
 export const Route = createFileRoute("/builder")({
 	component: Builder,
@@ -41,7 +42,6 @@ function Builder() {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [currentCode, setCurrentCode] = useState<string | null>(null);
 	const [history, setHistory] = useState<Generation[]>([]);
-	const canvasRef = useRef<HTMLCanvasElement>(null);
 
 	useEffect(() => {
 		const savedHistory = localStorage.getItem("builder-history");
@@ -164,7 +164,6 @@ function Builder() {
 						<ViewerPanel
 							currentCode={currentCode}
 							isGenerating={isGenerating}
-							canvasRef={canvasRef}
 						/>
 					</Stack>
 				</motion.div>
@@ -343,40 +342,11 @@ function BuilderPanel({
 function ViewerPanel({
 	currentCode,
 	isGenerating,
-	canvasRef,
 }: {
 	currentCode: string | null;
 	isGenerating: boolean;
-	canvasRef: React.RefObject<HTMLCanvasElement>;
+	canvasRef?: React.RefObject<HTMLCanvasElement>;
 }) {
-	useEffect(() => {
-		if (!currentCode || !canvasRef.current) return;
-
-		const canvas = canvasRef.current;
-		if (!canvas) return;
-
-		try {
-			canvas.width = canvas.offsetWidth * 2;
-			canvas.height = canvas.offsetHeight * 2;
-
-			const blob = new Blob([currentCode], { type: "application/javascript" });
-			const url = URL.createObjectURL(blob);
-
-			import(url)
-				.then((module: any) => {
-					if (module.createScene) {
-						module.createScene(canvas);
-						URL.revokeObjectURL(url);
-					}
-				})
-				.catch((err) => {
-					console.error("Failed to load generated scene:", err);
-				});
-		} catch (err) {
-			console.error("Scene rendering error:", err);
-		}
-	}, [currentCode]);
-
 	return (
 		<Paper
 			shadow="xl"
@@ -396,26 +366,13 @@ function ViewerPanel({
 					<IconCube size={20} style={{ color: "#0066ff" }} />
 					3D Viewer
 				</Title>
-				{currentCode && (
-					<ActionIcon
-						size={24}
-						variant="transparent"
-						style={{ color: "#ff00ff" }}
-					>
-						<IconRefresh size={20} />
-					</ActionIcon>
-				)}
 			</Group>
 
 			<div style={{ height: "600px", position: "relative" }}>
-				<canvas
-					ref={canvasRef}
-					style={{
-						width: "100%",
-						height: "100%",
-						display: "block",
-					}}
-				/>
+				{/* React Three Fiber Canvas with actual rendering */}
+				<div style={{ width: "100%", height: "100%", display: "block" }}>
+					<ThreeScene generatedCode={currentCode} />
+				</div>
 
 				{!currentCode && !isGenerating && (
 					<div
@@ -429,6 +386,7 @@ function ViewerPanel({
 							alignItems: "center",
 							justifyContent: "center",
 							background: "rgba(0, 0, 0, 0.7)",
+							pointerEvents: "none",
 						}}
 					>
 						<Stack align="center" gap="md">
@@ -453,6 +411,7 @@ function ViewerPanel({
 							alignItems: "center",
 							justifyContent: "center",
 							background: "rgba(0, 0, 0, 0.8)",
+							zIndex: 20,
 						}}
 					>
 						<Stack align="center" gap="md">
@@ -469,8 +428,8 @@ function ViewerPanel({
 					<div
 						style={{
 							position: "absolute",
-							bottom: "md",
-							right: "md",
+							bottom: "16px",
+							right: "16px",
 							zIndex: 10,
 							maxWidth: "500px",
 							maxHeight: "400px",
