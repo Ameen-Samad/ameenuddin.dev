@@ -1,4 +1,4 @@
-import { createStore } from "@tanstack/react-store";
+import { Store } from "@tanstack/store";
 import {
 	type FilterType,
 	getFilters,
@@ -13,7 +13,7 @@ export interface ProjectsStore {
 	projects: Project[];
 }
 
-export const projectsStore = createStore<ProjectsStore>({
+export const projectsStore = new Store<ProjectsStore>({
 	activeFilter: "all",
 	searchQuery: "",
 	selectedProject: null,
