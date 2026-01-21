@@ -6,14 +6,18 @@ export const Route = createFileRoute("/api/chat")({
 	server: {
 		handlers: {
 			POST: async ({ request }) => {
+				console.log("[Chat API] Request received");
 				const ai = env.AI;
+				console.log("[Chat API] AI binding:", ai ? "available" : "not available");
 
 				if (!ai) {
+					console.error("[Chat API] AI binding is not available");
 					return json({ error: "AI not available" }, { status: 500 });
 				}
 
 				try {
 					const body = await request.json();
+					console.log("[Chat API] Request body parsed:", { messagesCount: body.messages?.length, documentsCount: body.documents?.length });
 
 					const { messages, documents } = body as {
 						messages: Array<{ role: string; content: string }>;
@@ -87,24 +91,53 @@ export const Route = createFileRoute("/api/chat")({
 									),
 								);
 
+								console.log("[Chat API] Calling AI.run with model:", "@cf/meta/llama-4-scout-17b-16e-instruct");
 								const response = await ai.run(
-									"@cf/qwen/qwen2.5-coder-32b-instruct",
+									"@cf/meta/llama-4-scout-17b-16e-instruct",
 									{
 										messages: [
 											{ role: "system", content: systemPrompt },
 											...messages,
 										],
 										stream: true,
-										max_tokens: 2000,
 									},
 								);
+								// Handle both object chunks (production) and byte chunks (dev)
+								const decoder = new TextDecoder();
+								let buffer = "";
 
 								for await (const chunk of response) {
-									const chunkText = typeof chunk === 'string' ? chunk : chunk?.response || '';
-									if (chunkText) {
+									// Check if chunk is a Uint8Array (dev mode returns raw bytes)
+									if (chunk instanceof Uint8Array) {
+										// Decode bytes and parse SSE format
+										const text = decoder.decode(chunk, { stream: true });
+										buffer += text;
+
+										// Process complete SSE messages
+										const lines = buffer.split('\n\n');
+										buffer = lines.pop() || ''; // Keep incomplete message in buffer
+
+										for (const line of lines) {
+											if (line.startsWith('data: ')) {
+												try {
+													const data = JSON.parse(line.slice(6));
+													if (data.response) {
+														controller.enqueue(
+															encoder.encode(
+																`data: ${JSON.stringify({ type: "content", content: data.response })}\n\n`,
+															),
+														);
+													}
+												} catch (e) {
+													console.error("[Chat API] Failed to parse SSE data:", e);
+												}
+											}
+										}
+									} else if (chunk.response !== undefined) {
+										// Production mode: chunks are objects
 										controller.enqueue(
 											encoder.encode(
-												`data: ${JSON.stringify({ type: "content", content: chunkText })}\n\n`,
+												`data: ${JSON.stringify({ type: "content", content: chunk.response })}\n\n`,
 											),
 										);
 									}
@@ -117,7 +150,13 @@ export const Route = createFileRoute("/api/chat")({
 								);
 								controller.close();
 							} catch (error) {
-								controller.error(error);
+								console.error("[Chat API] Error in stream:", error);
+								controller.enqueue(
+									encoder.encode(
+										`data: ${JSON.stringify({ type: "error", error: error instanceof Error ? error.message : String(error) })}\n\n`,
+									),
+								);
+								controller.close();
 							}
 						},
 					});
@@ -129,8 +168,12 @@ export const Route = createFileRoute("/api/chat")({
 						},
 					});
 				} catch (error) {
-					console.error("AI API Error:", error);
-					return json({ error: "Internal server error" }, { status: 500 });
+					console.error("[Chat API] Fatal error:", error);
+					console.error("[Chat API] Error details:", error instanceof Error ? error.stack : error);
+					return json({
+						error: "Internal server error",
+						details: error instanceof Error ? error.message : String(error)
+					}, { status: 500 });
 				}
 			},
 		},

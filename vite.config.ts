@@ -11,7 +11,10 @@ export default defineConfig({
 		tsconfigPaths(),
 		tanstackStart(),
 		react(),
-		cloudflare({ viteEnvironment: { name: "ssr" } }),
+		cloudflare({
+			viteEnvironment: { name: "ssr" },
+			persist: { path: ".wrangler/state/v3" },
+		}),
 		contentCollections(),
 		tailwindcss(),
 	],
@@ -44,9 +47,9 @@ export default defineConfig({
 					// Only split out the truly massive libraries (>1MB each)
 					// Let Vite handle everything else to avoid circular dependencies
 					if (id.includes('node_modules')) {
-						if (id.includes('mermaid')) return 'vendor-mermaid';
+						// Combine mermaid + cytoscape since mermaid depends on cytoscape
+						if (id.includes('mermaid') || id.includes('cytoscape')) return 'vendor-mermaid';
 						if (id.includes('phaser')) return 'vendor-phaser';
-						if (id.includes('cytoscape')) return 'vendor-cytoscape';
 						if (id.includes('three') || id.includes('@react-three')) return 'vendor-three';
 					}
 				},
