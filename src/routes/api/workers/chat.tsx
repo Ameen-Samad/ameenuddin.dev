@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { projects } from "~/lib/projects-data";
+import { projects } from "@/lib/projects-data";
 
 export const Route = createFileRoute("/api/workers/chat")({
 	GET: async () => {

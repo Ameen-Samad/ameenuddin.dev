@@ -1,8 +1,8 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { GitFork, Sparkles, Star, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getRecommendations } from "~/lib/cloudflare-ai";
-import type { Project } from "~/lib/projects-data";
+import { getRecommendations } from "@/lib/cloudflare-ai";
+import type { Project } from "@/lib/projects-data";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";

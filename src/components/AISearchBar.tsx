@@ -1,11 +1,11 @@
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
 import { useEffect, useState } from "react";
-import type { AISearchQuery } from "~/lib/cloudflare-ai";
+import type { AISearchQuery } from "@/lib/cloudflare-ai";
 import {
 	parseNaturalLanguage,
 	performSemanticSearch,
-} from "~/lib/cloudflare-ai";
+} from "@/lib/cloudflare-ai";
 
 interface AISearchBarProps {
 	onSearch: (query: AISearchQuery | string) => void;

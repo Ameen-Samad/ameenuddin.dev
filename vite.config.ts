@@ -17,4 +17,9 @@ export default defineConfig({
 		contentCollections(),
 		tailwindcss(),
 	],
+	build: {
+		rollupOptions: {
+			external: ["@cloudflare/ai", "cloudflare:ai"],
+		},
+	},
 });

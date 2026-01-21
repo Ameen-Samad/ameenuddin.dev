@@ -3,7 +3,6 @@ import {
 	Award,
 	Calendar,
 	ChevronDown,
-	ChevronUp,
 	Code2,
 	MapPin,
 	Users,
@@ -48,18 +47,11 @@ export const ExperienceCard = ({
 			/>
 
 			{/* Header - Always Visible */}
-			<div
-				role="button"
-				tabIndex={0}
+			<button
+				type="button"
 				aria-expanded={isExpanded}
 				onClick={onToggle}
-				onKeyUp={(e) => {
-					if (e.key === "Enter" || e.key === " ") {
-						e.preventDefault();
-						onToggle();
-					}
-				}}
-				className="p-6 cursor-pointer hover:bg-white/5 transition-colors"
+				className="p-6 cursor-pointer hover:bg-white/5 transition-colors w-full text-left bg-transparent border-0"
 			>
 				<div className="flex items-start gap-4">
 					<CompanyLogo logo={experience.logo} company={experience.company} />
@@ -139,7 +131,7 @@ export const ExperienceCard = ({
 						))}
 					</div>
 				)}
-			</div>
+			</button>
 
 			{/* Expanded Details */}
 			<AnimatePresence>
@@ -159,9 +151,9 @@ export const ExperienceCard = ({
 									Responsibilities
 								</h5>
 								<ul className="space-y-1">
-									{experience.responsibilities.map((resp, i) => (
+									{experience.responsibilities.map((resp) => (
 										<li
-											key={i}
+											key={resp}
 											className="text-sm text-slate-400 flex items-start gap-2"
 										>
 											<span className="text-slate-500 mt-1">•</span>

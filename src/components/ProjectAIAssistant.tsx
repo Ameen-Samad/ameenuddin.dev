@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Copy, Download, MessageCircle, Send, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { chatWithProject } from "~/lib/cloudflare-ai";
+import { chatWithProject } from "@/lib/cloudflare-ai";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 
