@@ -10,6 +10,7 @@ import {
 import { IconSend, IconX } from "@tabler/icons-react";
 import { useStore } from "@tanstack/react-store";
 import { motion } from "framer-motion";
+import { useDebouncedCallback } from "@tanstack/react-pacer/debouncer";
 import {
 	type ContactErrors,
 	type ContactFormData,
@@ -105,6 +106,18 @@ export function ContactForm({ onSubmit, isSubmitting }: ContactFormProps) {
 		{ value: "feedback", label: "Feedback" },
 	];
 
+	// Debounced validation to avoid validating on every keystroke
+	const debouncedValidate = useDebouncedCallback(
+		(field: keyof ContactFormData, value: string) => {
+			const result = validateField(field, value);
+			contactFormActions.setError(
+				field,
+				result.isValid ? undefined : result.error,
+			);
+		},
+		{ wait: 300 },
+	);
+
 	const handleBlur = (field: keyof ContactFormData) => {
 		contactFormActions.setTouched(field, true);
 		const result = validateField(field, formData[field]);
@@ -114,14 +127,12 @@ export function ContactForm({ onSubmit, isSubmitting }: ContactFormProps) {
 	};
 
 	const handleChange = (field: keyof ContactFormData, value: string) => {
+		// Update field value immediately (no lag in typing)
 		contactFormActions.setField(field, value);
 
+		// Debounce validation to reduce unnecessary checks
 		if (touched[field]) {
-			const result = validateField(field, value);
-			contactFormActions.setError(
-				field,
-				result.isValid ? undefined : result.error,
-			);
+			debouncedValidate(field, value);
 		}
 	};
 
