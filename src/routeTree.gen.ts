@@ -345,7 +345,7 @@ export interface FileRoutesByFullPath {
   '/demo/guitars/$guitarId': typeof DemoGuitarsGuitarIdRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
-  '/demo/guitars/': typeof DemoGuitarsIndexRoute
+  '/demo/guitars': typeof DemoGuitarsIndexRoute
   '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
   '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
@@ -356,7 +356,7 @@ export interface FileRoutesByFullPath {
   '/demo/start/ssr/data-only': typeof DemoStartSsrDataOnlyRoute
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
-  '/demo/start/ssr/': typeof DemoStartSsrIndexRoute
+  '/demo/start/ssr': typeof DemoStartSsrIndexRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -501,7 +501,7 @@ export interface FileRouteTypes {
     | '/demo/guitars/$guitarId'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
-    | '/demo/guitars/'
+    | '/demo/guitars'
     | '/api/workers/embeddings-protected/example'
     | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
@@ -512,7 +512,7 @@ export interface FileRouteTypes {
     | '/demo/start/ssr/data-only'
     | '/demo/start/ssr/full-ssr'
     | '/demo/start/ssr/spa-mode'
-    | '/demo/start/ssr/'
+    | '/demo/start/ssr'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -813,7 +813,7 @@ declare module '@tanstack/react-router' {
     '/demo/guitars/': {
       id: '/demo/guitars/'
       path: '/demo/guitars'
-      fullPath: '/demo/guitars/'
+      fullPath: '/demo/guitars'
       preLoaderRoute: typeof DemoGuitarsIndexRouteImport
       parentRoute: typeof rootRouteImport
     }
@@ -939,7 +939,7 @@ declare module '@tanstack/react-router' {
     '/demo/start/ssr/': {
       id: '/demo/start/ssr/'
       path: '/demo/start/ssr'
-      fullPath: '/demo/start/ssr/'
+      fullPath: '/demo/start/ssr'
       preLoaderRoute: typeof DemoStartSsrIndexRouteImport
       parentRoute: typeof rootRouteImport
     }

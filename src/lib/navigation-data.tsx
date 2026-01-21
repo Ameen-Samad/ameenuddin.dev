@@ -59,6 +59,24 @@ export const navItems: NavItem[] = [
 						path: "/demo/ai-voice",
 					},
 					{
+						id: "demo-chatbot",
+						label: "Chatbot with RAG",
+						icon: <IconRobot size={16} />,
+						path: "/chatbot",
+					},
+					{
+						id: "demo-tetris",
+						label: "Tetris AI Agent",
+						icon: <IconRobot size={16} />,
+						path: "/tetris",
+					},
+					{
+						id: "demo-builder",
+						label: "3D Builder",
+						icon: <IconRobot size={16} />,
+						path: "/builder",
+					},
+					{
 						id: "demo-ai-image",
 						label: "Image Generation",
 						icon: <IconRobot size={16} />,

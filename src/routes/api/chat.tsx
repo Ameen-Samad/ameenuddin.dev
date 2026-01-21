@@ -1,11 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@tanstack/react-start";
+import { env } from "cloudflare:workers";
 
 export const Route = createFileRoute("/api/chat")({
 	server: {
 		handlers: {
-			POST: async ({ request, context }) => {
-				const ai = context.cloudflare?.env.AI;
+			POST: async ({ request }) => {
+				const ai = env.AI;
 
 				if (!ai) {
 					return json({ error: "AI not available" }, { status: 500 });

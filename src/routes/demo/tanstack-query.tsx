@@ -1,9 +1,13 @@
+import type { RankingInfo } from "@tanstack/match-sorter-utils";
+import { rankItem } from "@tanstack/match-sorter-utils";
 import { useMutation, useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
 	createColumnHelper,
+	type FilterFn,
 	flexRender,
 	getCoreRowModel,
+	getFilteredRowModel,
 	getSortedRowModel,
 	type SortingState,
 	useReactTable,
@@ -14,6 +18,21 @@ import { useCallback, useRef, useState } from "react";
 export const Route = createFileRoute("/demo/tanstack-query")({
 	component: TanStackQueryDemo,
 });
+
+declare module "@tanstack/react-table" {
+	interface FilterFns {
+		fuzzy: FilterFn<unknown>;
+	}
+	interface FilterMeta {
+		itemRank: RankingInfo;
+	}
+}
+
+const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+	const itemRank = rankItem(row.getValue(columnId), value);
+	addMeta({ itemRank });
+	return itemRank.passed;
+};
 
 type Todo = {
 	id: number;
@@ -118,7 +137,6 @@ function TanStackQueryDemo() {
 								if (e.key === "Escape") handleCancelEdit();
 							}}
 							className="w-full px-2 py-1 bg-white/20 text-white rounded border border-white/30 focus:outline-none focus:ring-2 focus:ring-blue-400"
-							autoFocus
 						/>
 					);
 				}
@@ -134,12 +152,14 @@ function TanStackQueryDemo() {
 						{editingId === row.id ? (
 							<>
 								<button
+									type="button"
 									onClick={handleSaveEdit}
 									className="px-3 py-1 bg-green-500 hover:bg-green-600 text-white text-sm rounded transition-colors"
 								>
 									Save
 								</button>
 								<button
+									type="button"
 									onClick={handleCancelEdit}
 									className="px-3 py-1 bg-gray-500 hover:bg-gray-600 text-white text-sm rounded transition-colors"
 								>
@@ -149,12 +169,14 @@ function TanStackQueryDemo() {
 						) : (
 							<>
 								<button
+									type="button"
 									onClick={() => handleEdit(row.id, row.name)}
 									className="px-3 py-1 bg-blue-500 hover:bg-blue-600 text-white text-sm rounded transition-colors"
 								>
 									Edit
 								</button>
 								<button
+									type="button"
 									onClick={() => handleDelete(row.id)}
 									className="px-3 py-1 bg-red-500 hover:bg-red-600 text-white text-sm rounded transition-colors"
 								>
@@ -172,7 +194,11 @@ function TanStackQueryDemo() {
 	const table = useReactTable({
 		data,
 		columns,
+		filterFns: {
+			fuzzy: fuzzyFilter,
+		},
 		getCoreRowModel: getCoreRowModel(),
+		getFilteredRowModel: getFilteredRowModel(),
 		getSortedRowModel: getSortedRowModel(),
 		state: {
 			sorting,
@@ -222,6 +248,7 @@ function TanStackQueryDemo() {
 					/>
 					<div className="flex gap-2">
 						<button
+							type="button"
 							disabled={todo.trim().length === 0}
 							onClick={submitTodo}
 							className="flex-1 bg-blue-500 hover:bg-blue-600 disabled:bg-blue-500/50 disabled:cursor-not-allowed text-white font-bold py-3 px-4 rounded-lg transition-colors"
@@ -229,6 +256,7 @@ function TanStackQueryDemo() {
 							Add todo
 						</button>
 						<button
+							type="button"
 							onClick={() => generateBulkTodos(100)}
 							className="flex-1 bg-purple-500 hover:bg-purple-600 text-white font-bold py-3 px-4 rounded-lg transition-colors"
 						>

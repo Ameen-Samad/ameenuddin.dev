@@ -147,6 +147,49 @@ TanStack Start is designed for **pure Cloudflare Workers** deployment (not Pages
 
 ---
 
+## ✅ DEPLOYMENT: Cloudflare Workers
+
+### Deployment Method
+
+**This site is deployed as a pure Cloudflare Worker** (NOT Cloudflare Pages).
+
+- ✅ **TanStack Start**: v1.140.5 (last stable version before breaking changes in v1.142.x)
+- ✅ **Bindings configured**: AI, D1 (DB), KV (PROJECT_CACHE, RATE_LIMIT), ASSETS
+- ✅ **Binding access**: Uses `import { env } from "cloudflare:workers"` pattern
+- ✅ **Wrangler configuration**: Auto-generated `dist/server/wrangler.json`
+
+### How to Access Bindings
+
+In TanStack Start API routes, import bindings from `"cloudflare:workers"`:
+
+```typescript
+import { env } from "cloudflare:workers";
+
+export const Route = createFileRoute("/api/example")({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
+        const ai = env.AI;              // AI binding
+        const db = env.DB;              // D1 database
+        const kv = env.PROJECT_CACHE;   // KV namespace
+        // Use bindings...
+      }
+    }
+  }
+});
+```
+
+**Do NOT use**: `context.cloudflare?.env.*` (deprecated pattern)
+
+### Deployment Commands
+
+```bash
+npm run build   # Builds to dist/server + dist/client
+npm run deploy  # Deploys to Cloudflare Workers
+```
+
+---
+
 ## ⚠️ KNOWN LIMITATION: WebSocket Support
 
 ### TanStack Start Does NOT Support WebSocket Upgrades

@@ -1,23 +1,33 @@
 /**
- * Standalone WebSocket Worker for Real-Time Voice Transcription
+ * Standalone WebSocket Worker for Real-Time Text-to-Speech
  *
- * Uses Cloudflare AI Gateway with Deepgram Flux for real-time speech-to-text.
+ * Uses Cloudflare AI Gateway with Deepgram Aura-1 for streaming TTS.
  *
- * Deployed to: /demo/api/ai/transcription
+ * Deployed to: /demo/api/ai/tts-stream
  *
  * Usage:
  * ```javascript
- * const ws = new WebSocket('wss://ameenuddin.dev/demo/api/ai/transcription');
+ * const ws = new WebSocket('wss://ameenuddin.dev/demo/api/ai/tts-stream');
  *
  * ws.onopen = () => {
- *   // Send audio data (linear16, 16kHz)
- *   const audioData = getAudioFromMicrophone();
- *   ws.send(audioData);
+ *   // Send text to speak
+ *   ws.send(JSON.stringify({
+ *     type: 'Speak',
+ *     text: 'Hello, this is a streaming text-to-speech demo.'
+ *   }));
+ *
+ *   // Flush to get audio immediately
+ *   ws.send(JSON.stringify({ type: 'Flush' }));
  * };
  *
  * ws.onmessage = (event) => {
- *   const transcription = JSON.parse(event.data);
- *   console.log('Transcription:', transcription);
+ *   if (event.data instanceof ArrayBuffer) {
+ *     // Raw audio data (PCM, 24kHz, 16-bit, mono)
+ *     playAudio(event.data);
+ *   } else {
+ *     const msg = JSON.parse(event.data);
+ *     console.log('Message:', msg);
+ *   }
  * };
  * ```
  */
@@ -44,30 +54,48 @@ export default {
       return new Response(
         JSON.stringify({
           error: 'This endpoint requires a WebSocket connection',
-          info: 'Deepgram Flux requires WebSocket for real-time transcription',
-          usage: 'Connect via WebSocket and send audio data (linear16, 16kHz)',
+          info: 'Deepgram Aura-1 requires WebSocket for streaming text-to-speech',
+          usage: 'Connect via WebSocket and send JSON messages to speak text',
           websocketUrl: wsUrl,
-          model: '@cf/deepgram/flux',
+          model: '@cf/deepgram/aura-1',
           audioFormat: {
-            encoding: 'linear16',
-            sampleRate: 16000,
+            encoding: 'PCM',
+            sampleRate: 24000,
+            bitDepth: 16,
             channels: 1,
+          },
+          messages: {
+            Speak: 'Send text to convert to speech',
+            Flush: 'Generate audio immediately',
+            Clear: 'Clear audio queue',
+            Close: 'Close the connection',
           },
           example: {
             javascript: `
 const ws = new WebSocket('${wsUrl}');
 
 ws.onopen = () => {
-  console.log('Connected to Deepgram Flux');
-  // Send audio data (Int16Array from AudioContext)
-  const audioData = new Int16Array(audioBuffer);
-  ws.send(audioData.buffer);
+  console.log('Connected to Deepgram Aura TTS');
+
+  // Send text to speak
+  ws.send(JSON.stringify({
+    type: 'Speak',
+    text: 'Hello from Deepgram Aura streaming TTS!'
+  }));
+
+  // Flush to get audio immediately
+  ws.send(JSON.stringify({ type: 'Flush' }));
 };
 
 ws.onmessage = (event) => {
-  const result = JSON.parse(event.data);
-  if (result.type === 'transcription') {
-    console.log('Text:', result.text);
+  if (event.data instanceof ArrayBuffer) {
+    // Raw audio data - play it
+    playAudioBuffer(event.data);
+  } else {
+    const msg = JSON.parse(event.data);
+    if (msg.type === 'Flushed') {
+      console.log('Audio generation complete');
+    }
   }
 };
             `.trim(),
@@ -106,10 +134,10 @@ ws.onmessage = (event) => {
       // Accept the client connection
       server.accept();
 
-      // Build AI Gateway WebSocket URL
-      const aiGatewayUrl = `wss://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/workers-ai?model=@cf/deepgram/flux&encoding=linear16&sample_rate=16000&interim_results=true`;
+      // Build AI Gateway WebSocket URL for Aura-1
+      const aiGatewayUrl = `wss://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/workers-ai?model=@cf/deepgram/aura-1`;
 
-      console.log('Connecting to AI Gateway:', aiGatewayUrl.replace(env.CLOUDFLARE_API_TOKEN, '***'));
+      console.log('Connecting to AI Gateway (TTS):', aiGatewayUrl.replace(env.CLOUDFLARE_API_TOKEN, '***'));
 
       // Connect to Cloudflare AI Gateway
       const aiWebSocket = new WebSocket(aiGatewayUrl, {
@@ -124,22 +152,23 @@ ws.onmessage = (event) => {
       // Handle AI WebSocket open
       aiWebSocket.addEventListener('open', () => {
         aiConnected = true;
-        console.log('AI Gateway connection established');
+        console.log('AI Gateway TTS connection established');
 
         server.send(JSON.stringify({
           type: 'connected',
-          message: 'Connected to Deepgram Flux',
-          model: '@cf/deepgram/flux',
+          message: 'Connected to Deepgram Aura-1 TTS',
+          model: '@cf/deepgram/aura-1',
           config: {
-            encoding: 'linear16',
-            sampleRate: 16000,
-            interimResults: true,
+            sampleRate: 24000,
+            bitDepth: 16,
+            channels: 1,
+            encoding: 'PCM',
           },
           timestamp: Date.now(),
         }));
       });
 
-      // Forward audio from client to AI
+      // Forward messages from client to AI
       server.addEventListener('message', (event: MessageEvent) => {
         if (!aiConnected) {
           server.send(JSON.stringify({
@@ -151,46 +180,52 @@ ws.onmessage = (event) => {
         }
 
         try {
-          // Forward audio data to AI Gateway
-          if (event.data instanceof ArrayBuffer || event.data instanceof Uint8Array) {
+          // Forward text/control messages to AI Gateway
+          if (typeof event.data === 'string') {
             aiWebSocket.send(event.data);
-          } else if (typeof event.data === 'string') {
-            // Handle text control messages if needed
-            aiWebSocket.send(event.data);
+          } else {
+            // Shouldn't receive binary from client for TTS
+            console.warn('Unexpected binary data from client');
           }
         } catch (error) {
           console.error('Error forwarding to AI:', error);
           server.send(JSON.stringify({
             type: 'error',
-            error: 'Failed to forward audio data',
+            error: 'Failed to forward message',
             details: error instanceof Error ? error.message : 'Unknown error',
             timestamp: Date.now(),
           }));
         }
       });
 
-      // Forward transcription results from AI to client
+      // Forward audio/messages from AI to client
       aiWebSocket.addEventListener('message', (event: MessageEvent) => {
         try {
-          if (typeof event.data === 'string') {
-            // Parse AI response
-            const data = JSON.parse(event.data);
-
-            // Forward transcription result to client
-            server.send(JSON.stringify({
-              type: 'transcription',
-              data,
-              timestamp: Date.now(),
-            }));
-          } else {
-            // Binary data (unlikely from Flux, but handle it)
+          // Check if message is JSON (metadata, flushed, etc.) or raw audio
+          if (event.data instanceof ArrayBuffer || event.data instanceof Buffer) {
+            // Raw audio data - forward directly
             server.send(event.data);
+          } else if (typeof event.data === 'string') {
+            // JSON message (Metadata, Flushed, Cleared, Warning)
+            try {
+              const message = JSON.parse(event.data);
+
+              // Forward metadata/status messages
+              server.send(JSON.stringify({
+                type: message.type || 'message',
+                data: message,
+                timestamp: Date.now(),
+              }));
+            } catch {
+              // Not JSON, might be raw audio as string
+              server.send(event.data);
+            }
           }
         } catch (error) {
           console.error('Error forwarding from AI:', error);
           server.send(JSON.stringify({
             type: 'error',
-            error: 'Failed to process transcription',
+            error: 'Failed to process audio',
             details: error instanceof Error ? error.message : 'Unknown error',
             timestamp: Date.now(),
           }));
@@ -228,6 +263,12 @@ ws.onmessage = (event) => {
       server.addEventListener('close', (event: CloseEvent) => {
         console.log('Client WebSocket closed:', event.code, event.reason);
         if (aiConnected) {
+          // Send Close message to AI before closing
+          try {
+            aiWebSocket.send(JSON.stringify({ type: 'Close' }));
+          } catch (e) {
+            // Ignore if already closed
+          }
           aiWebSocket.close(event.code, event.reason || 'Client disconnected');
         }
       });

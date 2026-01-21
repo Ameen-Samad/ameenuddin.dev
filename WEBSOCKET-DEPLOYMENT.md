@@ -1,8 +1,8 @@
-# WebSocket Worker Deployment Guide
+# WebSocket Workers Deployment Guide
 
 ## Overview
 
-Due to TanStack Start's current limitations with WebSocket support, the real-time voice transcription endpoint is deployed as a **separate Cloudflare Worker** that bypasses the main app's routing layer.
+Due to TanStack Start's current limitations with WebSocket support, real-time AI features are deployed as **separate Cloudflare Workers** using **AI Gateway**. These workers bypass TanStack Start entirely and connect directly to Cloudflare's AI Gateway.
 
 ## Architecture
 
@@ -16,11 +16,19 @@ Due to TanStack Start's current limitations with WebSocket support, the real-tim
 └─────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────┐
-│  WebSocket Worker                       │
+│  Transcription Worker (WebSocket)       │
 │  ameenuddin.dev/demo/api/ai/transcription│
-│  - Real-time voice transcription        │
+│  - Speech-to-Text (Deepgram Flux)       │
+│  - AI Gateway connection                │
 │  - WebSocket upgrade (101)              │
-│  - Direct Cloudflare AI binding         │
+└─────────────────────────────────────────┘
+
+┌─────────────────────────────────────────┐
+│  TTS Worker (WebSocket)                 │
+│  ameenuddin.dev/demo/api/ai/tts-stream  │
+│  - Text-to-Speech (Deepgram Aura-1)     │
+│  - AI Gateway connection                │
+│  - Streaming audio output               │
 └─────────────────────────────────────────┘
 ```
 
@@ -28,117 +36,360 @@ Due to TanStack Start's current limitations with WebSocket support, the real-tim
 
 | File | Purpose |
 |------|---------|
-| `workers/transcription-ws.ts` | Standalone WebSocket Worker implementation |
-| `workers/wrangler.toml` | Worker-specific Wrangler configuration |
-| `package.json` | Deployment scripts (deploy:ws, deploy:all) |
+| `workers/transcription-ws.ts` | Speech-to-Text worker (Flux) |
+| `workers/tts-ws.ts` | Text-to-Speech worker (Aura-1) |
+| `workers/wrangler-transcription.toml` | Transcription worker config |
+| `workers/wrangler-tts.toml` | TTS worker config |
+| `AI-GATEWAY-SETUP.md` | AI Gateway setup instructions |
+| `.env.example` | Environment variable template |
+
+## Prerequisites
+
+### 1. AI Gateway Setup
+
+**⚠️ REQUIRED: You must create an AI Gateway first!**
+
+Follow the complete setup guide in **`AI-GATEWAY-SETUP.md`**:
+
+1. Create AI Gateway in Cloudflare Dashboard
+2. Get API Token with Workers AI permissions
+3. Set environment variables
+
+Quick summary:
+```bash
+# 1. Go to: https://dash.cloudflare.com/
+# 2. Navigate to: AI → AI Gateway → Create Gateway
+# 3. Name: ameenuddin-ai-gateway
+# 4. Note the Gateway ID
+```
+
+### 2. Environment Variables
+
+Copy `.env.example` to `.env.local`:
+```bash
+cp .env.example .env.local
+```
+
+Edit `.env.local` and set:
+```bash
+CLOUDFLARE_ACCOUNT_ID=90183697cb6664ac7b540cb2b3d9b66d
+CLOUDFLARE_GATEWAY_ID=your-gateway-id-here
+CLOUDFLARE_API_TOKEN=your-api-token-here
+```
+
+### 3. Set Production Secrets
+
+```bash
+# For transcription worker
+npx wrangler secret put CLOUDFLARE_API_TOKEN --config workers/wrangler-transcription.toml
+
+# For TTS worker
+npx wrangler secret put CLOUDFLARE_API_TOKEN --config workers/wrangler-tts.toml
+```
+
+Paste your API token when prompted.
+
+---
 
 ## Deployment Commands
 
-### Deploy Main App Only
-```bash
-npm run deploy
-```
-
-Builds and deploys the TanStack Start app to Cloudflare Workers.
-
-### Deploy WebSocket Worker Only
-```bash
-npm run deploy:ws
-```
-
-Deploys the WebSocket worker to `/demo/api/ai/transcription`.
-
-### Deploy Both (Recommended)
+### Deploy All (Recommended)
 ```bash
 npm run deploy:all
 ```
 
-Deploys both the main app and the WebSocket worker in sequence.
+Deploys:
+1. Main TanStack Start app
+2. Transcription WebSocket worker
+3. TTS WebSocket worker
 
-## First-Time Setup
-
-### 1. Authenticate with Wrangler
+### Deploy Only WebSocket Workers
 ```bash
-npx wrangler login
+npm run deploy:websockets
 ```
 
-### 2. Verify AI Binding
-Ensure your Cloudflare account has access to Workers AI:
+Deploys both WebSocket workers (transcription + TTS).
+
+### Deploy Individual Workers
+
+**Transcription worker:**
 ```bash
-npx wrangler whoami
+npm run deploy:transcription
 ```
 
-### 3. Deploy WebSocket Worker
+**TTS worker:**
 ```bash
-npm run deploy:ws
+npm run deploy:tts
 ```
 
-Expected output:
-```
-Total Upload: 5.xx KiB / gzip: 2.xx KiB
-Uploaded ameenuddin-transcription-ws (x.xx sec)
-Deployed ameenuddin-transcription-ws triggers (x.xx sec)
-  https://ameenuddin.dev/demo/api/ai/transcription
-```
-
-### 4. Deploy Main App
+**Main app:**
 ```bash
 npm run deploy
 ```
 
+---
+
 ## Local Development
 
-### Test WebSocket Worker Locally
+### Test Transcription Worker
 ```bash
-npm run dev:ws
+npm run dev:transcription
 ```
 
-This starts the WebSocket worker on `localhost:8787` using Wrangler dev mode.
+Worker runs on `localhost:8787`.
 
-**Test the connection:**
+**Test connection:**
 ```javascript
 const ws = new WebSocket('ws://localhost:8787');
 
 ws.onopen = () => {
-  console.log('Connected to local WebSocket worker');
+  console.log('Connected to transcription worker');
+  // Send audio data (Int16Array, 16kHz)
+  const audioData = new Int16Array(audioBuffer);
+  ws.send(audioData.buffer);
 };
 
 ws.onmessage = (event) => {
-  console.log('Message:', event.data);
+  const result = JSON.parse(event.data);
+  if (result.type === 'transcription') {
+    console.log('Text:', result.data.text);
+  }
 };
 ```
 
-### Run Full App Locally
+### Test TTS Worker
+```bash
+npm run dev:tts
+```
+
+Worker runs on `localhost:8787`.
+
+**Test connection:**
+```javascript
+const ws = new WebSocket('ws://localhost:8787');
+
+ws.onopen = () => {
+  console.log('Connected to TTS worker');
+
+  // Send text to speak
+  ws.send(JSON.stringify({
+    type: 'Speak',
+    text: 'Hello from Deepgram Aura!'
+  }));
+
+  // Flush to get audio immediately
+  ws.send(JSON.stringify({ type: 'Flush' }));
+};
+
+ws.onmessage = (event) => {
+  if (event.data instanceof ArrayBuffer) {
+    // Raw audio data (PCM, 24kHz, 16-bit)
+    playAudio(event.data);
+  } else {
+    const msg = JSON.parse(event.data);
+    console.log('Message:', msg);
+  }
+};
+```
+
+### Test Main App
 ```bash
 npm run dev
 ```
 
-The main app runs on `localhost:3000`, but **WebSocket connections will fail** because TanStack Start doesn't support WebSocket upgrades in development.
+Runs on `localhost:3000`.
 
-To test WebSocket functionality locally, you must use `npm run dev:ws` separately.
+**Note:** WebSocket features won't work in main app dev mode due to TanStack Start limitations. Use dedicated worker dev commands above.
 
-## Production Deployment Workflow
+---
 
-### Standard Deployment (via Git Push)
+## How It Works
 
-1. **Commit your changes:**
-```bash
-git add .
-git commit -m "feat: update voice transcription feature"
-git push
+### 1. AI Gateway Connection Pattern
+
+**OLD PATTERN (Incorrect - didn't work):**
+```typescript
+// ❌ This doesn't work - not documented by Cloudflare
+const response = await env.AI.run(
+  '@cf/deepgram/flux',
+  { encoding: 'linear16', sample_rate: '16000' },
+  { websocket: true } // Not a real option!
+);
 ```
 
-2. **Deploy both workers:**
-```bash
-npm run deploy:all
+**NEW PATTERN (Correct - uses AI Gateway):**
+```typescript
+// ✅ Correct pattern using AI Gateway
+const wsUrl = `wss://gateway.ai.cloudflare.com/v1/${accountId}/${gatewayId}/workers-ai?model=@cf/deepgram/flux&encoding=linear16&sample_rate=16000`;
+
+const aiWebSocket = new WebSocket(wsUrl, {
+  headers: {
+    'cf-aig-authorization': apiToken
+  }
+});
 ```
 
-### CI/CD Deployment (GitHub Actions)
+### 2. Worker Flow
 
-If you have GitHub Actions set up, add this to `.github/workflows/deploy.yml`:
+```
+Client Browser
+    ↓ (WebSocket connection)
+Cloudflare Worker (transcription-ws.ts)
+    ↓ (WebSocket to AI Gateway)
+AI Gateway (wss://gateway.ai.cloudflare.com)
+    ↓ (Deepgram Flux processing)
+AI Model Response
+    ↓ (WebSocket back to worker)
+Worker (forward to client)
+    ↓ (WebSocket back to browser)
+Client receives transcription
+```
+
+### 3. Audio Formats
+
+**Transcription (Flux - Speech-to-Text):**
+- **Input:** linear16 PCM (raw signed little-endian 16-bit)
+- **Sample Rate:** 16kHz
+- **Channels:** 1 (mono)
+
+**TTS (Aura-1 - Text-to-Speech):**
+- **Output:** PCM (raw signed 16-bit)
+- **Sample Rate:** 24kHz
+- **Channels:** 1 (mono)
+
+---
+
+## Troubleshooting
+
+### "Configuration error: Required environment variables not set"
+
+**Fix:**
+1. Check `workers/wrangler-transcription.toml` has `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_GATEWAY_ID` in `[vars]` section
+2. Set the secret:
+   ```bash
+   npx wrangler secret put CLOUDFLARE_API_TOKEN --config workers/wrangler-transcription.toml
+   ```
+
+### "AI Gateway not found"
+
+**Fix:**
+1. Create AI Gateway in Cloudflare Dashboard (see `AI-GATEWAY-SETUP.md`)
+2. Verify `CLOUDFLARE_GATEWAY_ID` in wrangler config matches your gateway ID
+3. Check gateway is in the same account (`90183697cb6664ac7b540cb2b3d9b66d`)
+
+### "Unauthorized" (401 error)
+
+**Fix:**
+1. Verify API token is valid (check Cloudflare Dashboard > My Profile > API Tokens)
+2. Ensure token has permissions:
+   - Workers AI (Read)
+   - AI Gateway (Read)
+3. Re-set the secret:
+   ```bash
+   npx wrangler secret put CLOUDFLARE_API_TOKEN --config workers/wrangler-transcription.toml
+   ```
+
+### WebSocket Connection Fails
+
+**Symptoms:**
+```
+WebSocket connection to 'wss://ameenuddin.dev/demo/api/ai/transcription' failed
+```
+
+**Debug steps:**
+1. **Check worker is deployed:**
+   ```bash
+   curl https://ameenuddin.dev/demo/api/ai/transcription
+   ```
+   Should return JSON with usage instructions (status 400 for non-WebSocket requests).
+
+2. **Check logs:**
+   ```bash
+   npx wrangler tail --config workers/wrangler-transcription.toml
+   ```
+
+3. **Verify route:**
+   - Go to Cloudflare Dashboard
+   - Workers & Pages → Routes
+   - Should show: `ameenuddin.dev/demo/api/ai/transcription` → `ameenuddin-transcription-ws`
+
+### "Workers AI model not found"
+
+**Fix:**
+1. Verify model name is correct:
+   - Transcription: `@cf/deepgram/flux`
+   - TTS: `@cf/deepgram/aura-1`
+2. Check your account has access to Workers AI models
+3. Try in Cloudflare Dashboard: AI → Workers AI → Models
+
+---
+
+## Monitoring
+
+### View Worker Logs
+
+**Transcription:**
+```bash
+npx wrangler tail --config workers/wrangler-transcription.toml
+```
+
+**TTS:**
+```bash
+npx wrangler tail --config workers/wrangler-tts.toml
+```
+
+### Check Deployment Status
+
+**Transcription:**
+```bash
+npx wrangler deployments list --name ameenuddin-transcription-ws
+```
+
+**TTS:**
+```bash
+npx wrangler deployments list --name ameenuddin-tts-ws
+```
+
+### Test Endpoints
+
+**Transcription:**
+```bash
+curl https://ameenuddin.dev/demo/api/ai/transcription
+```
+
+**TTS:**
+```bash
+curl https://ameenuddin.dev/demo/api/ai/tts-stream
+```
+
+Both should return JSON with usage instructions (not errors).
+
+---
+
+## Cost Considerations
+
+| Resource | Free Tier | Overage Cost |
+|----------|-----------|--------------|
+| AI Gateway | Unlimited | Free |
+| Deepgram Flux (STT) | 10,000 requests/day | $0.011 / 1K requests |
+| Deepgram Aura (TTS) | 10,000 requests/day | $0.02 / 1K requests |
+| WebSocket Workers | 100,000 requests/day | $0.15 / million requests |
+
+**Estimated cost for 1,000 sessions/day:**
+- AI Gateway: **Free**
+- Flux transcription: **Free** (under 10K limit)
+- Aura TTS: **Free** (under 10K limit)
+- WebSocket workers: **Free** (under 100K limit)
+- **Total: $0/month** 🎉
+
+---
+
+## CI/CD Deployment (GitHub Actions)
+
+Add to `.github/workflows/deploy.yml`:
 
 ```yaml
-name: Deploy to Cloudflare Workers
+name: Deploy to Cloudflare
 
 on:
   push:
@@ -163,114 +414,23 @@ jobs:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
         run: npm run deploy
 
-      - name: Deploy WebSocket Worker
+      - name: Deploy Transcription Worker
         env:
           CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
-        run: npm run deploy:ws
+        run: npm run deploy:transcription
+
+      - name: Deploy TTS Worker
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+        run: npm run deploy:tts
 ```
 
-## Troubleshooting
-
-### WebSocket Connection Fails
-
-**Symptom:**
-```
-WebSocket connection to 'wss://ameenuddin.dev/demo/api/ai/transcription' failed
-```
-
-**Check:**
-1. **Worker deployed?**
-   ```bash
-   npx wrangler deployments list --name ameenuddin-transcription-ws
-   ```
-
-2. **Route configured?**
-   ```bash
-   curl https://ameenuddin.dev/demo/api/ai/transcription
-   ```
-   Should return JSON with usage instructions (status 400).
-
-3. **AI binding available?**
-   Check in Cloudflare dashboard: Workers & Pages > ameenuddin-transcription-ws > Settings > Variables and Secrets > AI
-
-### "AI binding not available" Error
-
-**Fix:**
-1. Go to Cloudflare dashboard
-2. Workers & Pages > ameenuddin-transcription-ws
-3. Settings > Variables and Secrets
-4. Add AI binding (if missing)
-5. Redeploy: `npm run deploy:ws`
-
-### Route Conflict
-
-If the main app tries to handle `/demo/api/ai/transcription`:
-
-1. Check `workers/wrangler.toml` route pattern:
-   ```toml
-   [[routes]]
-   pattern = "ameenuddin.dev/demo/api/ai/transcription"
-   zone_name = "ameenuddin.dev"
-   ```
-
-2. Worker routes take precedence over the main app.
-
-3. Verify in Cloudflare dashboard:
-   - Workers & Pages > Routes
-   - Should show `ameenuddin.dev/demo/api/ai/transcription` → `ameenuddin-transcription-ws`
-
-## Monitoring
-
-### View Worker Logs
-```bash
-npx wrangler tail --config workers/wrangler.toml
-```
-
-### Check Deployment Status
-```bash
-npx wrangler deployments list --name ameenuddin-transcription-ws
-```
-
-### Test Connection
-```bash
-curl -i -N -H "Connection: Upgrade" \
-  -H "Upgrade: websocket" \
-  -H "Sec-WebSocket-Key: dGhlIHNhbXBsZSBub25jZQ==" \
-  -H "Sec-WebSocket-Version: 13" \
-  https://ameenuddin.dev/demo/api/ai/transcription
-```
-
-Expected response:
-```
-HTTP/2 101 Switching Protocols
-upgrade: websocket
-connection: Upgrade
-```
-
-## Cost Considerations
-
-| Resource | Cost |
-|----------|------|
-| WebSocket Worker | $0.15 / million requests |
-| Cloudflare AI (Deepgram Flux) | Free tier: 10,000 requests/day |
-| Worker CPU time | $0.02 / million GB-seconds |
-
-**Estimated cost for 1,000 voice sessions/day:**
-- ~30,000 requests (connect + messages) = $0.0045
-- ~1,000 AI transcriptions = Free (under limit)
-- Total: **< $0.01/day**
-
-## Future Improvements
-
-When TanStack Start adds WebSocket support:
-1. Migrate logic back to `src/routes/demo/api.ai.transcription.ts`
-2. Remove `workers/` directory
-3. Remove `deploy:ws` and `deploy:all` scripts
-4. Monitor [GitHub Discussion #4576](https://github.com/TanStack/router/discussions/4576)
+---
 
 ## References
 
-- [Cloudflare Workers WebSockets](https://developers.cloudflare.com/workers/runtime-apis/websockets/)
-- [Cloudflare AI Deepgram Flux](https://developers.cloudflare.com/workers-ai/models/deepgram-flux/)
+- [AI Gateway Documentation](https://developers.cloudflare.com/ai-gateway/)
+- [AI Gateway WebSockets API](https://developers.cloudflare.com/ai-gateway/usage/websockets-api/)
+- [Deepgram Flux Model](https://developers.cloudflare.com/workers-ai/models/flux/)
+- [Deepgram Aura Model](https://developers.cloudflare.com/workers-ai/models/aura/)
 - [TanStack Start WebSocket Discussion](https://github.com/TanStack/router/discussions/4576)
-- [Wrangler Configuration](https://developers.cloudflare.com/workers/wrangler/configuration/)
