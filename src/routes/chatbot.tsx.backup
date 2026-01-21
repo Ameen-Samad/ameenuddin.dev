@@ -144,9 +144,8 @@ function Chatbot() {
 										</Group>
 									),
 									message: (
-													<div style={{ maxHeight: "300px", overflowY: "auto" }}>
-														<Stack gap="xs">
-															{data.context.map((doc: ContextDoc) => (
+										<Stack gap="xs">
+											{data.context.map((doc: ContextDoc) => (
 												<Paper
 													key={doc.id}
 													p="sm"
@@ -188,7 +187,6 @@ function Chatbot() {
 												</Paper>
 											))}
 										</Stack>
-													</div>
 									),
 									color: "cyan",
 									autoClose: 8000,
@@ -210,10 +208,10 @@ function Chatbot() {
 								},
 							]);
 						} else if (data.type === "done") {
-						setMessages((prev) => [
-							...prev,
-							{ role: "assistant", content: fullContent },
-						]);
+							setMessages((prev) => [
+								...prev,
+								{ role: "assistant", content: fullContent },
+							]);
 							setStreamingContent("");
 							isStreamingRef.current = false;
 						}
@@ -223,8 +221,11 @@ function Chatbot() {
 		} catch (error) {
 			console.error("Chat error:", error);
 			setMessages((prev) => [
-				...prev,
-				{ role: "assistant", content: "Sorry, I encountered an error. Please try again." },
+				...prev.slice(0, -1),
+				{
+					...prev[prev.length - 1],
+					content: "Sorry, I encountered an error. Please try again.",
+				},
 			]);
 			setStreamingContent("");
 			isStreamingRef.current = false;
