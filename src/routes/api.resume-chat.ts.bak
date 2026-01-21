@@ -1,10 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { env } from 'cloudflare:workers'
 
 export const Route = createFileRoute("/api/resume-chat")({
 	server: {
 		handlers: {
-			POST: async ({ request}) => {
+			POST: async ({ request, context }) => {
 				const requestSignal = request.signal;
 
 				if (requestSignal.aborted) {
@@ -42,7 +41,10 @@ CONTEXT: You are helping evaluate this candidate's qualifications for potential 
 							role: m.role,
 							content: m.content,
 						})),
-					];					if (!env?.AI) {
+					];
+
+					const env = (context as any)?.cloudflare?.env;
+					if (!env?.AI) {
 						return new Response(
 							JSON.stringify({
 								error: "Cloudflare AI binding not available",

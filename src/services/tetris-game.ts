@@ -17,82 +17,99 @@ export interface AIMove {
 	score: number;
 }
 
+// Tetromino shapes with correct dimensions
+const SHAPES: Record<string, { shape: number[][]; color: number }> = {
+	I: {
+		shape: [
+			[0, 0, 0, 0],
+			[1, 1, 1, 1],
+			[0, 0, 0, 0],
+			[0, 0, 0, 0],
+		],
+		color: 0x00f3ff,
+	},
+	O: {
+		shape: [
+			[1, 1],
+			[1, 1],
+		],
+		color: 0xffff00,
+	},
+	T: {
+		shape: [
+			[0, 1, 0],
+			[1, 1, 1],
+			[0, 0, 0],
+		],
+		color: 0xff00ff,
+	},
+	S: {
+		shape: [
+			[0, 1, 1],
+			[1, 1, 0],
+			[0, 0, 0],
+		],
+		color: 0x00ff00,
+	},
+	Z: {
+		shape: [
+			[1, 1, 0],
+			[0, 1, 1],
+			[0, 0, 0],
+		],
+		color: 0xff0000,
+	},
+	J: {
+		shape: [
+			[1, 0, 0],
+			[1, 1, 1],
+			[0, 0, 0],
+		],
+		color: 0x0066ff,
+	},
+	L: {
+		shape: [
+			[0, 0, 1],
+			[1, 1, 1],
+			[0, 0, 0],
+		],
+		color: 0xffa500,
+	},
+};
+
 export class Tetromino {
 	shape: number[][];
 	color: number;
-	width: number;
-	height: number;
 	rotation: number = 0;
+	type: string;
 
-	constructor(type: string, color: number) {
-		this.color = color;
-
-		switch (type) {
-			case "I":
-				this.shape = [
-					[0, 0, 0, 0],
-					[1, 1, 1, 1],
-				];
-				this.width = 4;
-				this.height = 4;
-				break;
-			case "O":
-				this.shape = [
-					[1, 1],
-					[1, 1],
-				];
-				this.width = 4;
-				this.height = 4;
-				break;
-			case "T":
-				this.shape = [
-					[0, 0, 0],
-					[1, 1, 1],
-				];
-				this.width = 3;
-				this.height = 2;
-				break;
-			case "S":
-				this.shape = [
-					[0, 1, 1],
-					[1, 1, 0],
-				];
-				this.width = 3;
-				this.height = 2;
-				break;
-			case "Z":
-				this.shape = [
-					[1, 1, 0],
-					[1, 1, 1],
-				];
-				this.width = 3;
-				this.height = 2;
-				break;
-			case "J":
-				this.shape = [
-					[0, 0, 0],
-					[1, 1, 1],
-				];
-				this.width = 3;
-				this.height = 2;
-				break;
-			case "L":
-				this.shape = [
-					[0, 0, 0],
-					[1, 1, 1],
-				];
-				this.width = 3;
-				this.height = 2;
-				break;
-		}
+	constructor(type: string) {
+		this.type = type;
+		const config = SHAPES[type];
+		this.shape = config.shape.map((row) => [...row]);
+		this.color = config.color;
 	}
 
 	rotate() {
-		const rotated = this.shape[0].map((row, i) =>
-			row.map((_, j) => this.shape[this.shape.length - 1 - j][i]),
-		);
+		const n = this.shape.length;
+		const rotated: number[][] = [];
+
+		for (let i = 0; i < n; i++) {
+			rotated[i] = [];
+			for (let j = 0; j < n; j++) {
+				rotated[i][j] = this.shape[n - 1 - j][i];
+			}
+		}
+
 		this.shape = rotated;
 		this.rotation = (this.rotation + 1) % 4;
+	}
+
+	clone(): Tetromino {
+		const cloned = new Tetromino(this.type);
+		cloned.shape = this.shape.map((row) => [...row]);
+		cloned.rotation = this.rotation;
+		return cloned;
 	}
 }
 
@@ -121,7 +138,7 @@ export class TetrisAI {
 		const flatPiece = new Int32Array(pieceHeight * pieceWidth);
 		for (let y = 0; y < pieceHeight; y++) {
 			for (let x = 0; x < pieceWidth; x++) {
-				flatPiece[y * 10 + x] = piece.shape[y][x];
+				flatPiece[y * pieceWidth + x] = piece.shape[y][x];
 			}
 		}
 
@@ -161,17 +178,33 @@ export class TetrisGame extends Phaser.Scene {
 	private level: number = 1;
 	private paused: boolean = false;
 	private useAI: boolean = false;
-	private useImprovedAI: boolean = true;
 	private aiTimeout: number | null = null;
 	private isProcessingAIMove: boolean = false;
+	private gameOver: boolean = false;
+
+	// Graphics objects
+	private boardGraphics!: Phaser.GameObjects.Graphics;
+	private gridGraphics!: Phaser.GameObjects.Graphics;
+	private pieceGraphics!: Phaser.GameObjects.Graphics;
 
 	constructor() {
 		super({ key: "TetrisGame" });
 	}
 
 	create() {
+		this.gameOver = false;
+		this.score = 0;
+		this.lines = 0;
+		this.level = 1;
+		this.dropInterval = 1000;
+
+		// Initialize graphics layers
+		this.boardGraphics = this.add.graphics();
+		this.gridGraphics = this.add.graphics();
+		this.pieceGraphics = this.add.graphics();
+
 		this.initGrid();
-		this.createBoard();
+		this.drawBoard();
 		this.spawnPiece();
 	}
 
@@ -181,39 +214,50 @@ export class TetrisGame extends Phaser.Scene {
 			.map(() => Array(this.gridCols).fill(null));
 	}
 
-	private createBoard() {
-		const graphics = this.add.graphics();
-		this.drawBoard(graphics);
-	}
-
-	private drawBoard(graphics: Phaser.GameObjects.Graphics) {
+	private drawBoard() {
 		const boardWidth = this.gridCols * this.blockSize;
 		const boardHeight = this.gridRows * this.blockSize;
 
-		graphics.lineStyle(2, 0x00f3ff, 1);
-		graphics.strokeRect(0, 0, boardWidth, boardHeight);
+		// Draw border
+		this.boardGraphics.clear();
+		this.boardGraphics.lineStyle(2, 0x00f3ff, 1);
+		this.boardGraphics.strokeRect(0, 0, boardWidth, boardHeight);
 
-		graphics.lineStyle(1, 0x1a1a1a, 0.5);
+		// Draw grid lines
+		this.boardGraphics.lineStyle(1, 0x1a1a1a, 0.3);
+		for (let y = 1; y < this.gridRows; y++) {
+			this.boardGraphics.lineBetween(0, y * this.blockSize, boardWidth, y * this.blockSize);
+		}
+		for (let x = 1; x < this.gridCols; x++) {
+			this.boardGraphics.lineBetween(x * this.blockSize, 0, x * this.blockSize, boardHeight);
+		}
+	}
+
+	private renderGrid() {
+		this.gridGraphics.clear();
 
 		for (let y = 0; y < this.gridRows; y++) {
 			for (let x = 0; x < this.gridCols; x++) {
-				const px = x * this.blockSize;
-				const py = y * this.blockSize;
+				if (this.grid[y][x] !== null) {
+					const px = x * this.blockSize;
+					const py = y * this.blockSize;
+					const color = this.grid[y][x] as number;
 
-				if (this.grid[y] && this.grid[y][x]) {
-					graphics.fillStyle(0x00f3ff, 1);
-					graphics.fillRect(
+					// Draw block
+					this.gridGraphics.fillStyle(color, 1);
+					this.gridGraphics.fillRect(
 						px + 1,
 						py + 1,
 						this.blockSize - 2,
 						this.blockSize - 2,
 					);
 
-					graphics.fillStyle(0x0066ff, 0.3);
-					graphics.fillRect(
-						px + 5,
-						py + 5,
-						this.blockSize - 10,
+					// Draw highlight
+					this.gridGraphics.fillStyle(0xffffff, 0.2);
+					this.gridGraphics.fillRect(
+						px + 3,
+						py + 3,
+						this.blockSize - 6,
 						this.blockSize - 10,
 					);
 				}
@@ -222,26 +266,40 @@ export class TetrisGame extends Phaser.Scene {
 	}
 
 	spawnPiece() {
-		const shapes = ["I", "O", "T", "S", "Z", "J", "L"];
-		const shape = shapes[Math.floor(Math.random() * shapes.length)];
-		const colors = [
-			0x00f3ff, 0xff00ff, 0x0066ff, 0xffff00, 0x00ff00, 0x00ff00, 0x00ffff,
-		];
-		const color = colors[Math.floor(Math.random() * colors.length)];
+		if (this.gameOver) return;
 
-		this.currentPiece = new Tetromino(shape, color);
-		this.currentX =
-			Math.floor(this.gridCols / 2) - Math.floor(this.currentPiece.width / 2);
+		const shapes = ["I", "O", "T", "S", "Z", "J", "L"];
+		const type = shapes[Math.floor(Math.random() * shapes.length)];
+
+		this.currentPiece = new Tetromino(type);
+		this.currentX = Math.floor(this.gridCols / 2) - Math.floor(this.currentPiece.shape.length / 2);
 		this.currentY = 0;
+
+		// Check for game over
+		if (!this.canMove(0, 0)) {
+			this.triggerGameOver();
+			return;
+		}
 
 		this.renderCurrentPiece();
 	}
 
-	private renderCurrentPiece() {
-		if (!this.currentPiece) return;
+	private triggerGameOver() {
+		this.gameOver = true;
+		this.paused = true;
+		this.stopAI();
 
-		this.removeCurrentPiece();
-		const graphics = this.add.graphics();
+		// Dispatch game over event
+		const event = new CustomEvent("tetris-gameover", {
+			detail: { score: this.score, lines: this.lines, level: this.level },
+		});
+		window.dispatchEvent(event);
+	}
+
+	private renderCurrentPiece() {
+		if (!this.currentPiece || this.gameOver) return;
+
+		this.pieceGraphics.clear();
 
 		for (let y = 0; y < this.currentPiece.shape.length; y++) {
 			for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
@@ -249,39 +307,30 @@ export class TetrisGame extends Phaser.Scene {
 					const px = (this.currentX + x) * this.blockSize;
 					const py = (this.currentY + y) * this.blockSize;
 
-					graphics.fillStyle(this.currentPiece.color, 1);
-					graphics.fillRect(
+					// Draw block
+					this.pieceGraphics.fillStyle(this.currentPiece.color, 1);
+					this.pieceGraphics.fillRect(
 						px + 1,
 						py + 1,
 						this.blockSize - 2,
 						this.blockSize - 2,
 					);
 
-					graphics.fillStyle(0x0066ff, 0.3);
-					graphics.fillRect(
-						px + 5,
-						py + 5,
-						this.blockSize - 10,
+					// Draw highlight
+					this.pieceGraphics.fillStyle(0xffffff, 0.3);
+					this.pieceGraphics.fillRect(
+						px + 3,
+						py + 3,
+						this.blockSize - 6,
 						this.blockSize - 10,
 					);
 				}
 			}
 		}
-
-		this.drawBoard();
-	}
-
-	private removeCurrentPiece() {
-		this.children.list
-			.slice()
-			.filter((obj) => obj.type === "Graphics")
-			.forEach((graphics) => {
-				this.remove(graphics);
-			});
 	}
 
 	update(time: number) {
-		if (this.paused) return;
+		if (this.paused || this.gameOver) return;
 
 		// Manual play mode - handle automatic dropping
 		if (!this.useAI && time - this.lastDropTime > this.dropInterval) {
@@ -291,6 +340,7 @@ export class TetrisGame extends Phaser.Scene {
 	}
 
 	moveLeft() {
+		if (this.gameOver) return;
 		if (this.canMove(-1, 0)) {
 			this.currentX--;
 			this.renderCurrentPiece();
@@ -298,6 +348,7 @@ export class TetrisGame extends Phaser.Scene {
 	}
 
 	moveRight() {
+		if (this.gameOver) return;
 		if (this.canMove(1, 0)) {
 			this.currentX++;
 			this.renderCurrentPiece();
@@ -305,21 +356,41 @@ export class TetrisGame extends Phaser.Scene {
 	}
 
 	moveDown() {
+		if (this.gameOver) return;
 		if (this.canMove(0, 1)) {
 			this.currentY++;
+			this.renderCurrentPiece();
 		} else {
 			this.lockPiece();
 		}
-		this.renderCurrentPiece();
 	}
 
 	rotate() {
-		if (!this.currentPiece) return;
+		if (!this.currentPiece || this.gameOver) return;
 
+		const original = this.currentPiece.clone();
 		this.currentPiece.rotate();
-		if (this.canMove(0, 0)) {
-			this.renderCurrentPiece();
+
+		if (!this.canMove(0, 0)) {
+			// Try wall kicks
+			const kicks = [-1, 1, -2, 2];
+			let kicked = false;
+
+			for (const kick of kicks) {
+				if (this.canMove(kick, 0)) {
+					this.currentX += kick;
+					kicked = true;
+					break;
+				}
+			}
+
+			if (!kicked) {
+				// Restore original if wall kick failed
+				this.currentPiece = original;
+			}
 		}
+
+		this.renderCurrentPiece();
 	}
 
 	private canMove(offsetX: number, offsetY: number): boolean {
@@ -347,7 +418,7 @@ export class TetrisGame extends Phaser.Scene {
 	}
 
 	private lockPiece() {
-		if (!this.currentPiece) return;
+		if (!this.currentPiece || this.gameOver) return;
 
 		for (let y = 0; y < this.currentPiece.shape.length; y++) {
 			for (let x = 0; x < this.currentPiece.shape[y].length; x++) {
@@ -368,6 +439,7 @@ export class TetrisGame extends Phaser.Scene {
 		}
 
 		this.clearLines();
+		this.renderGrid();
 		this.spawnPiece();
 	}
 
@@ -375,18 +447,17 @@ export class TetrisGame extends Phaser.Scene {
 		let linesCleared = 0;
 
 		for (let y = this.gridRows - 1; y >= 0; y--) {
-			if (this.grid[y] && this.grid[y].every((cell) => cell !== null)) {
+			if (this.grid[y].every((cell) => cell !== null)) {
 				linesCleared++;
-
-				for (let k = y; k > 0; k--) {
-					this.grid[k] = this.grid[k - 1];
-				}
+				this.grid.splice(y, 1);
+				this.grid.unshift(Array(this.gridCols).fill(null));
+				y++; // Check this line again
 			}
 		}
 
 		if (linesCleared > 0) {
 			this.lines += linesCleared;
-			this.score += linesCleared * 100 * this.level;
+			this.score += [0, 100, 300, 500, 800][linesCleared] * this.level;
 			this.level = Math.floor(this.lines / 10) + 1;
 			this.dropInterval = Math.max(100, 1000 - (this.level - 1) * 100);
 
@@ -403,7 +474,7 @@ export class TetrisGame extends Phaser.Scene {
 
 	setPaused(paused: boolean) {
 		this.paused = paused;
-		if (!paused && this.useAI && !this.isProcessingAIMove) {
+		if (!paused && this.useAI && !this.isProcessingAIMove && !this.gameOver) {
 			// Resume AI if it was paused
 			this.startAI();
 		}
@@ -421,6 +492,25 @@ export class TetrisGame extends Phaser.Scene {
 		return this.useAI;
 	}
 
+	isGameOver(): boolean {
+		return this.gameOver;
+	}
+
+	restart() {
+		this.gameOver = false;
+		this.score = 0;
+		this.lines = 0;
+		this.level = 1;
+		this.dropInterval = 1000;
+		this.paused = false;
+		this.stopAI();
+
+		this.initGrid();
+		this.renderGrid();
+		this.spawnPiece();
+		this.onScoreChange(0, 0, 1);
+	}
+
 	destroy() {
 		this.stopAI();
 		super.destroy();
@@ -428,7 +518,7 @@ export class TetrisGame extends Phaser.Scene {
 
 	setUseAI(useAI: boolean) {
 		this.useAI = useAI;
-		if (useAI) {
+		if (useAI && !this.gameOver) {
 			this.startAI();
 		} else {
 			this.stopAI();
@@ -444,14 +534,14 @@ export class TetrisGame extends Phaser.Scene {
 	}
 
 	async startAI() {
-		if (this.isProcessingAIMove) return;
+		if (this.isProcessingAIMove || this.gameOver) return;
 
 		this.isProcessingAIMove = true;
 		await this.scheduleNextAIMove();
 	}
 
 	private async scheduleNextAIMove() {
-		if (!this.useAI || this.paused || !this.isProcessingAIMove) {
+		if (!this.useAI || this.paused || !this.isProcessingAIMove || this.gameOver) {
 			this.isProcessingAIMove = false;
 			return;
 		}
@@ -461,45 +551,47 @@ export class TetrisGame extends Phaser.Scene {
 		// Schedule next move with a delay
 		this.aiTimeout = window.setTimeout(() => {
 			this.scheduleNextAIMove();
-		}, 100); // 100ms delay between moves for visibility
+		}, 200); // 200ms delay between pieces
 	}
 
 	private async makeAIMove() {
-		if (!this.currentPiece || !this.useAI) {
+		if (!this.currentPiece || !this.useAI || this.gameOver) {
 			return;
 		}
 
 		try {
 			const bestMove = await TetrisAI.getBestMove(this.grid, this.currentPiece);
 
-			// Execute the best move step by step with delays
+			// Rotate to target rotation
 			while (
 				this.useAI &&
 				!this.paused &&
 				this.currentPiece &&
-				(this.currentX !== bestMove.x ||
-					this.currentY !== bestMove.y ||
-					this.currentPiece.rotation !== bestMove.rotation)
+				this.currentPiece.rotation !== bestMove.rotation &&
+				!this.gameOver
 			) {
-				if (bestMove.rotation !== this.currentPiece.rotation) {
-					this.rotate();
-					await this.sleep(50);
-				} else if (bestMove.x < this.currentX) {
+				this.rotate();
+				await this.sleep(30);
+			}
+
+			// Move horizontally to target x
+			while (
+				this.useAI &&
+				!this.paused &&
+				this.currentPiece &&
+				this.currentX !== bestMove.x &&
+				!this.gameOver
+			) {
+				if (bestMove.x < this.currentX) {
 					this.moveLeft();
-					await this.sleep(50);
 				} else if (bestMove.x > this.currentX) {
 					this.moveRight();
-					await this.sleep(50);
-				} else if (bestMove.y > this.currentY) {
-					this.moveDown();
-					await this.sleep(50);
-				} else {
-					break;
 				}
+				await this.sleep(30);
 			}
 
 			// Drop the piece
-			if (this.useAI && !this.paused && this.currentPiece) {
+			if (this.useAI && !this.paused && this.currentPiece && !this.gameOver) {
 				this.hardDrop();
 			}
 		} catch (error) {
@@ -512,8 +604,11 @@ export class TetrisGame extends Phaser.Scene {
 	}
 
 	hardDrop() {
+		if (this.gameOver) return;
 		while (this.canMove(0, 1)) {
-			this.moveDown();
+			this.currentY++;
 		}
+		this.renderCurrentPiece();
+		this.lockPiece();
 	}
 }

@@ -146,12 +146,27 @@ function TetrisPage() {
 					}
 				};
 
+				const handleGameOver = (event: Event) => {
+					const customEvent = event as CustomEvent<{
+						detail: { score: number; lines: number; level: number };
+					}>;
+					if (customEvent.detail) {
+						setScore(customEvent.detail.score);
+						setLines(customEvent.detail.lines);
+						setLevel(customEvent.detail.level);
+						setGameOver(true);
+						setIsPaused(false);
+					}
+				};
+
 				window.addEventListener("tetris-score", handleScoreChange);
+				window.addEventListener("tetris-gameover", handleGameOver);
 				setIsLoadingGame(false);
 
 				// Cleanup function returned from Promise
 				return () => {
 					window.removeEventListener("tetris-score", handleScoreChange);
+					window.removeEventListener("tetris-gameover", handleGameOver);
 					if (game) {
 						game.destroy(true);
 					}
@@ -206,18 +221,10 @@ function TetrisPage() {
 	};
 
 	const handleRestart = () => {
-		setGameOver(false);
-		setIsPaused(false);
-		setScore(0);
-		setLevel(1);
-		setLines(0);
-		if (gameInstance) {
-			// Destroy and recreate the game
-			gameInstance.destroy(true);
-			setGameInstance(null);
-			setGameStarted(false);
-			// Let useEffect handle recreation
-			setTimeout(() => setGameStarted(true), 100);
+		if (gameInstance && gameInstance.scene.keys["TetrisGame"]) {
+			gameInstance.scene.keys["TetrisGame"].restart();
+			setGameOver(false);
+			setIsPaused(false);
 		}
 	};
 

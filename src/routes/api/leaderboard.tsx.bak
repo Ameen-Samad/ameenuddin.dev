@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from 'cloudflare:workers'
 import { json } from "@tanstack/react-start";
+import { createLeaderboardRepository } from "@/db";
 
 export const Route = createFileRoute("/api/leaderboard")({
 	server: {
@@ -22,7 +23,7 @@ export const Route = createFileRoute("/api/leaderboard")({
 					);
 				}
 			},
-			POST: async ({ request}) => {
+			POST: async ({ request, context }) => {
 				if (!db) {
 					return json({ error: "Database not available" }, { status: 500 });
 				}

@@ -472,11 +472,18 @@ function ViewerPanel({
 							bottom: "md",
 							right: "md",
 							zIndex: 10,
+							maxWidth: "500px",
+							maxHeight: "400px",
+							background: "rgba(0, 0, 0, 0.9)",
+							borderRadius: "8px",
+							padding: "12px",
 						}}
 					>
-						<Code block p="sm" style={{ fontSize: "10px", maxWidth: "300px" }}>
-							{currentCode.slice(0, 200)}...
-						</Code>
+						<ScrollArea h={380} type="auto">
+							<Code block p="sm" style={{ fontSize: "11px" }}>
+								{currentCode}
+							</Code>
+						</ScrollArea>
 					</div>
 				)}
 			</div>

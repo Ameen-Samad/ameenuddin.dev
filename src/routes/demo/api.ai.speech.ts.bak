@@ -1,10 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { env } from 'cloudflare:workers'
 
 export const Route = createFileRoute('/demo/api/ai/speech')({
   server: {
     handlers: {
-      POST: async ({ request}) => {
+      POST: async ({ request, context }) => {
         const formData = await request.formData()
         const audioFile = formData.get('audio') as File | null
         const audioBase64 = formData.get('audioBase64') as string | null
@@ -19,7 +18,10 @@ export const Route = createFileRoute('/demo/api/ai/speech')({
               headers: { 'Content-Type': 'application/json' },
             },
           )
-        }        if (!env?.AI) {
+        }
+
+        const env = (context as any)?.cloudflare?.env
+        if (!env?.AI) {
           return new Response(
             JSON.stringify({
               error: 'Cloudflare AI binding not available',

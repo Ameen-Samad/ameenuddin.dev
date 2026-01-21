@@ -1,10 +1,9 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { env } from 'cloudflare:workers'
 
 export const Route = createFileRoute('/demo/api/ai/tts')({
   server: {
     handlers: {
-      POST: async ({ request}) => {
+      POST: async ({ request, context }) => {
         const body = await request.json()
         const {
           text,
@@ -23,7 +22,10 @@ export const Route = createFileRoute('/demo/api/ai/tts')({
               headers: { 'Content-Type': 'application/json' },
             },
           )
-        }        if (!env?.AI) {
+        }
+
+        const env = (context as any)?.cloudflare?.env
+        if (!env?.AI) {
           return new Response(
             JSON.stringify({
               error: 'Cloudflare AI binding not available',

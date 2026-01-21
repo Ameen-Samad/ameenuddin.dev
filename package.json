@@ -7,6 +7,7 @@
     "dev:worker": "npm run build && wrangler dev --config dist/server/wrangler.json",
     "dev:transcription": "wrangler dev --config workers/wrangler-transcription.toml",
     "dev:tts": "wrangler dev --config workers/wrangler-tts.toml",
+    "prebuild": "bun install",
     "build": "NODE_OPTIONS='--max-old-space-size=4096' vite build",
     "test": "vitest run",
     "format": "biome format",

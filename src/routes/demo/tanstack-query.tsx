@@ -1,6 +1,6 @@
 import type { RankingInfo } from "@tanstack/match-sorter-utils";
 import { rankItem } from "@tanstack/match-sorter-utils";
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
 import {
 	createColumnHelper,
@@ -40,6 +40,7 @@ type Todo = {
 };
 
 function TanStackQueryDemo() {
+	const queryClient = useQueryClient();
 	const { data, refetch } = useQuery<Todo[]>({
 		queryKey: ["todos"],
 		queryFn: () => fetch("/demo/api/tq-todos").then((res) => res.json()),
@@ -52,7 +53,27 @@ function TanStackQueryDemo() {
 				method: "POST",
 				body: JSON.stringify(todo),
 			}).then((res) => res.json()),
-		onSuccess: () => refetch(),
+		onMutate: async (newTodoName) => {
+			await queryClient.cancelQueries({ queryKey: ["todos"] });
+			const previousTodos = queryClient.getQueryData<Todo[]>(["todos"]);
+			const newTodo = {
+				id: (previousTodos?.length || 0) + 1,
+				name: newTodoName,
+			};
+			queryClient.setQueryData<Todo[]>(["todos"], (old) => [
+				...(old || []),
+				newTodo,
+			]);
+			return { previousTodos };
+		},
+		onError: (err, newTodoName, context) => {
+			if (context?.previousTodos) {
+				queryClient.setQueryData(["todos"], context.previousTodos);
+			}
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["todos"] });
+		},
 	});
 
 	const { mutate: deleteTodo } = useMutation({
@@ -61,7 +82,22 @@ function TanStackQueryDemo() {
 				method: "DELETE",
 				body: JSON.stringify({ id }),
 			}).then((res) => res.json()),
-		onSuccess: () => refetch(),
+		onMutate: async (id) => {
+			await queryClient.cancelQueries({ queryKey: ["todos"] });
+			const previousTodos = queryClient.getQueryData<Todo[]>(["todos"]);
+			queryClient.setQueryData<Todo[]>(["todos"], (old) =>
+				old?.filter((todo) => todo.id !== id),
+			);
+			return { previousTodos };
+		},
+		onError: (_err, _id, context) => {
+			if (context?.previousTodos) {
+				queryClient.setQueryData(["todos"], context.previousTodos);
+			}
+		},
+		onSettled: () => {
+			queryClient.invalidateQueries({ queryKey: ["todos"] });
+		},
 	});
 
 	const { mutate: updateTodo } = useMutation({

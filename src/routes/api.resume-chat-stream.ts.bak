@@ -1,6 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { env } from 'cloudflare:workers'
 import { allEducations, allJobs } from "content-collections";
+
 const SYSTEM_PROMPT = `You are a helpful resume assistant helping recruiters and hiring managers evaluate if this candidate is a good fit for their job requirements.
 
 CAPABILITIES:

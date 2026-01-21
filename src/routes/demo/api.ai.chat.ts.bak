@@ -1,5 +1,4 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { env } from 'cloudflare:workers'
 
 const SYSTEM_PROMPT = `You are a helpful assistant for a store that sells guitars.
 
@@ -20,7 +19,7 @@ IMPORTANT:
 export const Route = createFileRoute("/demo/api/ai/chat")({
 	server: {
 		handlers: {
-			POST: async ({ request}) => {
+			POST: async ({ request, context }) => {
 				const requestSignal = request.signal;
 
 				if (requestSignal.aborted) {
@@ -37,7 +36,10 @@ export const Route = createFileRoute("/demo/api/ai/chat")({
 							role: m.role,
 							content: m.content,
 						})),
-					];					if (!env?.AI) {
+					];
+
+					const env = (context as any)?.cloudflare?.env;
+					if (!env?.AI) {
 						return new Response(
 							JSON.stringify({
 								error: "Cloudflare AI binding not available",

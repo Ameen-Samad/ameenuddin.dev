@@ -1,5 +1,4 @@
 import { createFileRoute } from '@tanstack/react-router'
-import { env } from 'cloudflare:workers'
 import { z } from 'zod'
 
 // Schema for structured recipe output
@@ -39,7 +38,7 @@ export type Recipe = z.infer<typeof RecipeSchema>
 export const Route = createFileRoute('/demo/api/ai/structured')({
   server: {
     handlers: {
-      POST: async ({ request }) => {
+      POST: async ({ request, context }) => {
         const body = await request.json()
         const { recipeName, mode = 'structured' } = body
 
@@ -55,6 +54,7 @@ export const Route = createFileRoute('/demo/api/ai/structured')({
           )
         }
 
+        const env = (context as any)?.cloudflare?.env
         if (!env?.AI) {
           return new Response(
             JSON.stringify({

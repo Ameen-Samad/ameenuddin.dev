@@ -1,9 +1,10 @@
 import { createFileRoute } from '@tanstack/react-router'
+import { env } from 'cloudflare:workers'
 
 export const Route = createFileRoute('/demo/api/ai/image')({
   server: {
     handlers: {
-      POST: async ({ request, context }) => {
+      POST: async ({ request }) => {
         const body = await request.json()
         const { prompt, numberOfImages = 1 } = body
 
@@ -19,7 +20,6 @@ export const Route = createFileRoute('/demo/api/ai/image')({
           )
         }
 
-        const env = (context as any)?.cloudflare?.env
         if (!env?.AI) {
           return new Response(
             JSON.stringify({
