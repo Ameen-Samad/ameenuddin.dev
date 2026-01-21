@@ -1,20 +1,28 @@
-import { useState, useEffect, useRef } from 'react'
+import { useCallback, useEffect, useRef, useState } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
-import { Mic, MicOff, Wifi, WifiOff, Loader2, AlertCircle } from 'lucide-react'
+import { AlertCircle, Mic, MicOff, Wifi, WifiOff } from 'lucide-react'
+
+interface ModelConfig {
+  encoding: string
+  sampleRate: number
+  model: string
+}
+
+interface TranscriptionData {
+  text?: string
+  confidence?: number
+  [key: string]: unknown
+}
 
 interface TranscriptionMessage {
   type: 'connected' | 'transcription' | 'error'
   message?: string
   text?: string
-  data?: any
+  data?: TranscriptionData
   error?: string
   details?: string
   timestamp?: number
-  config?: {
-    encoding: string
-    sampleRate: number
-    model: string
-  }
+  config?: ModelConfig
 }
 
 interface Transcription {
@@ -29,12 +37,52 @@ function VoiceAgentPage() {
   const [transcriptions, setTranscriptions] = useState<Transcription[]>([])
   const [error, setError] = useState<string | null>(null)
   const [connectionStatus, setConnectionStatus] = useState<string>('Disconnected')
-  const [modelConfig, setModelConfig] = useState<any>(null)
+  const [modelConfig, setModelConfig] = useState<ModelConfig | null>(null)
 
   const wsRef = useRef<WebSocket | null>(null)
   const audioContextRef = useRef<AudioContext | null>(null)
   const workletNodeRef = useRef<AudioWorkletNode | null>(null)
   const streamRef = useRef<MediaStream | null>(null)
+
+  const stopRecording = useCallback(() => {
+    // Stop audio processing
+    if (workletNodeRef.current) {
+      workletNodeRef.current.disconnect()
+      workletNodeRef.current.port.close()
+      workletNodeRef.current = null
+    }
+
+    // Close audio context
+    if (audioContextRef.current) {
+      audioContextRef.current.close()
+      audioContextRef.current = null
+    }
+
+    // Stop media stream
+    if (streamRef.current) {
+      const tracks = streamRef.current.getTracks()
+      for (const track of tracks) {
+        track.stop()
+      }
+      streamRef.current = null
+    }
+
+    setIsRecording(false)
+  }, [])
+
+  const disconnectWebSocket = useCallback(() => {
+    // Stop recording first if recording is active
+    if (isRecording) {
+      stopRecording()
+    }
+
+    if (wsRef.current) {
+      wsRef.current.close(1000, 'User disconnected')
+      wsRef.current = null
+    }
+    setIsConnected(false)
+    setConnectionStatus('Disconnected')
+  }, [isRecording, stopRecording])
 
   // Cleanup on unmount
   useEffect(() => {
@@ -42,7 +90,7 @@ function VoiceAgentPage() {
       stopRecording()
       disconnectWebSocket()
     }
-  }, [])
+  }, [stopRecording, disconnectWebSocket])
 
   const getWebSocketUrl = () => {
     // In development, the WebSocket worker runs on port 8787
