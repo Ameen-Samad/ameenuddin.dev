@@ -9,7 +9,9 @@ import {
 } from "@tanstack/react-router";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
 import type { TRPCRouter } from "@/integrations/trpc/router";
-import Header from "../components/Header";
+import { useState } from "react";
+import { Sidebar } from "../components/Sidebar";
+import { MobileNav } from "../components/MobileNav";
 import appCss from "../styles.css?url";
 
 const theme = createTheme({
@@ -49,15 +51,38 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 });
 
 function RootDocument({ children }: { children: React.ReactNode }) {
+	const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
+	const [isSidebarCollapsed, setIsSidebarCollapsed] = useState(false);
+	const [isDarkMode, setIsDarkMode] = useState(true);
+
 	return (
 		<html lang="en">
 			<head>
 				<HeadContent />
 			</head>
 			<body>
-				<MantineProvider theme={theme} defaultColorScheme="dark">
-					<Header />
-					{children}
+				<MantineProvider theme={theme} defaultColorScheme={isDarkMode ? "dark" : "light"}>
+					<Sidebar
+						collapsed={isSidebarCollapsed}
+						onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
+						onMobileOpen={() => setIsMobileNavOpen(true)}
+						isDarkMode={isDarkMode}
+						onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+					/>
+					<MobileNav
+						isOpen={isMobileNavOpen}
+						onClose={() => setIsMobileNavOpen(false)}
+						isDarkMode={isDarkMode}
+						onThemeToggle={() => setIsDarkMode(!isDarkMode)}
+					/>
+					<div
+						style={{
+							marginLeft: "0",
+						}}
+						className="md:ml-[280px]"
+					>
+						{children}
+					</div>
 					<Scripts />
 				</MantineProvider>
 			</body>

@@ -161,6 +161,7 @@ export class TetrisGame extends Phaser.Scene {
 	private level: number = 1;
 	private paused: boolean = false;
 	private useAI: boolean = false;
+	private useImprovedAI: boolean = true;
 
 	constructor() {
 		super({ key: "TetrisGame" });

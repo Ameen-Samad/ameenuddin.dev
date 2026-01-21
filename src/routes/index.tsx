@@ -1,5 +1,7 @@
 import {
 	Anchor,
+	Badge,
+	Button,
 	Container,
 	Group,
 	Paper,
@@ -22,65 +24,18 @@ import {
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { ProjectsSection } from "../components/ProjectsSection";
+import { SkillsDashboard } from "../components/SkillsDashboard";
 
 export const Route = createFileRoute("/")({
 	component: Home,
 });
 
 function Home() {
-	const skills = [
-		{
-			category: "AI-Native Development",
-			items: [
-				"Claude Code",
-				"Cursor",
-				"MCPs",
-				"GitHub Copilot",
-				"Latest Plugins",
-			],
-			icon: <IconRobot size={24} />,
-			color: "#00f3ff",
-		},
-		{
-			category: "Programming",
-			items: [
-				"Python",
-				"JavaScript",
-				"TypeScript",
-				"React",
-				"Three.js",
-				"Phaser",
-			],
-			icon: <IconCode size={24} />,
-			color: "#ff00ff",
-		},
-		{
-			category: "Tools & Platforms",
-			items: [
-				"VS Code",
-				"Jira",
-				"PowerBI",
-				"Tableau",
-				"TanStack",
-				"Cloudflare Workers",
-			],
-			icon: <IconDevices size={24} />,
-			color: "#0066ff",
-		},
-		{
-			category: "Languages",
-			items: ["English", "Malay"],
-			icon: <IconDatabase size={24} />,
-			color: "#00f3ff",
-		},
-	];
-
 	return (
 		<>
 			<Hero />
 			<About />
-			<Skills skills={skills} />
-			<AINativeAdvantage />
+			<SkillsDashboard />
 			<ProjectsSection />
 			<Contact />
 		</>

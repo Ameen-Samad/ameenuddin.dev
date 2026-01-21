@@ -2,7 +2,7 @@
 export default [
   {
     "name": "Skills",
-    "startDate": "2024-01-01",
+    "startDate": "2025-10-01",
     "tags": [
       "AI-Native Development",
       "Claude Code",
