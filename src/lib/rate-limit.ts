@@ -39,7 +39,7 @@ export const RATE_LIMITS = {
 	THREE_JS: { maxRequests: 3, windowSeconds: 60, cost: 5 }, // 3/min (costs 5x)
 
 	// Very expensive operations - highly restrictive
-	IMAGE_GENERATION: { maxRequests: 3, windowSeconds: 86400, cost: 10 }, // 3/day (costs 10x)
+	IMAGE_GENERATION: { maxRequests: 3, windowSeconds: 86400 }, // 3/day
 
 	// Per-IP global limit across all endpoints
 	GLOBAL: { maxRequests: 100, windowSeconds: 3600 }, // 100/hour total
