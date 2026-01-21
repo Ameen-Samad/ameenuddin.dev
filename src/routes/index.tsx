@@ -90,28 +90,28 @@ function Hero() {
 							transition={{ duration: 0.5, delay: 0.2 }}
 							style={{ color: "#00f3ff" }}
 						>
-							AI-Native
+							Fast Learner
 						</motion.span>{" "}
-						Software Engineer
+						Who Builds to Understand
 					</Title>
 					<Text size="xl" c="dimmed" mb="xl">
-						Delivering{" "}
+						Not an expert—I show{" "}
 						<motion.span
 							style={{ color: "#ff00ff", fontWeight: 700 }}
 							animate={{ scale: [1, 1.1, 1] }}
 							transition={{ duration: 2, repeat: Infinity }}
 						>
-							100x productivity
-						</motion.span>{" "}
-						with AI-powered development using{" "}
+							proof through code
+						</motion.span>
+						. This portfolio contains{" "}
 						<motion.span
 							style={{ color: "#00f3ff", fontWeight: 600 }}
 							animate={{ opacity: [1, 0.7, 1] }}
 							transition={{ duration: 2, repeat: Infinity }}
 						>
-							Claude Code
-						</motion.span>
-						, MCPs, and latest plugins
+							15+ working demos
+						</motion.span>{" "}
+						and a git history of 30+ commits showing real problem-solving
 					</Text>
 					<Group gap="md">
 						<Button
