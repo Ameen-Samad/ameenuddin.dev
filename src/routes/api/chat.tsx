@@ -6,18 +6,14 @@ export const Route = createFileRoute("/api/chat")({
 	server: {
 		handlers: {
 			POST: async ({ request }) => {
-				console.log("[Chat API] Request received");
 				const ai = env.AI;
-				console.log("[Chat API] AI binding:", ai ? "available" : "not available");
 
 				if (!ai) {
-					console.error("[Chat API] AI binding is not available");
 					return json({ error: "AI not available" }, { status: 500 });
 				}
 
 				try {
 					const body = await request.json();
-					console.log("[Chat API] Request body parsed:", { messagesCount: body.messages?.length, documentsCount: body.documents?.length });
 
 					const { messages, documents } = body as {
 						messages: Array<{ role: string; content: string }>;
@@ -91,7 +87,6 @@ export const Route = createFileRoute("/api/chat")({
 									),
 								);
 
-								console.log("[Chat API] Calling AI.run with model:", "@cf/meta/llama-4-scout-17b-16e-instruct");
 								const response = await ai.run(
 									"@cf/meta/llama-4-scout-17b-16e-instruct",
 									{
@@ -119,8 +114,15 @@ export const Route = createFileRoute("/api/chat")({
 
 										for (const line of lines) {
 											if (line.startsWith('data: ')) {
+												const dataStr = line.slice(6);
+
+												// Skip [DONE] sentinel value
+												if (dataStr === '[DONE]') {
+													continue;
+												}
+
 												try {
-													const data = JSON.parse(line.slice(6));
+													const data = JSON.parse(dataStr);
 													if (data.response) {
 														controller.enqueue(
 															encoder.encode(
@@ -129,7 +131,7 @@ export const Route = createFileRoute("/api/chat")({
 														);
 													}
 												} catch (e) {
-													console.error("[Chat API] Failed to parse SSE data:", e);
+													// Ignore parse errors for non-JSON SSE messages
 												}
 											}
 										}

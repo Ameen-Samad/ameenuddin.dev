@@ -11,4 +11,5 @@ count.txt
 .output
 .vinxi
 todos.json
-target
+workers/.dev.vars
+src/wasm/target
