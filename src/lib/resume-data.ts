@@ -11,20 +11,14 @@ export interface ResumeData {
 }
 
 export async function getResumeData(): Promise<ResumeData> {
-	const educationModule = await import(
-		"@/.content-collections/generated/allEducations.js"
-	);
-	const jobsModule = await import(
-		"@/.content-collections/generated/allJobs.js"
-	);
-	const skillsModule = await import(
-		"@/.content-collections/generated/allSkills.js"
-	);
+	const { allEducations } = await import("content-collections");
+	const { allJobs } = await import("content-collections");
+	const { allSkills } = await import("content-collections");
 
 	return {
-		education: educationModule.default as Education[],
-		jobs: jobsModule.default as Job[],
-		skills: skillsModule.default as Skill[],
+		education: allEducations as Education[],
+		jobs: allJobs as Job[],
+		skills: allSkills as Skill[],
 		projects: [
 			{
 				id: "tetris-ai",

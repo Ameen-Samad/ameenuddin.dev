@@ -14,7 +14,9 @@ import {
 	type ColumnDef,
 	getCoreRowModel,
 	useReactTable,
+	type FilterFn,
 } from "@tanstack/react-table";
+import { rankItem } from "@tanstack/match-sorter-utils";
 import { motion } from "framer-motion";
 import type { SkillLevel } from "../lib/skills-data";
 import {
@@ -56,9 +58,16 @@ export function SkillsDashboard() {
 		})),
 	);
 
+	const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+		const itemRank = rankItem(row.getValue(columnId), value);
+		addMeta({ itemRank });
+		return itemRank.passed;
+	};
+
 	const table = useReactTable({
 		data: filteredSkills,
 		columns,
+		filterFns: { fuzzy: fuzzyFilter },
 		getCoreRowModel: getCoreRowModel(),
 	});
 

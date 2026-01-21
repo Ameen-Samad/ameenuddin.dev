@@ -6,7 +6,9 @@ import {
 	getSortedRowModel,
 	type SortingState,
 	useReactTable,
+	type FilterFn,
 } from "@tanstack/react-table";
+import { rankItem } from "@tanstack/match-sorter-utils";
 import { Store } from "@tanstack/store";
 import { motion } from "framer-motion";
 import { useEffect, useMemo } from "react";
@@ -82,9 +84,16 @@ export const ExperienceTimeline = ({
 		[],
 	);
 
+	const fuzzyFilter: FilterFn<any> = (row, columnId, value, addMeta) => {
+		const itemRank = rankItem(row.getValue(columnId), value);
+		addMeta({ itemRank });
+		return itemRank.passed;
+	};
+
 	const _table = useReactTable({
 		data: allExperiences,
 		columns,
+		filterFns: { fuzzy: fuzzyFilter },
 		state: {
 			sorting,
 			globalFilter: filter,

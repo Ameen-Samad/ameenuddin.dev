@@ -22,7 +22,7 @@ import {
 	SiTypescript,
 } from "react-icons/si";
 
-export type SkillLevel = "intermediate" | "learning" | "beginner";
+export type SkillLevel = "expert" | "advanced" | "intermediate" | "learning" | "beginner";
 
 export interface Skill {
 	name: string;

@@ -38,6 +38,9 @@ export const RATE_LIMITS = {
 	RECOMMENDATIONS: { maxRequests: 10, windowSeconds: 60 }, // 10/min
 	THREE_JS: { maxRequests: 3, windowSeconds: 60, cost: 5 }, // 3/min (costs 5x)
 
+	// Very expensive operations - highly restrictive
+	IMAGE_GENERATION: { maxRequests: 3, windowSeconds: 86400, cost: 10 }, // 3/day (costs 10x)
+
 	// Per-IP global limit across all endpoints
 	GLOBAL: { maxRequests: 100, windowSeconds: 3600 }, // 100/hour total
 } as const;
@@ -75,7 +78,7 @@ export async function checkRateLimit(
 	request: Request,
 	endpoint: string,
 	config: RateLimitConfig,
-	kv?: KVNamespace,
+	kv?: KVNamespace<string>,
 ): Promise<RateLimitResult> {
 	// If KV is not available (local dev), allow all requests
 	if (!kv) {

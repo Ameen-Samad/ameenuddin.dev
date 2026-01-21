@@ -1,5 +1,5 @@
-import { allEducations, allJobs } from "content-collections";
 import jsPDF from "jspdf";
+import { allEducations, allJobs } from "content-collections";
 
 export interface Education {
 	school: string;
@@ -34,13 +34,13 @@ export async function generateResumePDF(): Promise<Blob> {
 
 	// ATS-friendly header with complete contact information
 	doc.setFontSize(20);
-	doc.setFont(undefined, "bold");
+	doc.setFont("helvetica", "bold");
 	doc.setTextColor(40, 40, 40);
 	doc.text("AMEENUDDIN BIN SAMAD", pageWidth / 2, yPos, { align: "center" });
 	yPos += 8;
 
 	doc.setFontSize(12);
-	doc.setFont(undefined, "normal");
+	doc.setFont("helvetica", "normal");
 	doc.setTextColor(60, 60, 60);
 	doc.text("AI-Native Software Engineer", pageWidth / 2, yPos, { align: "center" });
 	yPos += 7;
@@ -59,12 +59,12 @@ export async function generateResumePDF(): Promise<Blob> {
 
 	// Professional Summary Section
 	doc.setFontSize(14);
-	doc.setFont(undefined, "bold");
+	doc.setFont("helvetica", "bold");
 	doc.setTextColor(40, 40, 40);
 	doc.text("PROFESSIONAL SUMMARY", margin, yPos);
 	yPos += 8;
 
-	doc.setFont(undefined, "normal");
+	doc.setFont("helvetica", "normal");
 	doc.setFontSize(10);
 	doc.setTextColor(60, 60, 60);
 
@@ -81,7 +81,7 @@ export async function generateResumePDF(): Promise<Blob> {
 		"solve problems more creatively, and deliver exceptional results.";
 
 	const summaryLines = doc.splitTextToSize(summary, contentWidth - 10, 10);
-	summaryLines.forEach((line) => {
+	summaryLines.forEach((line: string) => {
 		doc.text(line, margin, yPos);
 		yPos += 6;
 	});
@@ -89,7 +89,7 @@ export async function generateResumePDF(): Promise<Blob> {
 	yPos += 10;
 
 	doc.setFontSize(14);
-	doc.setFont(undefined, "bold");
+	doc.setFont("helvetica", "bold");
 	doc.setTextColor(40, 40, 40);
 	doc.text("TECHNICAL SKILLS", margin, yPos);
 	yPos += 10;
@@ -106,11 +106,11 @@ export async function generateResumePDF(): Promise<Blob> {
 
 	techSkills.forEach((skillGroup) => {
 		doc.setFontSize(11);
-		doc.setFont(undefined, "bold");
+		doc.setFont("helvetica", "bold");
 		doc.setTextColor(40, 40, 40);
 		doc.text(`${skillGroup.category}:`, margin, yPos);
 
-		doc.setFont(undefined, "normal");
+		doc.setFont("helvetica", "normal");
 		doc.setFontSize(10);
 		doc.setTextColor(60, 60, 60);
 
@@ -146,12 +146,12 @@ export async function generateResumePDF(): Promise<Blob> {
 	yPos += 15;
 
 	doc.setFontSize(14);
-	doc.setFont(undefined, "bold");
+	doc.setFont("helvetica", "bold");
 	doc.setTextColor(40, 40, 40);
 	doc.text("PROFESSIONAL EXPERIENCE", margin, yPos);
 	yPos += 10;
 
-	jobs.forEach((job, index) => {
+	jobs.forEach((job: Job, index: number) => {
 		doc.setFontSize(12);
 		doc.setTextColor(40, 40, 40);
 		doc.text(`${job.company}`, margin, yPos);
@@ -170,7 +170,7 @@ export async function generateResumePDF(): Promise<Blob> {
 			contentWidth - 10,
 			10,
 		);
-		jobSummaryLines.forEach((line) => {
+		jobSummaryLines.forEach((line: string) => {
 			doc.setFontSize(10);
 			doc.setTextColor(60, 60, 60);
 			doc.text(line, margin, yPos);
@@ -189,7 +189,7 @@ export async function generateResumePDF(): Promise<Blob> {
 		doc.text(duration, margin, yPos);
 		yPos += 10;
 
-		job.tags.forEach((tag) => {
+		job.tags.forEach((tag: string) => {
 			doc.setFontSize(9);
 			doc.setTextColor(80, 80, 80);
 			doc.text(tag, margin + 5, yPos);
@@ -212,7 +212,7 @@ export async function generateResumePDF(): Promise<Blob> {
 			contentWidth - 10,
 			10,
 		);
-		contentLines.forEach((line) => {
+		contentLines.forEach((line: string) => {
 			doc.text(line, margin, yPos);
 			yPos += 6;
 		});
@@ -240,19 +240,19 @@ export async function generateResumePDF(): Promise<Blob> {
 	yPos += 15;
 
 	doc.setFontSize(14);
-	doc.setFont(undefined, "bold");
+	doc.setFont("helvetica", "bold");
 	doc.setTextColor(40, 40, 40);
 	doc.text("EDUCATION", margin, yPos);
 	yPos += 10;
 
-	educations.forEach((edu) => {
+	educations.forEach((edu: Education) => {
 		doc.setFontSize(12);
 		doc.setTextColor(40, 40, 40);
 		doc.text(edu.school, margin, yPos);
 		yPos += 8;
 
 		doc.setFontSize(10);
-		doc.setFont(undefined, "bold");
+		doc.setFont("helvetica", "bold");
 		doc.setTextColor(60, 60, 60);
 		doc.text(edu.summary, margin, yPos);
 		yPos += 10;
@@ -262,13 +262,13 @@ export async function generateResumePDF(): Promise<Blob> {
 				? `${edu.startDate} – ${edu.endDate}`
 				: `${edu.startDate} – Present`;
 
-		doc.setFont(undefined, "normal");
+		doc.setFont("helvetica", "normal");
 		doc.text(duration, margin + contentWidth / 2, yPos);
 		yPos += 10;
 
-		edu.tags.forEach((tag) => {
+		edu.tags.forEach((tag: string) => {
 			doc.setFontSize(9);
-			doc.setFont(undefined, "italic");
+			doc.setFont("helvetica", "italic");
 			doc.setTextColor(80, 80, 80);
 			doc.text(tag, margin + 5, yPos);
 			const tagWidth = doc.getTextWidth(tag);
@@ -287,9 +287,9 @@ export async function generateResumePDF(): Promise<Blob> {
 			contentWidth - 10,
 			10,
 		);
-		contentLines.forEach((line) => {
+		contentLines.forEach((line: string) => {
 			doc.setFontSize(10);
-			doc.setFont(undefined, "normal");
+			doc.setFont("helvetica", "normal");
 			doc.setTextColor(60, 60, 60);
 			doc.text(line, margin, yPos);
 			yPos += 6;
@@ -318,7 +318,7 @@ export async function generateResumePDF(): Promise<Blob> {
 	yPos += 15;
 
 	doc.setFontSize(14);
-	doc.setFont(undefined, "bold");
+	doc.setFont("helvetica", "bold");
 	doc.setTextColor(40, 40, 40);
 	doc.text("PROJECTS", margin, yPos);
 	yPos += 10;
@@ -358,19 +358,19 @@ export async function generateResumePDF(): Promise<Blob> {
 	projects.forEach((project) => {
 		doc.setFontSize(12);
 		doc.setTextColor(40, 40, 40);
-		doc.setFont(undefined, "bold");
+		doc.setFont("helvetica", "bold");
 		doc.text(project.name, margin, yPos);
 		yPos += 8;
 
 		doc.setFontSize(10);
-		doc.setFont(undefined, "normal");
+		doc.setFont("helvetica", "normal");
 		doc.setTextColor(60, 60, 60);
 		const descLines = doc.splitTextToSize(
 			project.description,
 			contentWidth - 10,
 			10,
 		);
-		descLines.forEach((line) => {
+		descLines.forEach((line: string) => {
 			doc.text(line, margin, yPos);
 			yPos += 6;
 		});
@@ -379,7 +379,7 @@ export async function generateResumePDF(): Promise<Blob> {
 
 		doc.setFontSize(9);
 		project.tech.forEach((tech) => {
-			doc.setFont(undefined, "italic");
+			doc.setFont("helvetica", "italic");
 			doc.setTextColor(80, 80, 80);
 			doc.text(tech, margin + 5, yPos);
 			const techWidth = doc.getTextWidth(tech);
