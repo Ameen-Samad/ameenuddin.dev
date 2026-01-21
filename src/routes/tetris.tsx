@@ -21,9 +21,11 @@ import {
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import * as Phaser from "phaser";
 import { useCallback, useEffect, useRef, useState } from "react";
-import { TetrisGame as TetrisGameService } from "@/services/tetris-game";
+
+// Dynamic imports for heavy dependencies
+const loadPhaser = () => import("phaser");
+const loadTetrisGame = () => import("@/services/tetris-game").then(m => m.TetrisGame);
 
 export const Route = createFileRoute("/tetris")({
 	component: TetrisPage,
@@ -36,7 +38,8 @@ function TetrisPage() {
 	const [level, setLevel] = useState(1);
 	const [lines, setLines] = useState(0);
 	const [gameOver, setGameOver] = useState(false);
-	const [gameInstance, setGameInstance] = useState<Phaser.Game | null>(null);
+	const [gameInstance, setGameInstance] = useState<any | null>(null);
+	const [isLoadingGame, setIsLoadingGame] = useState(false);
 	const canvasRef = useRef<HTMLDivElement>(null);
 	const [highScores, setHighScores] = useState<
 		Array<{
@@ -103,42 +106,59 @@ function TetrisPage() {
 			gameInstance.destroy(true);
 		}
 
-		const config: Phaser.Types.Core.GameConfig = {
-			type: Phaser.CANVAS,
-			width: 300,
-			height: 600,
-			parent: canvasRef.current,
-			background: "#000",
-			physics: {
-				default: "arcade",
-				arcade: {
-					debug: false,
-					gravity: { x: 0, y: 0 },
-				},
-			},
-		};
+		// Dynamically load Phaser and TetrisGame to reduce initial bundle size
+		setIsLoadingGame(true);
+		Promise.all([loadPhaser(), loadTetrisGame()])
+			.then(([Phaser, TetrisGameService]) => {
+				const config: any = {
+					type: Phaser.CANVAS,
+					width: 300,
+					height: 600,
+					parent: canvasRef.current,
+					background: "#000",
+					physics: {
+						default: "arcade",
+						arcade: {
+							debug: false,
+							gravity: { x: 0, y: 0 },
+						},
+					},
+				};
 
-		const game = new Phaser.Game(config);
-		setGameInstance(game);
+				const game = new Phaser.Game(config);
+				setGameInstance(game);
 
-		const scene = new TetrisGameService();
-		game.scene.add("TetrisGame", scene);
+				const scene = new TetrisGameService();
+				game.scene.add("TetrisGame", scene);
 
-		const handleScoreChange = (event: Event) => {
-			const customEvent = event as CustomEvent<{
-				detail: { score: number; lines: number; level: number };
-			}>;
-			if (customEvent.detail) {
-				setScore(customEvent.detail.score);
-				setLines(customEvent.detail.lines);
-				setLevel(customEvent.detail.level);
-			}
-		};
+				const handleScoreChange = (event: Event) => {
+					const customEvent = event as CustomEvent<{
+						detail: { score: number; lines: number; level: number };
+					}>;
+					if (customEvent.detail) {
+						setScore(customEvent.detail.score);
+						setLines(customEvent.detail.lines);
+						setLevel(customEvent.detail.level);
+					}
+				};
 
-		window.addEventListener("tetris-score", handleScoreChange);
+				window.addEventListener("tetris-score", handleScoreChange);
+				setIsLoadingGame(false);
+
+				// Cleanup function returned from Promise
+				return () => {
+					window.removeEventListener("tetris-score", handleScoreChange);
+					if (game) {
+						game.destroy(true);
+					}
+				};
+			})
+			.catch((error) => {
+				console.error("Failed to load game:", error);
+				setIsLoadingGame(false);
+			});
 
 		return () => {
-			window.removeEventListener("tetris-score", handleScoreChange);
 			if (gameInstance) {
 				gameInstance.destroy(true);
 			}

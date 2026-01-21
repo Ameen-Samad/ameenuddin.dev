@@ -19,19 +19,30 @@ export default defineConfig({
 		rollupOptions: {
 			external: ["@cloudflare/ai", "cloudflare:ai"],
 			output: {
-				manualChunks: {
-					// Split large dependencies into separate chunks
-					"vendor-mermaid": ["mermaid"],
-					"vendor-three": ["three", "@react-three/fiber", "@react-three/drei"],
-					"vendor-react": ["react", "react-dom"],
-					"vendor-tanstack": [
-						"@tanstack/react-router",
-						"@tanstack/react-query",
-						"@tanstack/react-start",
-					],
+				manualChunks(id) {
+					// Split large vendor chunks for better caching
+					if (id.includes('node_modules')) {
+						// Heavy dependencies go into their own chunks
+						if (id.includes('mermaid')) return 'vendor-mermaid';
+						if (id.includes('three') || id.includes('@react-three')) return 'vendor-three';
+						if (id.includes('phaser')) return 'vendor-phaser';
+						if (id.includes('cytoscape')) return 'vendor-cytoscape';
+
+						// Core React libraries
+						if (id.includes('react') || id.includes('react-dom')) return 'vendor-react';
+
+						// TanStack ecosystem
+						if (id.includes('@tanstack')) return 'vendor-tanstack';
+
+						// UI libraries
+						if (id.includes('@mantine') || id.includes('@radix-ui')) return 'vendor-ui';
+
+						// Everything else goes into vendor
+						return 'vendor';
+					}
 				},
 			},
 		},
-		chunkSizeWarningLimit: 1000, // Increase warning limit for known large chunks
+		chunkSizeWarningLimit: 1500, // Some chunks are necessarily large (vendor-phaser, vendor-mermaid)
 	},
 });
