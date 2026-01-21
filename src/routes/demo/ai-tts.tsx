@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { createFileRoute } from '@tanstack/react-router'
 import { Volume2, Loader2, Download, Play, Pause } from 'lucide-react'
 
@@ -19,7 +19,7 @@ const VOICES = [
 
 function TTSPage() {
   const [text, setText] = useState(
-    'Hello! This is a demonstration of Cloudflare Workers AI text-to-speech using Deepgram Aura. The voice quality is impressive and the latency is minimal.',
+    'Hi, I\'m Ameenuddin, a full-stack developer based in Singapore. I help businesses automate their operations with voice-enabled solutions like customer service bots, multilingual notifications, and accessibility features for diverse audiences.',
   )
   const [voice, setVoice] = useState('aura-asteria-en')
   const [audioData, setAudioData] = useState<string | null>(null)
@@ -28,6 +28,15 @@ function TTSPage() {
   const [error, setError] = useState<string | null>(null)
   const [audioElement, setAudioElement] = useState<HTMLAudioElement | null>(null)
 
+  // Cleanup blob URL when component unmounts or audioData changes
+  useEffect(() => {
+    return () => {
+      if (audioData && audioData.startsWith('blob:')) {
+        URL.revokeObjectURL(audioData)
+      }
+    }
+  }, [audioData])
+
   const handleGenerate = async () => {
     setIsLoading(true)
     setError(null)
@@ -35,29 +44,37 @@ function TTSPage() {
     setIsPlaying(false)
 
     try {
-      const response = await fetch('/demo/api/ai/tts', {
+      // Use streaming endpoint for better UX
+      const response = await fetch('/demo/api/ai/tts-stream', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ text, voice }),
       })
 
-      const data = await response.json()
-
       if (!response.ok) {
-        throw new Error(data.error || 'Failed to generate speech')
+        const errorData = await response.json()
+        throw new Error(errorData.error || 'Failed to generate speech')
       }
 
-      // Store base64 audio data
-      const audioSrc = `data:${data.contentType};base64,${data.audio}`
+      // Get the audio stream
+      const blob = await response.blob()
+      const audioSrc = URL.createObjectURL(blob)
       setAudioData(audioSrc)
 
       // Create and store audio element
       const audio = new Audio(audioSrc)
       audio.onended = () => setIsPlaying(false)
+
+      // Auto-play the audio as soon as it's ready
+      audio.oncanplay = () => {
+        setIsLoading(false)
+        audio.play()
+        setIsPlaying(true)
+      }
+
       setAudioElement(audio)
     } catch (err: any) {
       setError(err.message)
-    } finally {
       setIsLoading(false)
     }
   }
@@ -178,8 +195,7 @@ function TTSPage() {
                         Generated Audio
                       </p>
                       <p className="text-xs text-gray-400">
-                        {VOICES.find((v) => v.id === voice)?.name} • Deepgram
-                        Aura
+                        {VOICES.find((v) => v.id === voice)?.name}
                       </p>
                     </div>
                   </div>
@@ -197,15 +213,7 @@ function TTSPage() {
             {/* Info */}
             <div className="text-xs text-gray-400 space-y-1">
               <p>
-                <strong className="text-gray-300">Model:</strong>{' '}
-                @cf/deepgram/aura-2-en
-              </p>
-              <p>
-                <strong className="text-gray-300">Provider:</strong> Cloudflare
-                Workers AI
-              </p>
-              <p>
-                <strong className="text-gray-300">Format:</strong> MP3
+                <strong className="text-gray-300">Why voice?</strong> Voice-enabled applications improve accessibility, reduce support costs, and enhance customer experience across multiple languages and channels.
               </p>
             </div>
           </div>
@@ -214,57 +222,57 @@ function TTSPage() {
         {/* Usage Examples */}
         <div className="mt-6 bg-gray-800 rounded-lg p-4 sm:p-6 border border-orange-500/20">
           <h2 className="text-lg font-semibold text-white mb-3">
-            Example Use Cases
+            Real Business Applications in Singapore
           </h2>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3 text-sm">
             <button
               onClick={() =>
                 setText(
-                  'Welcome to our website! We are excited to have you here. Feel free to explore our features and let us know if you have any questions.',
+                  'Good morning! Your food delivery order from Yishun will arrive in 15 minutes. Our rider is on the way with your chicken rice and teh peng.',
                 )
               }
               className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition-colors"
             >
-              <p className="font-medium text-white mb-1">Website Welcome</p>
+              <p className="font-medium text-white mb-1">Delivery Notifications</p>
               <p className="text-xs text-gray-400">
-                Greeting message for visitors
+                Real-time updates for logistics and food delivery
               </p>
             </button>
             <button
               onClick={() =>
                 setText(
-                  'Your order has been confirmed and will be delivered within 2-3 business days. Thank you for your purchase!',
+                  'This is a reminder that your medical appointment at Tan Tock Seng Hospital is scheduled for tomorrow at 2 PM. Please arrive 15 minutes early and bring your NRIC.',
                 )
               }
               className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition-colors"
             >
-              <p className="font-medium text-white mb-1">Order Confirmation</p>
-              <p className="text-xs text-gray-400">E-commerce notification</p>
+              <p className="font-medium text-white mb-1">Healthcare Reminders</p>
+              <p className="text-xs text-gray-400">Appointment confirmations for clinics</p>
             </button>
             <button
               onClick={() =>
                 setText(
-                  'Press 1 for sales, press 2 for support, or press 0 to speak with an operator.',
+                  'Welcome to DBS customer service. For account inquiries, press 1. For credit card services, press 2. To report a lost card, press 3. Or say what you need help with.',
                 )
               }
               className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition-colors"
             >
-              <p className="font-medium text-white mb-1">IVR System</p>
+              <p className="font-medium text-white mb-1">Banking Hotlines</p>
               <p className="text-xs text-gray-400">
-                Interactive voice response
+                Automated customer service for financial institutions
               </p>
             </button>
             <button
               onClick={() =>
                 setText(
-                  'New message from John: Hey, are we still meeting at 3 PM today? Let me know if you need to reschedule.',
+                  'Your HDB maintenance fee payment of $85 is due on the 15th of this month. Pay online via PayNow or at any AXS station to avoid late charges.',
                 )
               }
               className="p-3 bg-gray-700 hover:bg-gray-600 rounded-lg text-left transition-colors"
             >
-              <p className="font-medium text-white mb-1">Message Reading</p>
+              <p className="font-medium text-white mb-1">Government Alerts</p>
               <p className="text-xs text-gray-400">
-                Audio accessibility feature
+                Automated reminders for residents and citizens
               </p>
             </button>
           </div>

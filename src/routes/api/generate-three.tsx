@@ -54,75 +54,142 @@ export const Route = createFileRoute("/api/generate-three")({
 						}
 					}
 
-					const systemPrompt = `You are a Three.js expert code generator. Generate COMPLETE, WORKING Three.js code based on user descriptions.
+					// Step 1: Classify the request using structured output
+					const classificationResponse = await ai.run("@cf/qwen/qwen2.5-coder-32b-instruct", {
+						messages: [
+							{
+								role: "system",
+								content: `Classify 3D scene requests into two types:
+1. "simple_object" - Single object or simple group (e.g., "red cube", "blue sphere", "rotating torus")
+2. "complete_scene" - Full scene with environment/scenery (e.g., "space scene with planets", "forest with trees", "underwater scene")
+
+Return ONLY valid JSON with this structure:
+{
+  "type": "simple_object" or "complete_scene",
+  "needsCustomLighting": true/false,
+  "reasoning": "brief explanation"
+}`,
+							},
+							{
+								role: "user",
+								content: `Classify this request: "${prompt}"`,
+							},
+						],
+						max_tokens: 200,
+						temperature: 0.1,
+					});
+
+					let classification = {
+						type: "simple_object" as "simple_object" | "complete_scene",
+						needsCustomLighting: false,
+						reasoning: "default",
+					};
+
+					try {
+						const classText =
+							typeof classificationResponse === "string"
+								? classificationResponse
+								: (classificationResponse as any).response || "";
+						const jsonMatch = classText.match(/\{[\s\S]*\}/);
+						if (jsonMatch) {
+							classification = JSON.parse(jsonMatch[0]);
+						}
+					} catch (e) {
+						console.error("Classification parsing error:", e);
+						// Default to simple_object on error
+					}
+
+					console.log(`Classification for "${prompt}":`, classification);
+
+					// Step 2: Generate code based on classification
+					let systemPrompt: string;
+					let generateFullScene = false;
+
+					if (classification.type === "complete_scene" && classification.needsCustomLighting) {
+						generateFullScene = true;
+						systemPrompt = `You are a Three.js scene expert. Generate COMPLETE scene code with custom lighting and environment.
 
 CRITICAL RULES:
-1. Return ONLY executable JavaScript code - no explanations, no comments outside code, no markdown
-2. Code MUST be complete and runnable as-is
-3. ALWAYS include the full animation loop
-4. ALWAYS set renderer size correctly
-5. ALWAYS position camera appropriately for the scene
-6. ALWAYS include at least one light source
+1. Return ONLY geometry/material/mesh creation code - NO imports, NO scene/camera/renderer setup, NO animation loop
+2. You have access to THREE (already imported) and scene, camera, renderer (already set up)
+3. Create full environment with appropriate lighting for the scene atmosphere
+4. Add scene.background color appropriate to the scene (e.g., dark for space, blue for sky)
+5. Create multiple lights to set the mood (ambient, directional, point, spot)
+6. Add all geometries and lights to the scene
+7. Use MeshStandardMaterial or MeshPhongMaterial for realistic lighting
 
-REQUIRED CODE STRUCTURE:
+WHAT TO GENERATE:
 \`\`\`javascript
-import * as THREE from 'https://esm.sh/three@0.182.0';
-import { OrbitControls } from 'https://esm.sh/three@0.182.0/examples/jsm/controls/OrbitControls';
+// Set background for scene atmosphere
+scene.background = new THREE.Color(0x000020); // Dark blue for space
 
-export async function createScene(canvas) {
-  // 1. Initialize scene, camera, renderer
-  const scene = new THREE.Scene();
-  const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
-  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+// Custom lighting for atmosphere
+const ambientLight = new THREE.AmbientLight(0x404040, 0.3);
+scene.add(ambientLight);
 
-  // Set size to match canvas parent
-  function updateSize() {
-    const width = canvas.clientWidth;
-    const height = canvas.clientHeight;
-    renderer.setSize(width, height, false);
-    camera.aspect = width / height;
-    camera.updateProjectionMatrix();
-  }
-  updateSize();
-  window.addEventListener('resize', updateSize);
+const mainLight = new THREE.DirectionalLight(0xffffff, 0.8);
+mainLight.position.set(10, 10, 5);
+scene.add(mainLight);
 
-  // 2. Create geometry and materials based on user request
-  // [YOUR CREATIVE CODE HERE]
+// Create scene objects
+const geometry = new THREE.SphereGeometry(1, 32, 32);
+const material = new THREE.MeshStandardMaterial({ color: 0x0088ff });
+const planet = new THREE.Mesh(geometry, material);
+scene.add(planet);
 
-  // 3. Add lighting (REQUIRED)
-  const ambientLight = new THREE.AmbientLight(0x404040, 1);
-  scene.add(ambientLight);
-  const pointLight = new THREE.PointLight(0xffffff, 1, 100);
-  pointLight.position.set(10, 10, 10);
-  scene.add(pointLight);
-
-  // 4. Position camera
-  camera.position.z = 5;
-
-  // 5. Add orbit controls
-  const controls = new OrbitControls(camera, renderer.domElement);
-  controls.enableDamping = true;
-
-  // 6. Animation loop (REQUIRED)
-  function animate() {
-    requestAnimationFrame(animate);
-    controls.update();
-    renderer.render(scene, camera);
-  }
-  animate();
-
-  return { scene, camera, renderer, controls };
-}
+// Optional: Add animation
+animate.userCode = function() {
+  planet.rotation.y += 0.01;
+};
 \`\`\`
 
-BEST PRACTICES:
-- Use appropriate colors and materials (MeshStandardMaterial, MeshPhongMaterial)
-- Add subtle animations (rotation, movement) when appropriate
-- Scale objects appropriately to fit in view
-- Use groups for complex objects
-- Apply textures or colors creatively based on description
+IMPORTANT:
+- NO import statements
+- NO scene/camera/renderer/controls creation (already exists)
+- Set scene.background appropriate to the scene
+- Create custom lighting for atmosphere
+- ONLY geometry, material, mesh, light creation and scene.add() calls
+- For animations, define animate.userCode function
 
-NOW GENERATE COMPLETE CODE FOR THE USER'S REQUEST.`;
+NOW GENERATE COMPLETE SCENE CODE FOR THE USER'S REQUEST.`;
+					} else {
+						// Simple object - use template
+						systemPrompt = `You are a Three.js geometry expert. Generate ONLY the geometry/material creation code based on user descriptions.
+
+CRITICAL RULES:
+1. Return ONLY the geometry/material/mesh creation code - NO imports, NO scene setup, NO camera, NO renderer, NO animation loop, NO lighting
+2. You have access to THREE (already imported) and scene, camera, renderer, controls (already set up)
+3. The scene already has bright background and perfect lighting - DO NOT add lights
+4. Create geometries, materials, and meshes, then add them to the scene
+5. Add animations by modifying object properties in the animate() function
+6. Use MeshStandardMaterial or MeshPhongMaterial for realistic lighting
+7. Keep objects scaled between 0.5 and 3 units to fit in view
+
+WHAT TO GENERATE:
+\`\`\`javascript
+// Create geometry
+const geometry = new THREE.BoxGeometry(1, 1, 1);
+const material = new THREE.MeshStandardMaterial({ color: 0xff0000, metalness: 0.5, roughness: 0.2 });
+const cube = new THREE.Mesh(geometry, material);
+scene.add(cube);
+
+// Optional: Add animation
+animate.userCode = function() {
+  cube.rotation.x += 0.01;
+  cube.rotation.y += 0.01;
+};
+\`\`\`
+
+IMPORTANT:
+- NO import statements
+- NO scene/camera/renderer/controls creation
+- NO lights (already set up with bright background)
+- ONLY geometry, material, mesh creation and scene.add() calls
+- For animations, define animate.userCode function
+- Use descriptive variable names
+
+NOW GENERATE GEOMETRY CODE FOR THE USER'S REQUEST.`;
+					}
 
 					// Use Workers AI binding (secure, server-side only)
 					const response = await ai.run("@cf/qwen/qwen2.5-coder-32b-instruct", {
@@ -130,7 +197,7 @@ NOW GENERATE COMPLETE CODE FOR THE USER'S REQUEST.`;
 							{ role: "system", content: systemPrompt },
 							{
 								role: "user",
-								content: `Create a Three.js scene with: ${prompt}`,
+								content: `Create: ${prompt}`,
 							},
 						],
 						max_tokens: 3000,
@@ -148,16 +215,80 @@ NOW GENERATE COMPLETE CODE FOR THE USER'S REQUEST.`;
 					}
 
 					// Clean up markdown formatting
-					generatedCode = generatedCode
+					let geometryCode = generatedCode
 						.replace(/```javascript/g, "")
 						.replace(/```js/g, "")
 						.replace(/```/g, "")
 						.trim();
 
-					// Ensure imports are present
-					if (!generatedCode.startsWith("import")) {
-						generatedCode = `import * as THREE from 'https://esm.sh/three@0.182.0';\nimport { OrbitControls } from 'https://esm.sh/three@0.182.0/examples/jsm/controls/OrbitControls';\n\n${generatedCode}`;
-					}
+					// Remove any imports if AI added them
+					geometryCode = geometryCode
+						.replace(/import.*from.*;?\n?/g, "")
+						.trim();
+
+					// Wrap in our template with bright background and proper lighting
+					generatedCode = `import * as THREE from 'https://esm.sh/three@0.182.0';
+import { OrbitControls } from 'https://esm.sh/three@0.182.0/examples/jsm/controls/OrbitControls';
+
+export async function createScene(canvas) {
+  // Initialize scene with bright background
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0xe8e8e8); // Bright light gray background
+
+  // Setup camera
+  const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+  camera.position.z = 5;
+
+  // Setup renderer
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+
+  // Handle canvas resizing
+  function updateSize() {
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    renderer.setSize(width, height, false);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  }
+  updateSize();
+  window.addEventListener('resize', updateSize);
+
+  // Add bright lighting
+  const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
+  scene.add(ambientLight);
+
+  const directionalLight = new THREE.DirectionalLight(0xffffff, 1.2);
+  directionalLight.position.set(5, 5, 5);
+  scene.add(directionalLight);
+
+  const pointLight = new THREE.PointLight(0xffffff, 0.6, 100);
+  pointLight.position.set(-5, -5, 5);
+  scene.add(pointLight);
+
+  // User-generated geometry code
+  ${geometryCode}
+
+  // Setup orbit controls
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+
+  // Animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+
+    // Call user animation code if it exists
+    if (animate.userCode) {
+      animate.userCode();
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  return { scene, camera, renderer, controls };
+}`;
 
 					// Cache the generated code (7 days TTL)
 					if (cache) {
