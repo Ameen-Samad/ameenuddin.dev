@@ -5,6 +5,7 @@ export class TetrisAI {
     free(): void;
     [Symbol.dispose](): void;
     get_best_move(grid: Int32Array, grid_width: number, grid_height: number, piece_shape: Int32Array, piece_width: number, piece_height: number): any;
+    get_best_move_with_lookahead(grid: Int32Array, grid_width: number, grid_height: number, piece_shape: Int32Array, piece_width: number, piece_height: number, next_piece_shape: Int32Array, next_piece_width: number, next_piece_height: number): any;
     constructor();
 }
 
@@ -14,6 +15,7 @@ export interface InitOutput {
     readonly memory: WebAssembly.Memory;
     readonly __wbg_tetrisai_free: (a: number, b: number) => void;
     readonly tetrisai_get_best_move: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number) => any;
+    readonly tetrisai_get_best_move_with_lookahead: (a: number, b: number, c: number, d: number, e: number, f: number, g: number, h: number, i: number, j: number, k: number, l: number, m: number) => any;
     readonly tetrisai_new: () => number;
     readonly __wbindgen_malloc: (a: number, b: number) => number;
     readonly __wbindgen_realloc: (a: number, b: number, c: number, d: number) => number;

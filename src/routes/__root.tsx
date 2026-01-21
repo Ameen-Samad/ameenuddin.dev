@@ -1,5 +1,7 @@
 import "@mantine/core/styles.css";
+import "@mantine/notifications/styles.css";
 import { createTheme, MantineProvider } from "@mantine/core";
+import { Notifications } from "@mantine/notifications";
 import type { QueryClient } from "@tanstack/react-query";
 import {
 	createRootRouteWithContext,
@@ -8,10 +10,10 @@ import {
 	Scripts,
 } from "@tanstack/react-router";
 import type { TRPCOptionsProxy } from "@trpc/tanstack-react-query";
-import type { TRPCRouter } from "@/integrations/trpc/router";
 import { useState } from "react";
-import { Sidebar } from "../components/Sidebar";
+import type { TRPCRouter } from "@/integrations/trpc/router";
 import { MobileNav } from "../components/MobileNav";
+import { Sidebar } from "../components/Sidebar";
 import { WhatsAppButton } from "../components/WhatsAppButton";
 import appCss from "../styles.css?url";
 
@@ -33,7 +35,8 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
 			},
 			{
 				name: "viewport",
-				content: "width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes",
+				content:
+					"width=device-width, initial-scale=1, maximum-scale=5, user-scalable=yes",
 			},
 			{
 				title: "Ameenuddin.dev | AI-Native Software Engineer",
@@ -62,7 +65,10 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 				<HeadContent />
 			</head>
 			<body>
-				<MantineProvider theme={theme} defaultColorScheme={isDarkMode ? "dark" : "light"}>
+				<MantineProvider
+					theme={theme}
+					defaultColorScheme={isDarkMode ? "dark" : "light"}
+				>
 					<Sidebar
 						collapsed={isSidebarCollapsed}
 						onToggleCollapse={() => setIsSidebarCollapsed(!isSidebarCollapsed)}
@@ -76,10 +82,14 @@ function RootDocument({ children }: { children: React.ReactNode }) {
 						isDarkMode={isDarkMode}
 						onThemeToggle={() => setIsDarkMode(!isDarkMode)}
 					/>
-					<div className="ml-0 md:ml-[280px] min-h-dvh transition-all duration-300 ease-out" style={{ overflowX: "hidden" }}>
+					<div
+						className="ml-0 md:ml-[280px] min-h-dvh transition-all duration-300 ease-out"
+						style={{ overflowX: "hidden" }}
+					>
 						{children}
 					</div>
 					<WhatsAppButton />
+					<Notifications position="top-right" zIndex={9999} />
 					<Scripts />
 				</MantineProvider>
 			</body>

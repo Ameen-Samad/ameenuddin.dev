@@ -28,6 +28,28 @@ export class TetrisAI {
         const ret = wasm.tetrisai_get_best_move(this.__wbg_ptr, ptr0, len0, grid_width, grid_height, ptr1, len1, piece_width, piece_height);
         return ret;
     }
+    /**
+     * @param {Int32Array} grid
+     * @param {number} grid_width
+     * @param {number} grid_height
+     * @param {Int32Array} piece_shape
+     * @param {number} piece_width
+     * @param {number} piece_height
+     * @param {Int32Array} next_piece_shape
+     * @param {number} next_piece_width
+     * @param {number} next_piece_height
+     * @returns {any}
+     */
+    get_best_move_with_lookahead(grid, grid_width, grid_height, piece_shape, piece_width, piece_height, next_piece_shape, next_piece_width, next_piece_height) {
+        const ptr0 = passArray32ToWasm0(grid, wasm.__wbindgen_malloc);
+        const len0 = WASM_VECTOR_LEN;
+        const ptr1 = passArray32ToWasm0(piece_shape, wasm.__wbindgen_malloc);
+        const len1 = WASM_VECTOR_LEN;
+        const ptr2 = passArray32ToWasm0(next_piece_shape, wasm.__wbindgen_malloc);
+        const len2 = WASM_VECTOR_LEN;
+        const ret = wasm.tetrisai_get_best_move_with_lookahead(this.__wbg_ptr, ptr0, len0, grid_width, grid_height, ptr1, len1, piece_width, piece_height, ptr2, len2, next_piece_width, next_piece_height);
+        return ret;
+    }
     constructor() {
         const ret = wasm.tetrisai_new();
         this.__wbg_ptr = ret >>> 0;
