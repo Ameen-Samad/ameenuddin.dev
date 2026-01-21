@@ -5,7 +5,7 @@ export interface Experience {
 	location: string;
 	title: string;
 	startDate: string;
-	endDate?: string;
+	endDate?: string | null;
 	duration: string;
 	isCurrent: boolean;
 	type: "full-time" | "part-time" | "contract" | "internship";
@@ -34,6 +34,7 @@ export const experiences: Experience[] = [
 		title: "Software Engineer",
 		startDate: "2025-12-01",
 		endDate: null,
+		duration: "1 month",
 		isCurrent: true,
 		type: "full-time",
 		category: "cloud",
@@ -108,7 +109,17 @@ export const getTotalExperienceYears = (): number => {
 	}, 0);
 };
 
-export const getCareerStats = () => {
+interface CareerStats {
+	totalYears: number;
+	totalPositions: number;
+	companiesWorked: number;
+	currentCompany: string | undefined;
+	topSkills: string[];
+	achievementsCount: number;
+	avgTechStackSize: number;
+}
+
+export const getCareerStats = (): CareerStats => {
 	const totalYears = getTotalExperienceYears();
 	const companiesWorked = new Set(experiences.map((exp) => exp.company)).size;
 	const allSkills = experiences.flatMap((exp) => exp.skills);
@@ -147,7 +158,7 @@ export const getCareerStats = () => {
 
 export const calculateDuration = (
 	startDate: string,
-	endDate?: string,
+	endDate?: string | null,
 ): string => {
 	const start = new Date(startDate);
 	const end = endDate ? new Date(endDate) : new Date();

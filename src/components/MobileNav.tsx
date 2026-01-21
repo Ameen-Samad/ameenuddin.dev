@@ -15,10 +15,11 @@ import {
 	IconX,
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion, AnimatePresence, useReducedMotion } from "framer-motion";
+import { useState, useEffect } from "react";
 import { type NavItem, navItems, socialLinks } from "../lib/navigation-data";
 import { downloadResumePDF } from "../lib/generate-pdf";
+import { cn } from "../lib/utils";
 
 interface MobileNavProps {
 	isOpen: boolean;
@@ -34,6 +35,19 @@ export function MobileNav({
 	onThemeToggle,
 }: MobileNavProps) {
 	const [expandedItems, setExpandedItems] = useState<Set<string>>(new Set());
+	const shouldReduceMotion = useReducedMotion();
+
+	// Prevent body scroll when mobile nav is open
+	useEffect(() => {
+		if (isOpen) {
+			document.body.style.overflow = "hidden";
+		} else {
+			document.body.style.overflow = "";
+		}
+		return () => {
+			document.body.style.overflow = "";
+		};
+	}, [isOpen]);
 
 	const toggleExpand = (itemId: string) => {
 		setExpandedItems((prev) => {
@@ -67,19 +81,16 @@ export function MobileNav({
 						initial={{ opacity: 0 }}
 						animate={{ opacity: 1 }}
 						exit={{ opacity: 0 }}
-						transition={{ duration: 0.3 }}
-						onClick={onClose}
-						style={{
-							position: "fixed",
-							top: 0,
-							left: 0,
-							right: 0,
-							bottom: 0,
-							background: "rgba(0, 0, 0, 0.7)",
-							backdropFilter: "blur(8px)",
-							zIndex: 999,
+						transition={{
+							duration: shouldReduceMotion ? 0 : 0.3,
+							ease: "easeOut"
 						}}
-						className="md:hidden"
+						onClick={onClose}
+						className={cn(
+							"md:hidden fixed inset-0 z-[999]",
+							"bg-black/70 backdrop-blur-sm",
+							"safe-area-inset"
+						)}
 					/>
 
 					{/* Mobile Menu */}
@@ -87,42 +98,32 @@ export function MobileNav({
 						initial={{ x: "100%" }}
 						animate={{ x: 0 }}
 						exit={{ x: "100%" }}
-						transition={{ duration: 0.3, ease: "easeInOut" }}
-						style={{
-							position: "fixed",
-							top: 0,
-							right: 0,
-							bottom: 0,
-							width: "85%",
-							maxWidth: "400px",
-							background: "rgba(10, 10, 15, 0.98)",
-							backdropFilter: "blur(12px)",
-							borderLeft: "1px solid rgba(0, 243, 255, 0.1)",
-							zIndex: 1000,
-							display: "flex",
-							flexDirection: "column",
-							overflow: "hidden",
+						transition={{
+							duration: shouldReduceMotion ? 0 : 0.3,
+							ease: "easeOut"
 						}}
-						className="md:hidden"
+						className={cn(
+							"md:hidden fixed top-0 right-0 bottom-0",
+							"w-[85%] max-w-sm",
+							"bg-slate-900/98 backdrop-blur-xl",
+							"border-l border-cyan-500/10",
+							"z-[1000] flex flex-col overflow-hidden",
+							"safe-area-inset-right safe-area-inset-top safe-area-inset-bottom"
+						)}
 					>
 						{/* Header */}
-						<Box
-							style={{
-								padding: "1.5rem",
-								borderBottom: "1px solid rgba(255, 255, 255, 0.05)",
-								display: "flex",
-								alignItems: "center",
-								justifyContent: "space-between",
-							}}
-						>
+						<Box className={cn(
+							"flex items-center justify-between",
+							"p-6 border-b border-white/5"
+						)}>
 							<Link
 								to="/"
-								style={{ textDecoration: "none" }}
+								className="no-underline"
 								onClick={onClose}
 							>
 								<Group gap="sm">
-									<IconCode size={32} style={{ color: "#00f3ff" }} />
-									<Title order={3} c="white" size="1.5rem">
+									<IconCode size={32} className="text-cyan-500" />
+									<Title order={3} className="text-white text-2xl font-bold text-balance">
 										Ameenuddin
 									</Title>
 								</Group>
@@ -133,7 +134,8 @@ export function MobileNav({
 								variant="subtle"
 								color="gray"
 								onClick={onClose}
-								aria-label="Close menu"
+								aria-label="Close navigation menu"
+								className="hover:bg-white/10 transition-colors duration-200"
 							>
 								<IconX size={24} />
 							</ActionIcon>
@@ -142,11 +144,7 @@ export function MobileNav({
 						{/* Navigation */}
 						<Stack
 							gap="sm"
-							style={{
-								padding: "1.5rem",
-								flex: 1,
-								overflowY: "auto",
-							}}
+							className="flex-1 overflow-y-auto p-6"
 						>
 							{navItems.map((item) => (
 								<MobileNavItem
@@ -155,19 +153,15 @@ export function MobileNav({
 									expanded={expandedItems.has(item.id)}
 									onToggle={() => handleItemClick(item)}
 									onClose={onClose}
+									shouldReduceMotion={shouldReduceMotion}
 								/>
 							))}
 						</Stack>
 
 						{/* Footer */}
-						<Box
-							style={{
-								padding: "1.5rem",
-								borderTop: "1px solid rgba(255, 255, 255, 0.05)",
-							}}
-						>
+						<Box className="p-6 border-t border-white/5">
 							{/* Social Links */}
-							<Group gap="md" justify="center" mb="md">
+							<Group gap="md" justify="center" className="mb-4">
 								{socialLinks.map((social) => (
 									<ActionIcon
 										key={social.id}
@@ -178,9 +172,11 @@ export function MobileNav({
 										size="xl"
 										variant="light"
 										color="cyan"
-										style={{
-											transition: "all 0.2s ease",
-										}}
+										className={cn(
+											"transition-all duration-200 ease-out",
+											"hover:-translate-y-1 hover:shadow-lg hover:shadow-cyan-500/20"
+										)}
+										aria-label={social.label}
 									>
 										{social.icon}
 									</ActionIcon>
@@ -190,31 +186,20 @@ export function MobileNav({
 							{/* Theme Toggle */}
 							<UnstyledButton
 								onClick={onThemeToggle}
-								style={{
-									width: "100%",
-									padding: "1rem",
-									borderRadius: "0.75rem",
-									background: "rgba(0, 243, 255, 0.1)",
-									transition: "all 0.2s ease",
-									display: "flex",
-									alignItems: "center",
-									justifyContent: "center",
-									gap: "0.75rem",
-								}}
-								styles={{
-									root: {
-										"&:hover": {
-											background: "rgba(0, 243, 255, 0.15)",
-										},
-									},
-								}}
+								className={cn(
+									"w-full p-4 rounded-xl bg-cyan-500/10",
+									"transition-all duration-200 ease-out",
+									"hover:bg-cyan-500/15",
+									"flex items-center justify-center gap-3",
+									"min-h-[56px]" // Touch target
+								)}
 							>
 								{isDarkMode ? (
-									<IconSun size={24} color="#00f3ff" />
+									<IconSun size={24} className="text-cyan-500" />
 								) : (
-									<IconMoon size={24} color="#00f3ff" />
+									<IconMoon size={24} className="text-cyan-500" />
 								)}
-								<Text size="md" c="white" fw={500}>
+								<Text className="text-white font-medium text-base">
 									{isDarkMode ? "Light Mode" : "Dark Mode"}
 								</Text>
 							</UnstyledButton>
@@ -231,6 +216,7 @@ interface MobileNavItemProps {
 	expanded: boolean;
 	onToggle: () => void;
 	onClose: () => void;
+	shouldReduceMotion: boolean | null;
 }
 
 function MobileNavItem({
@@ -238,49 +224,38 @@ function MobileNavItem({
 	expanded,
 	onToggle,
 	onClose,
+	shouldReduceMotion,
 }: MobileNavItemProps) {
 	const hasChildren = item.children && item.children.length > 0;
 
 	const ItemButton = (
 		<UnstyledButton
 			onClick={onToggle}
-			style={{
-				width: "100%",
-				padding: "1rem 1.25rem",
-				borderRadius: "0.75rem",
-				background: expanded
-					? "rgba(0, 243, 255, 0.1)"
-					: "rgba(255, 255, 255, 0.03)",
-				transition: "all 0.2s ease",
-				display: "flex",
-				alignItems: "center",
-				justifyContent: "space-between",
-				minHeight: "56px",
-			}}
-			styles={{
-				root: {
-					"&:hover": {
-						background: "rgba(0, 243, 255, 0.15)",
-						transform: "translateX(4px)",
-					},
-					"&:active": {
-						transform: "scale(0.98)",
-					},
-				},
-			}}
+			className={cn(
+				"w-full px-5 py-4 rounded-xl",
+				"transition-all duration-200 ease-out",
+				"flex items-center justify-between",
+				"min-h-[56px]", // Touch target
+				expanded
+					? "bg-cyan-500/10"
+					: "bg-white/5 hover:bg-cyan-500/15 hover:translate-x-1 active:scale-[0.98]"
+			)}
 		>
 			<Group gap="md">
-				<Box style={{ color: "#00f3ff", flexShrink: 0 }}>{item.icon}</Box>
-				<Text size="lg" c="white" fw={500}>
+				<Box className="text-cyan-500 flex-shrink-0">{item.icon}</Box>
+				<Text className="text-white font-medium text-lg">
 					{item.label}
 				</Text>
 			</Group>
 			{hasChildren && (
 				<motion.div
 					animate={{ rotate: expanded ? 0 : -90 }}
-					transition={{ duration: 0.2 }}
+					transition={{
+						duration: shouldReduceMotion ? 0 : 0.2,
+						ease: "easeOut"
+					}}
 				>
-					<IconChevronDown size={20} color="rgba(255, 255, 255, 0.5)" />
+					<IconChevronDown size={20} className="text-white/50" />
 				</motion.div>
 			)}
 		</UnstyledButton>
@@ -293,7 +268,7 @@ function MobileNavItem({
 			) : (
 				<Link
 					to={item.path || "#"}
-					style={{ textDecoration: "none" }}
+					className="no-underline"
 					onClick={onClose}
 				>
 					{ItemButton}
@@ -307,15 +282,18 @@ function MobileNavItem({
 						initial={{ height: 0, opacity: 0 }}
 						animate={{ height: "auto", opacity: 1 }}
 						exit={{ height: 0, opacity: 0 }}
-						transition={{ duration: 0.3, ease: "easeInOut" }}
-						style={{ overflow: "hidden" }}
+						transition={{
+							duration: shouldReduceMotion ? 0 : 0.3,
+							ease: "easeOut"
+						}}
+						className="overflow-hidden"
 					>
-						<Stack gap="xs" mt="sm" ml="md">
+						<Stack gap="xs" className="mt-2 ml-4">
 							{item.children?.map((child) => (
 								<Link
 									key={child.id}
 									to={child.path || "#"}
-									style={{ textDecoration: "none" }}
+									className="no-underline"
 									onClick={() => {
 										if (child.id === "resume") {
 											downloadResumePDF();
@@ -324,33 +302,20 @@ function MobileNavItem({
 									}}
 								>
 									<UnstyledButton
-										style={{
-											width: "100%",
-											padding: "0.875rem 1rem",
-											borderRadius: "0.5rem",
-											background: "rgba(255, 255, 255, 0.02)",
-											transition: "all 0.2s ease",
-											display: "flex",
-											alignItems: "center",
-											gap: "0.75rem",
-											minHeight: "48px",
-										}}
-										styles={{
-											root: {
-												"&:hover": {
-													background: "rgba(0, 243, 255, 0.08)",
-													transform: "translateX(6px)",
-												},
-												"&:active": {
-													transform: "scale(0.98)",
-												},
-											},
-										}}
+										className={cn(
+											"w-full px-4 py-3.5 rounded-lg",
+											"bg-white/5",
+											"transition-all duration-200 ease-out",
+											"hover:bg-cyan-500/8 hover:translate-x-1.5",
+											"active:scale-[0.98]",
+											"flex items-center gap-3",
+											"min-h-[48px]" // Touch target
+										)}
 									>
-										<Box style={{ color: "#00f3ff", flexShrink: 0 }}>
+										<Box className="text-cyan-500 flex-shrink-0">
 											{child.icon}
 										</Box>
-										<Text size="md" c="dimmed">
+										<Text className="text-gray-400 truncate">
 											{child.label}
 										</Text>
 									</UnstyledButton>

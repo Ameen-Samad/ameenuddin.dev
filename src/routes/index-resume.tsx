@@ -1,11 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { allEducations, allJobs, allSkills } from "content-collections";
-import { marked, marked } from "marked";
+import { marked } from "marked";
 import DownloadPDFButton from "@/components/DownloadPDFButton";
 import ResumeAssistant from "@/components/ResumeAssistant";
-import ResumeAssistant from "@/components/ResumeAssistant";
-import { Card, Card, CardContent, CardContent, CardHeader, CardHeader, CardTitle, CardTitle } from "@/components/ui/card";
-import { Separator, Separator } from "@/components/ui/separator";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Separator } from "@/components/ui/separator";
 
 export const Route = createFileRoute("/index-resume")({
 	component: App,
@@ -27,7 +26,9 @@ function App() {
 								<h1 className="text-5xl font-bold bg-linear-to-r from-gray-900 via-gray-800 to-gray-900 bg-clip-text text-transparent">
 									My Resume
 								</h1>
-								<p className="text-gray-600 text-lg">Education, Experience & Skills</p>
+								<p className="text-gray-600 text-lg">
+									Education, Experience & Skills
+								</p>
 								<div className="mt-6">
 									<DownloadPDFButton />
 								</div>

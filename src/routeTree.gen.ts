@@ -34,6 +34,14 @@ import { Route as DemoFormSimpleRouteImport } from './routes/demo/form.simple'
 import { Route as DemoFormAddressRouteImport } from './routes/demo/form.address'
 import { Route as DemoApiTqTodosRouteImport } from './routes/demo/api.tq-todos'
 import { Route as DemoApiNamesRouteImport } from './routes/demo/api.names'
+import { Route as ApiWorkersTagsRouteImport } from './routes/api/workers/tags'
+import { Route as ApiWorkersSummaryRouteImport } from './routes/api/workers/summary'
+import { Route as ApiWorkersSearchRouteImport } from './routes/api/workers/search'
+import { Route as ApiWorkersRecommendationsRouteImport } from './routes/api/workers/recommendations'
+import { Route as ApiWorkersParseQueryRouteImport } from './routes/api/workers/parse-query'
+import { Route as ApiWorkersEmbeddingsRouteImport } from './routes/api/workers/embeddings'
+import { Route as ApiWorkersChatRouteImport } from './routes/api/workers/chat'
+import { Route as ApiWorkersCategorizeRouteImport } from './routes/api/workers/categorize'
 import { Route as ApiTrpcSplatRouteImport } from './routes/api.trpc.$'
 import { Route as ApiLeaderboardHistoryRouteImport } from './routes/api/leaderboard/history'
 import { Route as DemoStartSsrIndexRouteImport } from './routes/demo/start.ssr.index'
@@ -171,6 +179,47 @@ const DemoApiNamesRoute = DemoApiNamesRouteImport.update({
   path: '/demo/api/names',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiWorkersTagsRoute = ApiWorkersTagsRouteImport.update({
+  id: '/api/workers/tags',
+  path: '/api/workers/tags',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWorkersSummaryRoute = ApiWorkersSummaryRouteImport.update({
+  id: '/api/workers/summary',
+  path: '/api/workers/summary',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWorkersSearchRoute = ApiWorkersSearchRouteImport.update({
+  id: '/api/workers/search',
+  path: '/api/workers/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWorkersRecommendationsRoute =
+  ApiWorkersRecommendationsRouteImport.update({
+    id: '/api/workers/recommendations',
+    path: '/api/workers/recommendations',
+    getParentRoute: () => rootRouteImport,
+  } as any)
+const ApiWorkersParseQueryRoute = ApiWorkersParseQueryRouteImport.update({
+  id: '/api/workers/parse-query',
+  path: '/api/workers/parse-query',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWorkersEmbeddingsRoute = ApiWorkersEmbeddingsRouteImport.update({
+  id: '/api/workers/embeddings',
+  path: '/api/workers/embeddings',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWorkersChatRoute = ApiWorkersChatRouteImport.update({
+  id: '/api/workers/chat',
+  path: '/api/workers/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ApiWorkersCategorizeRoute = ApiWorkersCategorizeRouteImport.update({
+  id: '/api/workers/categorize',
+  path: '/api/workers/categorize',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiTrpcSplatRoute = ApiTrpcSplatRouteImport.update({
   id: '/api/trpc/$',
   path: '/api/trpc/$',
@@ -247,6 +296,14 @@ export interface FileRoutesByFullPath {
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
   '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/api/workers/categorize': typeof ApiWorkersCategorizeRoute
+  '/api/workers/chat': typeof ApiWorkersChatRoute
+  '/api/workers/embeddings': typeof ApiWorkersEmbeddingsRoute
+  '/api/workers/parse-query': typeof ApiWorkersParseQueryRoute
+  '/api/workers/recommendations': typeof ApiWorkersRecommendationsRoute
+  '/api/workers/search': typeof ApiWorkersSearchRoute
+  '/api/workers/summary': typeof ApiWorkersSummaryRoute
+  '/api/workers/tags': typeof ApiWorkersTagsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/form/address': typeof DemoFormAddressRoute
@@ -285,6 +342,14 @@ export interface FileRoutesByTo {
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
   '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/api/workers/categorize': typeof ApiWorkersCategorizeRoute
+  '/api/workers/chat': typeof ApiWorkersChatRoute
+  '/api/workers/embeddings': typeof ApiWorkersEmbeddingsRoute
+  '/api/workers/parse-query': typeof ApiWorkersParseQueryRoute
+  '/api/workers/recommendations': typeof ApiWorkersRecommendationsRoute
+  '/api/workers/search': typeof ApiWorkersSearchRoute
+  '/api/workers/summary': typeof ApiWorkersSummaryRoute
+  '/api/workers/tags': typeof ApiWorkersTagsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/form/address': typeof DemoFormAddressRoute
@@ -324,6 +389,14 @@ export interface FileRoutesById {
   '/demo/trpc-todo': typeof DemoTrpcTodoRoute
   '/api/leaderboard/history': typeof ApiLeaderboardHistoryRoute
   '/api/trpc/$': typeof ApiTrpcSplatRoute
+  '/api/workers/categorize': typeof ApiWorkersCategorizeRoute
+  '/api/workers/chat': typeof ApiWorkersChatRoute
+  '/api/workers/embeddings': typeof ApiWorkersEmbeddingsRoute
+  '/api/workers/parse-query': typeof ApiWorkersParseQueryRoute
+  '/api/workers/recommendations': typeof ApiWorkersRecommendationsRoute
+  '/api/workers/search': typeof ApiWorkersSearchRoute
+  '/api/workers/summary': typeof ApiWorkersSummaryRoute
+  '/api/workers/tags': typeof ApiWorkersTagsRoute
   '/demo/api/names': typeof DemoApiNamesRoute
   '/demo/api/tq-todos': typeof DemoApiTqTodosRoute
   '/demo/form/address': typeof DemoFormAddressRoute
@@ -364,6 +437,14 @@ export interface FileRouteTypes {
     | '/demo/trpc-todo'
     | '/api/leaderboard/history'
     | '/api/trpc/$'
+    | '/api/workers/categorize'
+    | '/api/workers/chat'
+    | '/api/workers/embeddings'
+    | '/api/workers/parse-query'
+    | '/api/workers/recommendations'
+    | '/api/workers/search'
+    | '/api/workers/summary'
+    | '/api/workers/tags'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
     | '/demo/form/address'
@@ -402,6 +483,14 @@ export interface FileRouteTypes {
     | '/demo/trpc-todo'
     | '/api/leaderboard/history'
     | '/api/trpc/$'
+    | '/api/workers/categorize'
+    | '/api/workers/chat'
+    | '/api/workers/embeddings'
+    | '/api/workers/parse-query'
+    | '/api/workers/recommendations'
+    | '/api/workers/search'
+    | '/api/workers/summary'
+    | '/api/workers/tags'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
     | '/demo/form/address'
@@ -440,6 +529,14 @@ export interface FileRouteTypes {
     | '/demo/trpc-todo'
     | '/api/leaderboard/history'
     | '/api/trpc/$'
+    | '/api/workers/categorize'
+    | '/api/workers/chat'
+    | '/api/workers/embeddings'
+    | '/api/workers/parse-query'
+    | '/api/workers/recommendations'
+    | '/api/workers/search'
+    | '/api/workers/summary'
+    | '/api/workers/tags'
     | '/demo/api/names'
     | '/demo/api/tq-todos'
     | '/demo/form/address'
@@ -478,6 +575,14 @@ export interface RootRouteChildren {
   DemoTanstackQueryRoute: typeof DemoTanstackQueryRoute
   DemoTrpcTodoRoute: typeof DemoTrpcTodoRoute
   ApiTrpcSplatRoute: typeof ApiTrpcSplatRoute
+  ApiWorkersCategorizeRoute: typeof ApiWorkersCategorizeRoute
+  ApiWorkersChatRoute: typeof ApiWorkersChatRoute
+  ApiWorkersEmbeddingsRoute: typeof ApiWorkersEmbeddingsRoute
+  ApiWorkersParseQueryRoute: typeof ApiWorkersParseQueryRoute
+  ApiWorkersRecommendationsRoute: typeof ApiWorkersRecommendationsRoute
+  ApiWorkersSearchRoute: typeof ApiWorkersSearchRoute
+  ApiWorkersSummaryRoute: typeof ApiWorkersSummaryRoute
+  ApiWorkersTagsRoute: typeof ApiWorkersTagsRoute
   DemoApiNamesRoute: typeof DemoApiNamesRoute
   DemoApiTqTodosRoute: typeof DemoApiTqTodosRoute
   DemoFormAddressRoute: typeof DemoFormAddressRoute
@@ -674,6 +779,62 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoApiNamesRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/workers/tags': {
+      id: '/api/workers/tags'
+      path: '/api/workers/tags'
+      fullPath: '/api/workers/tags'
+      preLoaderRoute: typeof ApiWorkersTagsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/workers/summary': {
+      id: '/api/workers/summary'
+      path: '/api/workers/summary'
+      fullPath: '/api/workers/summary'
+      preLoaderRoute: typeof ApiWorkersSummaryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/workers/search': {
+      id: '/api/workers/search'
+      path: '/api/workers/search'
+      fullPath: '/api/workers/search'
+      preLoaderRoute: typeof ApiWorkersSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/workers/recommendations': {
+      id: '/api/workers/recommendations'
+      path: '/api/workers/recommendations'
+      fullPath: '/api/workers/recommendations'
+      preLoaderRoute: typeof ApiWorkersRecommendationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/workers/parse-query': {
+      id: '/api/workers/parse-query'
+      path: '/api/workers/parse-query'
+      fullPath: '/api/workers/parse-query'
+      preLoaderRoute: typeof ApiWorkersParseQueryRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/workers/embeddings': {
+      id: '/api/workers/embeddings'
+      path: '/api/workers/embeddings'
+      fullPath: '/api/workers/embeddings'
+      preLoaderRoute: typeof ApiWorkersEmbeddingsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/workers/chat': {
+      id: '/api/workers/chat'
+      path: '/api/workers/chat'
+      fullPath: '/api/workers/chat'
+      preLoaderRoute: typeof ApiWorkersChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/api/workers/categorize': {
+      id: '/api/workers/categorize'
+      path: '/api/workers/categorize'
+      fullPath: '/api/workers/categorize'
+      preLoaderRoute: typeof ApiWorkersCategorizeRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/trpc/$': {
       id: '/api/trpc/$'
       path: '/api/trpc/$'
@@ -785,6 +946,14 @@ const rootRouteChildren: RootRouteChildren = {
   DemoTanstackQueryRoute: DemoTanstackQueryRoute,
   DemoTrpcTodoRoute: DemoTrpcTodoRoute,
   ApiTrpcSplatRoute: ApiTrpcSplatRoute,
+  ApiWorkersCategorizeRoute: ApiWorkersCategorizeRoute,
+  ApiWorkersChatRoute: ApiWorkersChatRoute,
+  ApiWorkersEmbeddingsRoute: ApiWorkersEmbeddingsRoute,
+  ApiWorkersParseQueryRoute: ApiWorkersParseQueryRoute,
+  ApiWorkersRecommendationsRoute: ApiWorkersRecommendationsRoute,
+  ApiWorkersSearchRoute: ApiWorkersSearchRoute,
+  ApiWorkersSummaryRoute: ApiWorkersSummaryRoute,
+  ApiWorkersTagsRoute: ApiWorkersTagsRoute,
   DemoApiNamesRoute: DemoApiNamesRoute,
   DemoApiTqTodosRoute: DemoApiTqTodosRoute,
   DemoFormAddressRoute: DemoFormAddressRoute,
@@ -806,3 +975,12 @@ const rootRouteChildren: RootRouteChildren = {
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { createStart } from '@tanstack/react-start'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+  }
+}

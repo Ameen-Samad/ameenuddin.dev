@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { Building2 } from "lucide-react";
-import type { Experience } from "@/lib/experience-data";
 
 interface CompanyLogoProps {
 	logo?: string;

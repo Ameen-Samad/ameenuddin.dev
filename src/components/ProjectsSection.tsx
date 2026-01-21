@@ -2,6 +2,8 @@ import { Container, SimpleGrid, Text } from "@mantine/core";
 import { motion } from "framer-motion";
 import { useEffect, useId, useMemo, useState } from "react";
 import { type FilterType, getFilters, projects } from "../lib/projects-data";
+import { AIRecommendations } from "./AIRecommendations";
+import { ProjectAIAssistant } from "./ProjectAIAssistant";
 import { ProjectCard } from "./ProjectCard";
 import { ProjectFilter } from "./ProjectFilter";
 import { ProjectHero } from "./ProjectHero";
