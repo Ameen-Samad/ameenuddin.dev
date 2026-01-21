@@ -1,4 +1,5 @@
 import { LRUCache } from "lru-cache";
+import { handleRateLimitError } from "./rate-limit-handler";
 
 export interface AISearchQuery {
 	query: string;
@@ -64,12 +65,21 @@ export async function generateEmbedding(text: string): Promise<number[]> {
 			}),
 		});
 
-		if (!response.ok) throw new Error("Failed to generate embedding");
+		if (!response.ok) {
+			await handleRateLimitError(response);
+			throw new Error("Failed to generate embedding");
+		}
 
 		const data = await response.json();
 		embeddingCache.set(cacheKey, data.embedding);
 		return data.embedding;
 	} catch (error) {
+		if (
+			error instanceof Error &&
+			error.message.includes("Rate limit exceeded")
+		) {
+			throw error;
+		}
 		console.error("Embedding generation error:", error);
 		throw error;
 	}
@@ -91,11 +101,20 @@ export async function performSemanticSearch(
 			}),
 		});
 
-		if (!response.ok) throw new Error("Failed to perform semantic search");
+		if (!response.ok) {
+			await handleRateLimitError(response);
+			throw new Error("Failed to perform semantic search");
+		}
 
 		const data = await response.json();
 		return data.results || [];
 	} catch (error) {
+		if (
+			error instanceof Error &&
+			error.message.includes("Rate limit exceeded")
+		) {
+			throw error;
+		}
 		console.error("Semantic search error:", error);
 		return [];
 	}
@@ -116,7 +135,10 @@ export async function generateSummary(project: any): Promise<AIContent> {
 			}),
 		});
 
-		if (!response.ok) throw new Error("Failed to generate summary");
+		if (!response.ok) {
+			await handleRateLimitError(response);
+			throw new Error("Failed to generate summary");
+		}
 
 		const data = await response.json();
 		const summary: AIContent = {
@@ -129,6 +151,12 @@ export async function generateSummary(project: any): Promise<AIContent> {
 		summaryCache.set(cacheKey, summary);
 		return summary;
 	} catch (error) {
+		if (
+			error instanceof Error &&
+			error.message.includes("Rate limit exceeded")
+		) {
+			throw error;
+		}
 		console.error("Summary generation error:", error);
 		return {
 			summary: project.description,
@@ -150,11 +178,20 @@ export async function suggestTags(description: string): Promise<string[]> {
 			}),
 		});
 
-		if (!response.ok) throw new Error("Failed to suggest tags");
+		if (!response.ok) {
+			await handleRateLimitError(response);
+			throw new Error("Failed to suggest tags");
+		}
 
 		const data = await response.json();
 		return data.tags || [];
 	} catch (error) {
+		if (
+			error instanceof Error &&
+			error.message.includes("Rate limit exceeded")
+		) {
+			throw error;
+		}
 		console.error("Tag suggestion error:", error);
 		return [];
 	}
@@ -173,7 +210,10 @@ export async function parseNaturalLanguage(
 			}),
 		});
 
-		if (!response.ok) throw new Error("Failed to parse query");
+		if (!response.ok) {
+			await handleRateLimitError(response);
+			throw new Error("Failed to parse query");
+		}
 
 		const data = await response.json();
 		return (
@@ -183,6 +223,12 @@ export async function parseNaturalLanguage(
 			}
 		);
 	} catch (error) {
+		if (
+			error instanceof Error &&
+			error.message.includes("Rate limit exceeded")
+		) {
+			throw error;
+		}
 		console.error("Query parsing error:", error);
 		return {
 			technologies: [],
@@ -212,12 +258,21 @@ export async function chatWithProject(
 			}),
 		});
 
-		if (!response.ok) throw new Error("Failed to chat with project");
+		if (!response.ok) {
+			await handleRateLimitError(response);
+			throw new Error("Failed to chat with project");
+		}
 
 		const data = await response.json();
 		chatCache.set(cacheKey, data.response);
 		return data.response;
 	} catch (error) {
+		if (
+			error instanceof Error &&
+			error.message.includes("Rate limit exceeded")
+		) {
+			throw error;
+		}
 		console.error("Chat error:", error);
 		throw error;
 	}
@@ -239,11 +294,20 @@ export async function getRecommendations(
 			}),
 		});
 
-		if (!response.ok) throw new Error("Failed to get recommendations");
+		if (!response.ok) {
+			await handleRateLimitError(response);
+			throw new Error("Failed to get recommendations");
+		}
 
 		const data = await response.json();
 		return data.results || [];
 	} catch (error) {
+		if (
+			error instanceof Error &&
+			error.message.includes("Rate limit exceeded")
+		) {
+			throw error;
+		}
 		console.error("Recommendations error:", error);
 		return [];
 	}
@@ -260,11 +324,20 @@ export async function categorizeProject(project: any): Promise<string> {
 			}),
 		});
 
-		if (!response.ok) throw new Error("Failed to categorize project");
+		if (!response.ok) {
+			await handleRateLimitError(response);
+			throw new Error("Failed to categorize project");
+		}
 
 		const data = await response.json();
 		return data.category || project.category;
 	} catch (error) {
+		if (
+			error instanceof Error &&
+			error.message.includes("Rate limit exceeded")
+		) {
+			throw error;
+		}
 		console.error("Categorization error:", error);
 		return project.category;
 	}

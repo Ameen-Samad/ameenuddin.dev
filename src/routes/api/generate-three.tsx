@@ -54,48 +54,65 @@ export const Route = createFileRoute("/api/generate-three")({
 						}
 					}
 
-					// Step 1: Classify the request using structured output
-					const classificationResponse = await ai.run("@cf/qwen/qwen2.5-coder-32b-instruct", {
+					// Step 1: Classify the request using Scout model (Meta Llama 4 Scout - fast reasoning)
+					const classificationResponse = await ai.run("@cf/meta/llama-4-scout-17b-16e-instruct", {
 						messages: [
 							{
 								role: "system",
-								content: `Classify 3D scene requests into two types:
-1. "simple_object" - Single object or simple group (e.g., "red cube", "blue sphere", "rotating torus")
-2. "complete_scene" - Full scene with environment/scenery (e.g., "space scene with planets", "forest with trees", "underwater scene")
+								content: `You are a classification expert. Classify 3D scene requests into exactly one of these types:
+- "simple_object": Single object or simple group (e.g., "red cube", "blue sphere", "rotating golden cube")
+- "complete_scene": Full scene with environment/atmosphere (e.g., "space scene", "underwater world", "forest landscape")
 
-Return ONLY valid JSON with this structure:
-{
-  "type": "simple_object" or "complete_scene",
-  "needsCustomLighting": true/false,
-  "reasoning": "brief explanation"
-}`,
+Respond with ONLY the type name: either "simple_object" or "complete_scene". No explanation.`,
 							},
 							{
 								role: "user",
-								content: `Classify this request: "${prompt}"`,
+								content: `Classify: "${prompt}"`,
 							},
 						],
-						max_tokens: 200,
+						max_tokens: 50,
 						temperature: 0.1,
 					});
 
+					// Parse Scout's classification
 					let classification = {
 						type: "simple_object" as "simple_object" | "complete_scene",
 						needsCustomLighting: false,
-						reasoning: "default",
+						reasoning: "scout classification",
 					};
 
 					try {
-						const classText =
+						const responseText =
 							typeof classificationResponse === "string"
 								? classificationResponse
 								: (classificationResponse as any).response || "";
-						const jsonMatch = classText.match(/\{[\s\S]*\}/);
-						if (jsonMatch) {
-							classification = JSON.parse(jsonMatch[0]);
+
+						const cleanText = responseText.toLowerCase().trim();
+
+						if (cleanText.includes("complete_scene") || cleanText.includes("complete scene")) {
+							classification = {
+								type: "complete_scene",
+								needsCustomLighting: true,
+								reasoning: "scout model detected scene/environment",
+							};
+						} else if (cleanText.includes("simple_object") || cleanText.includes("simple object")) {
+							classification = {
+								type: "simple_object",
+								needsCustomLighting: false,
+								reasoning: "scout model detected simple object",
+							};
+						} else {
+							// Fallback: keyword detection
+							const sceneKeywords = ["scene", "environment", "world", "landscape", "space", "underwater"];
+							const isScene = sceneKeywords.some((kw) => prompt.toLowerCase().includes(kw));
+							classification = {
+								type: isScene ? "complete_scene" : "simple_object",
+								needsCustomLighting: isScene,
+								reasoning: "fallback keyword detection",
+							};
 						}
 					} catch (e) {
-						console.error("Classification parsing error:", e);
+						console.error("Classification error:", e);
 						// Default to simple_object on error
 					}
 
@@ -226,8 +243,61 @@ NOW GENERATE GEOMETRY CODE FOR THE USER'S REQUEST.`;
 						.replace(/import.*from.*;?\n?/g, "")
 						.trim();
 
-					// Wrap in our template with bright background and proper lighting
-					generatedCode = `import * as THREE from 'https://esm.sh/three@0.182.0';
+					// Step 3: Wrap in appropriate template based on classification
+					if (generateFullScene) {
+						// Complete scene - minimal template (AI controls background and lighting)
+						generatedCode = `import * as THREE from 'https://esm.sh/three@0.182.0';
+import { OrbitControls } from 'https://esm.sh/three@0.182.0/examples/jsm/controls/OrbitControls';
+
+export async function createScene(canvas) {
+  // Initialize scene (AI will set background)
+  const scene = new THREE.Scene();
+
+  // Setup camera
+  const camera = new THREE.PerspectiveCamera(75, canvas.clientWidth / canvas.clientHeight, 0.1, 1000);
+  camera.position.z = 5;
+
+  // Setup renderer
+  const renderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+
+  // Handle canvas resizing
+  function updateSize() {
+    const width = canvas.clientWidth;
+    const height = canvas.clientHeight;
+    renderer.setSize(width, height, false);
+    camera.aspect = width / height;
+    camera.updateProjectionMatrix();
+  }
+  updateSize();
+  window.addEventListener('resize', updateSize);
+
+  // AI-generated scene code (includes lighting and objects)
+  ${geometryCode}
+
+  // Setup orbit controls
+  const controls = new OrbitControls(camera, renderer.domElement);
+  controls.enableDamping = true;
+  controls.dampingFactor = 0.05;
+
+  // Animation loop
+  function animate() {
+    requestAnimationFrame(animate);
+
+    // Call user animation code if it exists
+    if (animate.userCode) {
+      animate.userCode();
+    }
+
+    controls.update();
+    renderer.render(scene, camera);
+  }
+  animate();
+
+  return { scene, camera, renderer, controls };
+}`;
+					} else {
+						// Simple object - bright template with controlled lighting
+						generatedCode = `import * as THREE from 'https://esm.sh/three@0.182.0';
 import { OrbitControls } from 'https://esm.sh/three@0.182.0/examples/jsm/controls/OrbitControls';
 
 export async function createScene(canvas) {
@@ -253,7 +323,7 @@ export async function createScene(canvas) {
   updateSize();
   window.addEventListener('resize', updateSize);
 
-  // Add bright lighting
+  // Add bright lighting (studio setup)
   const ambientLight = new THREE.AmbientLight(0xffffff, 0.8);
   scene.add(ambientLight);
 
@@ -289,6 +359,7 @@ export async function createScene(canvas) {
 
   return { scene, camera, renderer, controls };
 }`;
+					}
 
 					// Cache the generated code (7 days TTL)
 					if (cache) {
