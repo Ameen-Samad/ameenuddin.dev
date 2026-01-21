@@ -141,7 +141,7 @@ export const navItems: NavItem[] = [
 						id: "demo-form-address",
 						label: "Form (Address)",
 						icon: <IconCode size={16} />,
-						path: "/demo/form.address",
+						path: "/demo/form/address",
 					},
 				],
 			},

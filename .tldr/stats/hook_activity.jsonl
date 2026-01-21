@@ -153,3 +153,6 @@
 {"hook_name": "edit-context-inject", "invocations": 1, "successes": 1, "failures": 0, "metrics": {"edits_processed": 1, "symbols_shown": 1}, "timestamp": "2026-01-21T13:31:50.029226+00:00"}
 {"hook_name": "post-edit-notify", "invocations": 3, "successes": 3, "failures": 0, "metrics": {"edits_notified": 3, "reindexes_triggered": 0}, "timestamp": "2026-01-21T13:34:04.753959+00:00"}
 {"hook_name": "edit-context-inject", "invocations": 2, "successes": 2, "failures": 0, "metrics": {"edits_processed": 2, "symbols_shown": 3}, "timestamp": "2026-01-21T13:34:04.753959+00:00"}
+{"hook_name": "tldr-read-enforcer", "invocations": 1, "successes": 1, "failures": 0, "metrics": {"reads_intercepted": 1, "layers_returned": 2}, "timestamp": "2026-01-21T13:56:41.478611+00:00"}
+{"hook_name": "post-edit-notify", "invocations": 2, "successes": 2, "failures": 0, "metrics": {"edits_notified": 2, "reindexes_triggered": 0}, "timestamp": "2026-01-21T13:56:41.478611+00:00"}
+{"hook_name": "edit-context-inject", "invocations": 2, "successes": 2, "failures": 0, "metrics": {"edits_processed": 2, "symbols_shown": 2}, "timestamp": "2026-01-21T13:56:41.478611+00:00"}

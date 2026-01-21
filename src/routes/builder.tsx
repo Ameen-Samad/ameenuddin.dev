@@ -4,6 +4,7 @@ import {
 	Button,
 	Code,
 	Container,
+	Drawer,
 	Group,
 	Loader,
 	Paper,
@@ -347,6 +348,8 @@ function ViewerPanel({
 	isGenerating: boolean;
 	canvasRef?: React.RefObject<HTMLCanvasElement>;
 }) {
+	const [codeDrawerOpened, setCodeDrawerOpened] = useState(false);
+
 	return (
 		<Paper
 			shadow="xl"
@@ -366,6 +369,17 @@ function ViewerPanel({
 					<IconCube size={20} style={{ color: "#0066ff" }} />
 					3D Viewer
 				</Title>
+				{currentCode && !isGenerating && (
+					<Button
+						size="xs"
+						variant="outline"
+						leftSection={<IconCode size={16} />}
+						onClick={() => setCodeDrawerOpened(true)}
+						style={{ borderColor: "#00f3ff", color: "#00f3ff" }}
+					>
+						Reveal Code
+					</Button>
+				)}
 			</Group>
 
 			<div style={{ height: "600px", position: "relative" }}>
@@ -423,29 +437,40 @@ function ViewerPanel({
 						</Stack>
 					</div>
 				)}
-
-				{currentCode && !isGenerating && (
-					<div
-						style={{
-							position: "absolute",
-							bottom: "16px",
-							right: "16px",
-							zIndex: 10,
-							maxWidth: "500px",
-							maxHeight: "400px",
-							background: "rgba(0, 0, 0, 0.9)",
-							borderRadius: "8px",
-							padding: "12px",
-						}}
-					>
-						<ScrollArea h={380} type="auto">
-							<Code block p="sm" style={{ fontSize: "11px" }}>
-								{currentCode}
-							</Code>
-						</ScrollArea>
-					</div>
-				)}
 			</div>
+
+			{/* Code Drawer */}
+			<Drawer
+				opened={codeDrawerOpened}
+				onClose={() => setCodeDrawerOpened(false)}
+				position="right"
+				size="xl"
+				title={
+					<Group gap="sm">
+						<IconCode size={20} style={{ color: "#00f3ff" }} />
+						<Text fw={600}>Generated Three.js Code</Text>
+					</Group>
+				}
+				styles={{
+					header: {
+						background: "rgba(26, 26, 26, 0.95)",
+						borderBottom: "1px solid rgba(0, 243, 255, 0.2)",
+					},
+					body: {
+						background: "rgba(10, 10, 10, 0.98)",
+						padding: 0,
+					},
+					content: {
+						background: "rgba(10, 10, 10, 0.98)",
+					},
+				}}
+			>
+				<ScrollArea h="calc(100vh - 80px)" p="md">
+					<Code block style={{ fontSize: "12px", lineHeight: "1.6" }}>
+						{currentCode}
+					</Code>
+				</ScrollArea>
+			</Drawer>
 		</Paper>
 	);
 }
