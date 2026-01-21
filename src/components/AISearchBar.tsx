@@ -1,6 +1,7 @@
 import { motion } from "framer-motion";
 import { Search } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useState } from "react";
+import { useDebouncedCallback } from "@tanstack/react-pacer/debouncer";
 import type { AISearchQuery } from "@/lib/cloudflare-ai";
 import {
 	parseNaturalLanguage,
@@ -25,12 +26,13 @@ export function AISearchBar({
 	const [isSearching, setIsSearching] = useState(false);
 	const [showDropdown, setShowDropdown] = useState(false);
 
-	useEffect(() => {
-		const timer = setTimeout(async () => {
-			if (query.length > 2 && showSuggestions) {
+	// Use TanStack Pacer for debounced suggestions
+	const debouncedFetchSuggestions = useDebouncedCallback(
+		async (searchQuery: string) => {
+			if (searchQuery.length > 2 && showSuggestions) {
 				setIsSearching(true);
 				try {
-					const parsed = await parseNaturalLanguage(query);
+					const parsed = await parseNaturalLanguage(searchQuery);
 					if (parsed.technologies.length > 0 || parsed.categories.length > 0) {
 						setSuggestions([...parsed.technologies, ...parsed.categories]);
 						setShowDropdown(true);
@@ -47,10 +49,9 @@ export function AISearchBar({
 				setSuggestions([]);
 				setShowDropdown(false);
 			}
-		}, 300);
-
-		return () => clearTimeout(timer);
-	}, [query, showSuggestions]);
+		},
+		{ wait: 300 }
+	);
 
 	const handleSubmit = (e: React.FormEvent) => {
 		e.preventDefault();
@@ -93,7 +94,11 @@ export function AISearchBar({
 				<motion.input
 					type="text"
 					value={query}
-					onChange={(e) => setQuery(e.target.value)}
+					onChange={(e) => {
+						const newValue = e.target.value;
+						setQuery(newValue);
+						debouncedFetchSuggestions(newValue);
+					}}
 					onFocus={() => setShowDropdown(true)}
 					placeholder={placeholder}
 					className="w-full pl-10 pr-24 py-3 bg-slate-800/50 border border-slate-700 rounded-lg text-white placeholder-gray-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50 focus:border-transparent transition-all"
