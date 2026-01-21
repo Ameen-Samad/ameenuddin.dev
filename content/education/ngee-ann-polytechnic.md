@@ -3,18 +3,17 @@ school: Ngee Ann Polytechnic
 summary: Diploma in Information Technology - Year 2, Elective in Enterprise Computing
 startDate: 2024-04-01
 tags:
-  [
-    "Information Technology",
-    "Enterprise Computing",
-    "Python",
-    "JavaScript",
-    "TypeScript",
-    "Database Systems",
-    "Web Development",
-    "Software Engineering",
-    "AI-Native Development",
-  ]
----
+  - "Information Technology"
+  - "Enterprise Computing"
+  - "Python"
+  - "JavaScript"
+  - "TypeScript"
+  - "Database Design"
+  - "API Development"
+  - "AI-Native Development"
+  - "Full-Stack Development"
+  - "Cloud Platforms"
+  ---
 
 Pursuing Diploma in Information Technology with Enterprise Computing specialization at Ngee Ann Polytechnic (Year 2). Building real-world applications including AI-powered chatbots with RAG, 3D generators with Three.js, and games with AI agents—all using Claude Code for 100x productivity.
 

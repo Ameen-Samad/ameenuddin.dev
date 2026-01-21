@@ -29,8 +29,20 @@ var jobs = defineCollection({
     content: z.string()
   })
 });
+var skills = defineCollection({
+  name: "skills",
+  directory: "content/skills",
+  include: "**/*.md",
+  schema: z.object({
+    name: z.string(),
+    startDate: z.string().optional(),
+    tags: z.array(z.string()),
+    summary: z.string(),
+    content: z.string()
+  })
+});
 var content_collections_default = defineConfig({
-  collections: [education, jobs]
+  collections: [education, jobs, skills]
 });
 export {
   content_collections_default as default

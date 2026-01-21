@@ -1,36 +1,49 @@
 import { defineCollection, defineConfig } from '@content-collections/core'
 import { z } from 'zod'
-
+ 
 const education = defineCollection({
-  name: 'education',
-  directory: 'content/education',
-  include: '**/*.md',
-  schema: z.object({
-    school: z.string(),
-    summary: z.string(),
-    startDate: z.string(),
-    endDate: z.string().optional(),
-    tags: z.array(z.string()),
-    content: z.string(),
-  }),
-})
-
+   name: 'education',
+   directory: 'content/education',
+   include: '**/*.md',
+   schema: z.object({
+     school: z.string(),
+     summary: z.string(),
+     startDate: z.string(),
+     endDate: z.string().optional(),
+     tags: z.array(z.string()),
+     content: z.string(),
+   }),
+ })
+ 
 const jobs = defineCollection({
-  name: 'jobs',
-  directory: 'content/jobs',
-  include: '**/*.md',
-  schema: z.object({
-    jobTitle: z.string(),
-    company: z.string(),
-    location: z.string(),
-    startDate: z.string(),
-    endDate: z.string().optional(),
-    summary: z.string(),
-    tags: z.array(z.string()),
-    content: z.string(),
-  }),
-})
+   name: 'jobs',
+   directory: 'content/jobs',
+   include: '**/*.md',
+   schema: z.object({
+     jobTitle: z.string(),
+     company: z.string(),
+     location: z.string(),
+     startDate: z.string(),
+     endDate: z.string().optional(),
+     summary: z.string(),
+     tags: z.array(z.string()),
+     content: z.string(),
+   }),
+ })
 
+const skills = defineCollection({
+   name: 'skills',
+   directory: 'content/skills',
+   include: '**/*.md',
+   schema: z.object({
+     name: z.string(),
+     startDate: z.string().optional(),
+     tags: z.array(z.string()),
+     summary: z.string(),
+     content: z.string(),
+   }),
+ })
+ 
 export default defineConfig({
-  collections: [education, jobs],
-})
+   collections: [education, jobs, skills],
+ })

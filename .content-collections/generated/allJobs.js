@@ -1,6 +1,29 @@
 
 export default [
   {
+    "jobTitle": "Software Engineer Intern",
+    "company": "Ngee Ann Polytechnic",
+    "location": "Singapore",
+    "startDate": "2023-06-01",
+    "endDate": "2023-12-01",
+    "summary": "Developed and deployed enterprise web applications and database systems. Gained hands-on experience  in full-stack development, REST API design, and database optimization.\n",
+    "tags": [
+      "Python",
+      "JavaScript",
+      "Web Development",
+      "Database Design",
+      "API Development"
+    ],
+    "content": "",
+    "_meta": {
+      "filePath": "intern-ngee-ann.md",
+      "fileName": "intern-ngee-ann.md",
+      "directory": ".",
+      "extension": "md",
+      "path": "intern-ngee-ann"
+    }
+  },
+  {
     "jobTitle": "Software Engineer",
     "company": "Replikate Labs",
     "location": "Singapore",
@@ -24,6 +47,32 @@ export default [
       "directory": ".",
       "extension": "md",
       "path": "software-engineer-replikate-labs"
+    }
+  },
+  {
+    "jobTitle": "Software Engineer",
+    "company": "Replikate Labs",
+    "location": "Singapore",
+    "startDate": "2025-10-01",
+    "endDate": "Present",
+    "summary": "Building production-ready AI applications using Claude Code, MCPs, and Cloudflare Workers. Developed  intelligent chatbots with RAG (Retrieval Augmented Generation), interactive web tools, and automated  workflows that significantly enhance developer productivity.\nKey achievements: - Built complete portfolio website with 3D interactive projects - Created AI-powered chatbot with real-time streaming and tool calling capabilities - Developed AI agents for task automation and code assistance - Implemented 3D scene generator using natural language and Three.js - Deployed applications on Cloudflare's edge platform for optimal performance\n",
+    "tags": [
+      "React",
+      "TypeScript",
+      "Python",
+      "Claude Code",
+      "MCPs",
+      "Cloudflare Workers",
+      "AI Integration",
+      "Full-Stack Development"
+    ],
+    "content": "",
+    "_meta": {
+      "filePath": "software-engineer-replit-labs.md",
+      "fileName": "software-engineer-replit-labs.md",
+      "directory": ".",
+      "extension": "md",
+      "path": "software-engineer-replit-labs"
     }
   }
 ]

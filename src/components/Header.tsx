@@ -1,4 +1,5 @@
 import {
+	ActionIcon,
 	Burger,
 	Button,
 	Drawer,
@@ -12,10 +13,12 @@ import {
 	IconBrandLinkedin,
 	IconCode,
 	IconCube,
+	IconDownload,
 	IconRobot,
 } from "@tabler/icons-react";
 import { Link } from "@tanstack/react-router";
 import { useState } from "react";
+import { downloadResumePDF } from "@/lib/generate-pdf";
 
 export default function Header() {
 	const [opened, { toggle }] = useState(false);
@@ -78,6 +81,19 @@ export default function Header() {
 							style={{ color: "white" }}
 						>
 							3D Builder
+						</Button>
+
+						<Button
+							onClick={() => {
+								downloadResumePDF();
+							}}
+							variant="subtle"
+							size="sm"
+							style={{ color: "white" }}
+						>
+							<ActionIcon size={16}>
+								<IconDownload />
+							</ActionIcon>
 						</Button>
 
 						<a
@@ -165,6 +181,20 @@ export default function Header() {
 							</Text>
 						</Group>
 					</Link>
+
+					<Button
+						onClick={() => {
+							downloadResumePDF();
+						}}
+						variant="subtle"
+						size="sm"
+						style={{ color: "white" }}
+					>
+						<ActionIcon size={16}>
+							<IconDownload />
+						</ActionIcon>
+						Download CV
+					</Button>
 				</Stack>
 			</Drawer>
 		</>

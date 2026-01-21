@@ -1,7 +1,5 @@
 import {
 	Anchor,
-	Badge,
-	Button,
 	Container,
 	Group,
 	Paper,
@@ -14,9 +12,7 @@ import {
 	IconArrowDown,
 	IconBrandGithub,
 	IconBrandLinkedin,
-	IconChartBar,
 	IconCode,
-	IconCpu,
 	IconDatabase,
 	IconDevices,
 	IconMail,
@@ -25,6 +21,7 @@ import {
 } from "@tabler/icons-react";
 import { createFileRoute } from "@tanstack/react-router";
 import { motion } from "framer-motion";
+import { ProjectsSection } from "../components/ProjectsSection";
 
 export const Route = createFileRoute("/")({
 	component: Home,
@@ -78,43 +75,13 @@ function Home() {
 		},
 	];
 
-	const projects = [
-		{
-			title: "Tetris with AI Agent",
-			description:
-				"Classic Tetris game featuring a reinforcement learning agent that plays autonomously with smart heuristics.",
-			link: "/tetris",
-			icon: <IconCpu size={32} />,
-			tags: ["Phaser", "JavaScript", "AI"],
-			color: "#00f3ff",
-		},
-		{
-			title: "AI Chatbot with RAG",
-			description:
-				"ChatGPT-style interface with document-based RAG, tool calling, and SSE streaming responses.",
-			link: "/chatbot",
-			icon: <IconRobot size={32} />,
-			tags: ["RAG", "Cloudflare AI", "TypeScript"],
-			color: "#ff00ff",
-		},
-		{
-			title: "3D Builder",
-			description:
-				"AI-powered 3D object generator that creates Three.js scenes from text descriptions.",
-			link: "/builder",
-			icon: <IconChartBar size={32} />,
-			tags: ["Three.js", "LLM", "WebGL"],
-			color: "#0066ff",
-		},
-	];
-
 	return (
 		<>
 			<Hero />
 			<About />
 			<Skills skills={skills} />
 			<AINativeAdvantage />
-			<Projects projects={projects} />
+			<ProjectsSection />
 			<Contact />
 		</>
 	);
@@ -441,115 +408,6 @@ function Skills({
 											</Badge>
 										))}
 									</Stack>
-								</Paper>
-							</motion.div>
-						))}
-					</SimpleGrid>
-				</motion.div>
-			</Container>
-		</section>
-	);
-}
-
-function Projects({
-	projects,
-}: {
-	projects: Array<{
-		title: string;
-		description: string;
-		link: string;
-		icon: React.ReactNode;
-		tags: string[];
-		color: string;
-	}>;
-}) {
-	return (
-		<section id="projects" style={{ padding: "100px 0" }}>
-			<Container size="xl">
-				<motion.div
-					initial={{ opacity: 0, y: 50 }}
-					whileInView={{ opacity: 1, y: 0 }}
-					viewport={{ once: true }}
-					transition={{ duration: 0.6 }}
-				>
-					<Title
-						order={2}
-						c="white"
-						mb="xl"
-						style={{ position: "relative", display: "inline-block" }}
-					>
-						Featured Projects
-						<div
-							style={{
-								position: "absolute",
-								bottom: "-8px",
-								left: 0,
-								width: "100px",
-								height: "4px",
-								background: "linear-gradient(90deg, #ff00ff, transparent)",
-							}}
-						/>
-					</Title>
-					<SimpleGrid cols={{ base: 1, md: 2, lg: 3 }} spacing="xl">
-						{projects.map((project, idx) => (
-							<motion.div
-								key={project.title}
-								initial={{ opacity: 0, scale: 0.9 }}
-								whileInView={{ opacity: 1, scale: 1 }}
-								viewport={{ once: true }}
-								transition={{ duration: 0.4, delay: idx * 0.1 }}
-							>
-								<Paper
-									shadow="xl"
-									radius="lg"
-									p="xl"
-									component="a"
-									href={project.link}
-									style={{
-										background: "rgba(26, 26, 26, 0.8)",
-										border: "1px solid rgba(0, 243, 255, 0.1)",
-										height: "100%",
-										cursor: "pointer",
-										textDecoration: "none",
-										display: "block",
-										transition: "transform 0.3s, box-shadow 0.3s",
-									}}
-								>
-									<Group gap="md" mb="md" style={{ alignItems: "center" }}>
-										<div style={{ color: project.color }}>{project.icon}</div>
-										<Title order={3} c="white">
-											{project.title}
-										</Title>
-									</Group>
-									<Text c="dimmed" mb="lg" size="sm">
-										{project.description}
-									</Text>
-									<Group gap="xs" mb="md">
-										{project.tags.map((tag) => (
-											<Badge
-												key={tag}
-												variant="light"
-												size="sm"
-												style={{
-													background: `${project.color}15`,
-													color: "white",
-												}}
-											>
-												{tag}
-											</Badge>
-										))}
-									</Group>
-									<Button
-										fullWidth
-										variant="filled"
-										style={{
-											background: `linear-gradient(45deg, ${project.color}, ${project.color}aa)`,
-											border: "none",
-										}}
-										onClick={(e) => e.preventDefault()}
-									>
-										Try It Out →
-									</Button>
 								</Paper>
 							</motion.div>
 						))}

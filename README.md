@@ -157,7 +157,7 @@ Create a new markdown file in `content/jobs/` with the following frontmatter:
 jobTitle: Your Job Title
 company: Company Name
 location: City, State
-startDate: 2024-01-01
+startDate: 2025-10-01
 endDate: 2024-12-31  # Optional - omit for current position
 summary: Brief summary of your role
 tags:
@@ -178,7 +178,7 @@ Create a new markdown file in `content/education/`:
 school: School Name
 summary: Degree or Program Name
 startDate: 2020-01-01
-endDate: 2024-01-01
+endDate: 2025-10-01
 tags:
   - Relevant
   - Skills
