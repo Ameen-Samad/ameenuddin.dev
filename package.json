@@ -5,7 +5,7 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "dev:worker": "npm run build && wrangler dev --config dist/server/wrangler.json",
-    "build": "vite build",
+    "build": "NODE_OPTIONS='--max-old-space-size=4096' vite build",
     "test": "vitest run",
     "format": "biome format",
     "lint": "biome lint",

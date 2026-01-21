@@ -18,6 +18,20 @@ export default defineConfig({
 	build: {
 		rollupOptions: {
 			external: ["@cloudflare/ai", "cloudflare:ai"],
+			output: {
+				manualChunks: {
+					// Split large dependencies into separate chunks
+					"vendor-mermaid": ["mermaid"],
+					"vendor-three": ["three", "@react-three/fiber", "@react-three/drei"],
+					"vendor-react": ["react", "react-dom"],
+					"vendor-tanstack": [
+						"@tanstack/react-router",
+						"@tanstack/react-query",
+						"@tanstack/react-start",
+					],
+				},
+			},
 		},
+		chunkSizeWarningLimit: 1000, // Increase warning limit for known large chunks
 	},
 });
