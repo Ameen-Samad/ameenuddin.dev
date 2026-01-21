@@ -5,13 +5,13 @@
   "scripts": {
     "dev": "vite dev --port 3000",
     "dev:worker": "pnpm run build && wrangler pages dev ./dist/client --compatibility-date=2025-09-02 --port=3000",
-    "build": "vite build",
+    "build": "vite build && node scripts/post-build.js",
     "preview": "vite preview",
     "test": "vitest run",
     "format": "biome format",
     "lint": "biome lint",
     "check": "biome check",
-    "deploy": "pnpm run build && wrangler pages deploy ./dist"
+    "deploy": "pnpm run build && wrangler pages deploy ./dist/client --project-name=ameenuddin"
   },
   "dependencies": {
     "@cloudflare/vite-plugin": "^1.13.8",
