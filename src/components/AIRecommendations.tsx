@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { GitFork, Sparkles, Star, TrendingUp } from "lucide-react";
 import { useEffect, useState } from "react";
-import { getRecommendations } from "@/lib/cloudflare-ai";
+import { PacerAI } from "@/lib/pacer-ai-utils";
 import type { Project } from "@/lib/projects-data";
 import { Badge } from "./ui/badge";
 import { Button } from "./ui/button";
@@ -47,7 +47,7 @@ export function AIRecommendations({
 						),
 					});
 				} else if (type === "similar" && projectId) {
-					const results = await getRecommendations(projectId);
+					const results = await PacerAI.recommendations(projectId, undefined, limit);
 					const recIds = results.map((r) => r.id);
 					recs = projects.filter((p) => recIds.includes(p.id)).slice(0, limit);
 					setExplanations({
@@ -61,7 +61,7 @@ export function AIRecommendations({
 						),
 					});
 				} else if (type === "personalized" && userInterests.length > 0) {
-					const results = await getRecommendations("", userInterests);
+					const results = await PacerAI.recommendations("", userInterests, limit);
 					const recIds = results.map((r) => r.id);
 					recs = projects.filter((p) => recIds.includes(p.id)).slice(0, limit);
 					setExplanations({

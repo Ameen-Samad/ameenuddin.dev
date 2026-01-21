@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import { Copy, Download, MessageCircle, Send, Sparkles, X } from "lucide-react";
 import { useEffect, useRef, useState } from "react";
-import { chatWithProject } from "@/lib/cloudflare-ai";
+import { PacerAI } from "@/lib/pacer-ai-utils";
 import { Button } from "./ui/button";
 import { Card } from "./ui/card";
 
@@ -63,19 +63,19 @@ export function ProjectAIAssistant({
 		setIsLoading(true);
 
 		try {
-			const response = await chatWithProject(projectId, messageText, messages);
+			const response = await PacerAI.chat(projectId, messageText, messages);
 			setMessages((prev) => [
 				...prev,
 				{ role: "assistant", content: response },
 			]);
 		} catch (error) {
 			console.error("Chat error:", error);
+			const errorMessage = error instanceof Error ? error.message : "Sorry, I'm having trouble connecting right now. Please try again later.";
 			setMessages((prev) => [
 				...prev,
 				{
 					role: "assistant",
-					content:
-						"Sorry, I'm having trouble connecting right now. Please try again later.",
+					content: errorMessage,
 				},
 			]);
 		} finally {

@@ -14,6 +14,7 @@ import {
 	suggestTags,
 	generateSummary,
 	chatWithProject,
+	getRecommendations,
 } from "./cloudflare-ai";
 
 /**
@@ -139,6 +140,22 @@ export const rateLimitedTags = rateLimit(
 );
 
 /**
+ * Rate-Limited Recommendations
+ *
+ * Limits: 10 calls per minute
+ */
+export const rateLimitedRecommendations = rateLimit(
+	async (projectId: string, userInterests?: string[], limit?: number) =>
+		getRecommendations(projectId, userInterests, limit),
+	{
+		...RATE_LIMITS.RECOMMENDATIONS,
+		onReject: () => {
+			throw new Error("Recommendations rate limit exceeded. Please wait.");
+		},
+	},
+);
+
+/**
  * Batched Embedding Generation
  *
  * Collects multiple embedding requests and processes them together
@@ -237,6 +254,7 @@ export const PacerAI = {
 	summary: rateLimitedSummary,
 	chat: rateLimitedChat,
 	tags: rateLimitedTags,
+	recommendations: rateLimitedRecommendations,
 
 	// Batched
 	batchEmbedding: batchGenerateEmbedding,
