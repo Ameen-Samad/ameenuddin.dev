@@ -583,11 +583,13 @@ function DocumentSidebar({
 	onAdd,
 	onUpdate,
 	onRemove,
+	onEdit,
 }: {
 	documents: Array<{ id: string; content: string }>;
 	onAdd: () => void;
 	onUpdate: (id: string, content: string) => void;
 	onRemove: (id: string) => void;
+	onEdit: (doc: { id: string; content: string }) => void;
 }) {
 	return (
 		<Paper
@@ -626,34 +628,58 @@ function DocumentSidebar({
 							style={{
 								background: "rgba(0, 0, 0, 0.3)",
 								border: "1px solid rgba(255, 255, 255, 0.1)",
+								cursor: "pointer",
+								transition: "all 0.2s",
+							}}
+							onClick={() => onEdit(doc)}
+							onMouseEnter={(e) => {
+								e.currentTarget.style.background = "rgba(0, 243, 255, 0.1)";
+								e.currentTarget.style.borderColor = "rgba(0, 243, 255, 0.3)";
+							}}
+							onMouseLeave={(e) => {
+								e.currentTarget.style.background = "rgba(0, 0, 0, 0.3)";
+								e.currentTarget.style.borderColor = "rgba(255, 255, 255, 0.1)";
 							}}
 						>
 							<Group justify="space-between" mb="xs">
 								<Text size="xs" fw={600} c="white">
 									Document {doc.id}
 								</Text>
-								<ActionIcon
-									size={18}
-									variant="transparent"
-									onClick={() => onRemove(doc.id)}
-									style={{ color: "#ff5555" }}
-								>
-									<IconRefresh size={16} />
-								</ActionIcon>
+								<Group gap="xs">
+									<ActionIcon
+										size={18}
+										variant="transparent"
+										onClick={(e) => {
+											e.stopPropagation();
+											onEdit(doc);
+										}}
+										style={{ color: "#00f3ff" }}
+									>
+										<IconEdit size={16} />
+									</ActionIcon>
+									<ActionIcon
+										size={18}
+										variant="transparent"
+										onClick={(e) => {
+											e.stopPropagation();
+											onRemove(doc.id);
+										}}
+										style={{ color: "#ff5555" }}
+									>
+										<IconX size={16} />
+									</ActionIcon>
+								</Group>
 							</Group>
-							<Textarea
-								value={doc.content}
-								onChange={(e) => onUpdate(doc.id, e.currentTarget.value)}
-								minRows={3}
-								maxRows={8}
+							<Text
 								size="xs"
-								variant="unstyled"
+								c="dimmed"
+								lineClamp={3}
 								style={{
-									color: "white",
-									background: "transparent",
-									resize: "vertical",
+									whiteSpace: "pre-wrap",
 								}}
-							/>
+							>
+								{doc.content}
+							</Text>
 						</Paper>
 					))}
 				</Stack>
