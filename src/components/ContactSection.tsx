@@ -1,6 +1,6 @@
 import { Container, Stack } from "@mantine/core";
 import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { useId, useState } from "react";
+import { useState } from "react";
 import {
 	type ContactFormData,
 	contactFormActions,
@@ -22,7 +22,6 @@ async function submitContactForm(data: ContactFormData): Promise<void> {
 }
 
 export function ContactSection() {
-	const contactId = useId();
 	const queryClient = useQueryClient();
 	const [isSuccess, setIsSuccess] = useState(false);
 
@@ -51,7 +50,7 @@ export function ContactSection() {
 
 	return (
 		<section
-			id={contactId}
+			id="contact"
 			style={{
 				padding: "100px 0",
 				minHeight: "100vh",
