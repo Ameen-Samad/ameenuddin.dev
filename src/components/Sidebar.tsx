@@ -1,5 +1,6 @@
 import {
 	ActionIcon,
+	Badge,
 	Box,
 	Group,
 	Stack,
@@ -8,6 +9,7 @@ import {
 	UnstyledButton,
 } from "@mantine/core";
 import {
+	IconBrandGithub,
 	IconChevronDown,
 	IconCode,
 	IconMenu2,
@@ -223,6 +225,46 @@ export function Sidebar({
 							)}
 						</UnstyledButton>
 					</Tooltip>
+
+					{/* GitHub Repo Badge */}
+					{!collapsed && (
+						<Box mt="sm">
+							<UnstyledButton
+								component="a"
+								href="https://github.com/Ameen-Samad/ameenuddin.dev"
+								target="_blank"
+								rel="noopener noreferrer"
+								className={cn(
+									"w-full rounded-lg",
+									"bg-gradient-to-r from-purple-600/20 to-cyan-600/20",
+									"border border-purple-500/30",
+									"transition-all duration-200 ease-out",
+									"hover:from-purple-600/30 hover:to-cyan-600/30",
+									"hover:border-purple-500/50",
+									"hover:scale-[1.02]",
+									"flex items-center gap-2 px-3 py-2",
+								)}
+							>
+								<IconBrandGithub size={18} className="text-purple-400" />
+								<Box className="flex-1 min-w-0">
+									<Text size="xs" className="text-purple-300 font-semibold">
+										ameenuddin.dev
+									</Text>
+									<Text size="xs" className="text-gray-400 truncate">
+										View Source Code
+									</Text>
+								</Box>
+								<Badge
+									size="xs"
+									variant="light"
+									color="purple"
+									className="flex-shrink-0"
+								>
+									Public
+								</Badge>
+							</UnstyledButton>
+						</Box>
+					)}
 				</Box>
 			</Box>
 		</>
