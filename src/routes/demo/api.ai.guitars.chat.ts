@@ -95,17 +95,10 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 									console.log('[Guitar Chat] Tool executed:', guitarId, reason);
 									const guitar = guitars.find((g) => g.id === guitarId);
 									if (!guitar) {
-										return { error: "Guitar not found" };
+										return `Sorry, I couldn't find guitar ID ${guitarId} in our inventory.`;
 									}
-									return {
-										id: guitar.id,
-										name: guitar.name,
-										price: guitar.price,
-										image: guitar.image,
-										shortDescription: guitar.shortDescription,
-										type: guitar.type,
-										reason,
-									};
+									// Return only semantic description for model
+									return `Showed the ${guitar.name} ($${guitar.price}) - ${reason}`;
 								},
 							}),
 						},
@@ -117,6 +110,9 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 					const stream = new ReadableStream({
 						async start(controller) {
 							try {
+								// Track tool calls to reconstruct data for frontend
+								const pendingToolCalls = new Map<string, any>();
+
 								// Stream the response using AI SDK's fullStream
 								for await (const chunk of result.fullStream) {
 									if (requestSignal.aborted) {
@@ -140,22 +136,46 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 											console.log('[Guitar Chat] Empty text-delta detected');
 										}
 									} else if (chunk.type === "tool-call") {
-										// Tool call detected
-										console.log('[Guitar Chat] Tool call:', chunk.toolName, chunk.args);
+										// Store tool call args for later
+										const toolCallId = (chunk as any).toolCallId;
+										const toolName = (chunk as any).toolName;
+										const args = (chunk as any).args;
+
+										console.log('[Guitar Chat] Tool call:', toolName, args);
+										pendingToolCalls.set(toolCallId, { toolName, args });
 									} else if (chunk.type === "tool-result") {
-										// Tool execution completed - send recommendation
+										// Tool executed - reconstruct guitar data for frontend
+										const toolCallId = (chunk as any).toolCallId;
+										const toolCall = pendingToolCalls.get(toolCallId);
+
 										console.log('[Guitar Chat] Tool result:', chunk.result);
-										const result = chunk.result as any;
-										if (result && !result.error) {
-											controller.enqueue(
-												encoder.encode(
-													`data: ${JSON.stringify({
-														type: "recommendation",
-														guitar: result,
-														reason: result.reason
-													})}\n\n`,
-												),
-											);
+
+										if (toolCall && toolCall.toolName === 'recommendGuitar') {
+											const { guitarId, reason } = toolCall.args;
+											const guitar = guitars.find((g) => g.id === guitarId);
+
+											if (guitar) {
+												// Send structured data to frontend for card display
+												controller.enqueue(
+													encoder.encode(
+														`data: ${JSON.stringify({
+															type: "recommendation",
+															guitar: {
+																id: guitar.id,
+																name: guitar.name,
+																price: guitar.price,
+																image: guitar.image,
+																shortDescription: guitar.shortDescription,
+																type: guitar.type,
+																reason,
+															}
+														})}\n\n`,
+													),
+												);
+											}
+
+											// Clean up
+											pendingToolCalls.delete(toolCallId);
 										}
 									} else if (chunk.type === "error") {
 										console.error('[Guitar Chat] Stream error:', chunk.error);

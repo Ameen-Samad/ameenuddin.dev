@@ -354,25 +354,28 @@ function AmeenuddinPortfolioChat() {
               className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}
             >
               <div className="inline-block max-w-[80%]">
-                <div
-                  className={`p-4 rounded-2xl ${
-                    message.role === 'user'
-                      ? 'bg-emerald-600 text-white'
-                      : 'bg-gray-800 text-gray-100'
-                  }`}
-                >
-                  {message.role === 'assistant' ? (
-                    <Streamdown content={message.content} />
-                  ) : (
-                    <p className="whitespace-pre-wrap">{message.content}</p>
-                  )}
-                </div>
-                
+                {/* Only show text bubble if there's content */}
+                {message.content && message.content.trim() && (
+                  <div
+                    className={`p-4 rounded-2xl ${
+                      message.role === 'user'
+                        ? 'bg-emerald-600 text-white'
+                        : 'bg-gray-800 text-gray-100'
+                    }`}
+                  >
+                    {message.role === 'assistant' ? (
+                      <Streamdown content={message.content} />
+                    ) : (
+                      <p className="whitespace-pre-wrap">{message.content}</p>
+                    )}
+                  </div>
+                )}
+
                 {/* RAG Context Sources */}
                 {message.role === 'assistant' && message.context && (
                   <ContextSources sources={message.context} />
                 )}
-                
+
                 {/* Tool Results - Project Recommendations */}
                 {message.role === 'assistant' && message.toolResults?.map((result, toolIdx) => {
                   if (result.type === 'project_recommendation') {

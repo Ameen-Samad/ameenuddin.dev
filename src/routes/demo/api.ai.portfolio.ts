@@ -90,6 +90,7 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 										role: m.role,
 										content: m.content,
 									})),
+									maxSteps: 5, // Enable agentic workflow - model continues after tool calls
 									tools: {
 										recommendProject: tool({
 											description: 'Recommend one or more projects to showcase a specific skill or technology. This displays interactive project cards with images, descriptions, and links.',
@@ -99,7 +100,9 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 											}),
 											execute: async ({ projectIds, reason }) => {
 												console.log('[Portfolio Chat] Tool executed: recommendProject', projectIds);
-												return executePortfolioTool('recommendProject', { projectIds, reason });
+												// Return semantic description for model
+												const projectNames = projectIds.join(', ');
+												return `Showed ${projectIds.length} project(s): ${projectNames}. ${reason}`;
 											},
 										}),
 										explainSkill: tool({
@@ -125,6 +128,9 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 									},
 								});
 
+								// Track tool calls to reconstruct data for frontend
+								const pendingToolCalls = new Map<string, any>();
+
 								// Stream the response
 								for await (const chunk of result.fullStream) {
 									if (requestSignal.aborted) {
@@ -144,16 +150,35 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 											)
 										}
 									} else if (chunk.type === "tool-call") {
-										// Tool call started
-										console.log('[Portfolio Chat] Tool call:', chunk.toolName, chunk.input);
+										// Store tool call args for later
+										const toolCallId = (chunk as any).toolCallId;
+										const toolName = (chunk as any).toolName;
+										const args = (chunk as any).args;
+
+										console.log('[Portfolio Chat] Tool call:', toolName, args);
+										pendingToolCalls.set(toolCallId, { toolName, args });
 									} else if (chunk.type === "tool-result") {
-										// Tool result - send to frontend
-										console.log('[Portfolio Chat] Tool result:', chunk.output);
-										const output = chunk.output as any;
-										if (output && typeof output === "object" && "type" in output) {
-											controller.enqueue(
-												encoder.encode(`data: ${JSON.stringify(output)}\n\n`),
-											)
+										// Tool executed - reconstruct project data for frontend
+										const toolCallId = (chunk as any).toolCallId;
+										const toolCall = pendingToolCalls.get(toolCallId);
+
+										console.log('[Portfolio Chat] Tool result:', chunk.result);
+
+										if (toolCall && toolCall.toolName === 'recommendProject') {
+											const { projectIds, reason } = toolCall.args;
+
+											// Execute tool to get structured data
+											const toolResult = executePortfolioTool('recommendProject', { projectIds, reason });
+
+											// Send to frontend if successful
+											if (toolResult && 'type' in toolResult) {
+												controller.enqueue(
+													encoder.encode(`data: ${JSON.stringify(toolResult)}\n\n`),
+												)
+											}
+
+											// Clean up
+											pendingToolCalls.delete(toolCallId);
 										}
 									} else if (chunk.type === "error") {
 										console.error('[Portfolio Chat] Stream error:', chunk.error);
