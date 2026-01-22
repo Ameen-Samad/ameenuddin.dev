@@ -134,12 +134,14 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 
 									// Handle different chunk types
 									if (chunk.type === "text-delta") {
-										// Text content
-										controller.enqueue(
-											encoder.encode(
-												`data: ${JSON.stringify({ type: 'content', content: chunk.textDelta })}\n\n`,
-											),
-										)
+										// Text content - only send if textDelta is not empty
+										if (chunk.textDelta) {
+											controller.enqueue(
+												encoder.encode(
+													`data: ${JSON.stringify({ type: 'content', content: chunk.textDelta })}\n\n`,
+												),
+											)
+										}
 									} else if (chunk.type === "tool-call") {
 										// Tool call started
 										console.log('[Portfolio Chat] Tool call:', chunk.toolName, chunk.input);

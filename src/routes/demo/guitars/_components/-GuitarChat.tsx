@@ -297,15 +297,18 @@ function ChatMessage({ message }: { message: Message }) {
       <div
         className={`flex-1 space-y-2 ${isUser ? 'flex flex-col items-end' : ''}`}
       >
-        <div
-          className={`px-4 py-2 rounded-2xl max-w-[85%] ${
-            isUser
-              ? 'bg-blue-600 text-white rounded-br-md'
-              : 'bg-gray-800 text-gray-100 rounded-bl-md'
-          }`}
-        >
-          <p className="text-sm whitespace-pre-wrap">{message.content}</p>
-        </div>
+        {/* Only show text bubble if there's content */}
+        {message.content && message.content.trim() && (
+          <div
+            className={`px-4 py-2 rounded-2xl max-w-[85%] ${
+              isUser
+                ? 'bg-blue-600 text-white rounded-br-md'
+                : 'bg-gray-800 text-gray-100 rounded-bl-md'
+            }`}
+          >
+            <p className="text-sm whitespace-pre-wrap">{message.content}</p>
+          </div>
+        )}
 
         {/* Recommendation Cards */}
         {message.recommendations && message.recommendations.length > 0 && (

@@ -140,12 +140,14 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 
 									// Handle different chunk types from AI SDK
 									if (chunk.type === "text-delta") {
-										// Text content
-										controller.enqueue(
-											encoder.encode(
-												`data: ${JSON.stringify({ type: "content", content: chunk.textDelta })}\n\n`,
-											),
-										);
+										// Text content - only send if textDelta is not empty
+										if (chunk.textDelta) {
+											controller.enqueue(
+												encoder.encode(
+													`data: ${JSON.stringify({ type: "content", content: chunk.textDelta })}\n\n`,
+												),
+											);
+										}
 									} else if (chunk.type === "tool-call") {
 										// Tool call detected
 										console.log('[Guitar Chat] Tool call:', chunk.toolName, chunk.args);
