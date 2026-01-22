@@ -1,10 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Guitar } from "lucide-react";
+import { Guitar, MessageCircle } from "lucide-react";
 import { useState } from "react";
 import { CompareDrawer } from "@/components/CompareDrawer";
 import { CartDrawer } from "./_components/-CartDrawer";
 import { CartIcon } from "./_components/-CartIcon";
-import { GuitarChat } from "./_components/-GuitarChat";
+import { ChatDrawer } from "./_components/-ChatDrawer";
 import { GuitarGrid } from "./_components/-GuitarGrid";
 import { SemanticSearch } from "./_components/-SemanticSearch";
 
@@ -60,15 +60,22 @@ function GuitarsIndex() {
 
 						<GuitarGrid />
 					</div>
-
-					{/* AI Chat Panel (collapsible) */}
-					{isChatOpen && (
-						<aside className="hidden lg:block fixed right-0 top-[73px] bottom-0 w-96 bg-gray-900/95 backdrop-blur-md border-l border-gray-800 z-10">
-							<GuitarChat onClose={() => setIsChatOpen(false)} />
-						</aside>
-					)}
 				</div>
 			</main>
+
+			{/* Floating Chat Button (Mobile Only) */}
+			{!isChatOpen && (
+				<button
+					onClick={() => setIsChatOpen(true)}
+					className="lg:hidden fixed bottom-6 right-6 w-14 h-14 bg-emerald-600 hover:bg-emerald-500 text-white rounded-full shadow-lg flex items-center justify-center z-30 transition-colors"
+					aria-label="Open AI chat"
+				>
+					<MessageCircle className="w-6 h-6" />
+				</button>
+			)}
+
+			{/* AI Chat Drawer (Mobile) / Sidebar (Desktop) */}
+			<ChatDrawer isOpen={isChatOpen} onClose={() => setIsChatOpen(false)} />
 
 			{/* Compare Drawer */}
 			<CompareDrawer />

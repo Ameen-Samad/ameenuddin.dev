@@ -21,8 +21,7 @@ When helping customers:
 3. Consider their budget
 4. Ask if they prefer acoustic or electric sounds
 
-You have access to these tools:
-- getGuitars: View all available guitars in the shop
+You have access to a tool:
 - recommendGuitar: Display a guitar recommendation to the customer
 
 CRITICAL RULES:
@@ -44,15 +43,6 @@ Keep responses conversational but concise. After understanding their needs, use 
 
 const TOOLS = [
 	{
-		name: "getGuitars",
-		description: "Get all guitars available in the shop inventory",
-		parameters: {
-			type: "object",
-			properties: {},
-			required: [],
-		},
-	},
-	{
 		name: "recommendGuitar",
 		description:
 			"Display a guitar recommendation to the customer with a nice card UI. Use this when you want to show a specific guitar to the customer.",
@@ -60,7 +50,7 @@ const TOOLS = [
 			type: "object",
 			properties: {
 				guitarId: {
-					type: "number",
+					type: "integer",
 					description: "The ID of the guitar to recommend",
 				},
 				reason: {
@@ -145,7 +135,7 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 									{
 										messages: fullMessages,
 										tools: TOOLS,
-										stream: true,
+										stream: false, // Try non-streaming
 									},
 								);
 
