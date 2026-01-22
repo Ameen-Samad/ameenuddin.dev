@@ -4,6 +4,7 @@ import {
 	IconFileText,
 	IconMessage,
 	IconMicrophone,
+	IconMusic,
 	IconPhoto,
 	IconRobot,
 	IconVolume,
@@ -244,6 +245,49 @@ export const projects: Project[] = [
 			frontend: ["React", "TypeScript", "Zod"],
 			ai: ["Cloudflare AI", "LLM", "JSON Schema"],
 			tools: ["Vite", "Streamdown"],
+		},
+	},
+	{
+		id: "guitar-concierge",
+		title: "AI Guitar Concierge",
+		description:
+			"Full-stack AI-powered shopping experience with chat recommendations, semantic search, and comparison tools.",
+		longDescription:
+			"A comprehensive e-commerce demo showcasing AI-powered guitar recommendations, semantic search using vector embeddings, intelligent chat assistant with tool calling, shopping cart with persistence, and side-by-side comparison with AI insights. Built with TanStack Store, Table, Pacer, and Cloudflare AI.",
+		link: "/demo/guitars",
+		category: "ai-ml",
+		color: "#10b981",
+		icon: <IconMusic size={32} />,
+		tags: [
+			"E-commerce",
+			"AI Chat",
+			"Semantic Search",
+			"TanStack Store",
+			"Embeddings",
+		],
+		featured: true,
+		status: "production",
+		stats: {
+			stars: 72,
+			views: 1150,
+			lastUpdated: "Jan 2025",
+		},
+		techStack: {
+			frontend: [
+				"React",
+				"TypeScript",
+				"TanStack Table",
+				"TanStack Store",
+				"TanStack Pacer",
+			],
+			ai: [
+				"Cloudflare AI",
+				"LLM",
+				"Vector Embeddings",
+				"Semantic Search",
+				"Tool Calling",
+			],
+			tools: ["Vite", "Tailwind CSS", "LocalStorage"],
 		},
 	},
 ];
