@@ -46,6 +46,7 @@ function Builder() {
 	const [currentCode, setCurrentCode] = useState<string | null>(null);
 	const [history, setHistory] = useState<Generation[]>([]);
 	const [showCoins, setShowCoins] = useState(false);
+	const [controlsDrawerOpened, setControlsDrawerOpened] = useState(false);
 
 	useEffect(() => {
 		const savedHistory = localStorage.getItem("builder-history");
@@ -140,9 +141,22 @@ function Builder() {
 				@media (max-width: 768px) {
 					.builder-grid {
 						grid-template-columns: 1fr;
+						display: flex;
+						flex-direction: column;
 					}
-					.builder-paper {
-						margin-bottom: 1rem;
+					.builder-panel-desktop {
+						display: none;
+					}
+					.mobile-controls-fab {
+						display: flex !important;
+					}
+				}
+				@media (min-width: 769px) {
+					.builder-panel-desktop {
+						display: block;
+					}
+					.mobile-controls-fab {
+						display: none !important;
 					}
 				}
 				@media (max-width: 480px) {
@@ -193,7 +207,7 @@ function Builder() {
 									← Back
 								</Button>
 							</Link>
-							<Title order={3} c="white">
+							<Title order={3} c="white" style={{ fontSize: "clamp(1rem, 5vw, 1.5rem)" }}>
 								AI 3D Builder
 							</Title>
 						</Group>
@@ -206,22 +220,90 @@ function Builder() {
 							}}
 							className="builder-grid"
 						>
-							<BuilderPanel
-								prompt={prompt}
-								setPrompt={setPrompt}
-								isGenerating={isGenerating}
-								onGenerate={handleGenerate}
-								examplePrompts={examplePrompts}
-								history={history}
-								onReplay={handleReplay}
-								onDelete={handleDelete}
-								onClearHistory={handleClearHistory}
-							/>
+							{/* Desktop - BuilderPanel as sidebar */}
+							<div className="builder-panel-desktop">
+								<BuilderPanel
+									prompt={prompt}
+									setPrompt={setPrompt}
+									isGenerating={isGenerating}
+									onGenerate={handleGenerate}
+									examplePrompts={examplePrompts}
+									history={history}
+									onReplay={handleReplay}
+									onDelete={handleDelete}
+									onClearHistory={handleClearHistory}
+								/>
+							</div>
 
-							<ViewerPanel
-								currentCode={currentCode}
-								isGenerating={isGenerating}
-							/>
+							{/* Mobile - BuilderPanel in Drawer */}
+							<Drawer
+								opened={controlsDrawerOpened}
+								onClose={() => setControlsDrawerOpened(false)}
+								position="left"
+								size="90%"
+								title={
+									<Group gap="sm">
+										<Icon3dCubeSphere size={20} style={{ color: "#00f3ff" }} />
+										<Text fw={600}>Builder Controls</Text>
+									</Group>
+								}
+								styles={{
+									header: {
+										background: "rgba(26, 26, 26, 0.95)",
+										borderBottom: "1px solid rgba(0, 243, 255, 0.2)",
+									},
+									body: {
+										background: "rgba(10, 10, 10, 0.98)",
+										padding: "1rem",
+									},
+									content: {
+										background: "rgba(10, 10, 10, 0.98)",
+									},
+								}}
+							>
+								<BuilderPanel
+									prompt={prompt}
+									setPrompt={setPrompt}
+									isGenerating={isGenerating}
+									onGenerate={handleGenerate}
+									examplePrompts={examplePrompts}
+									history={history}
+									onReplay={handleReplay}
+									onDelete={handleDelete}
+									onClearHistory={handleClearHistory}
+								/>
+							</Drawer>
+
+							{/* Viewer Panel - always visible */}
+							<div style={{ position: "relative" }}>
+								{/* Mobile FAB to open controls */}
+								<Button
+									className="mobile-controls-fab"
+									onClick={() => setControlsDrawerOpened(true)}
+									style={{
+										position: "fixed",
+										bottom: "2rem",
+										left: "1rem",
+										zIndex: 100,
+										background: "linear-gradient(45deg, #00f3ff, #0066ff)",
+										borderRadius: "50%",
+										width: "56px",
+										height: "56px",
+										padding: 0,
+										display: "none",
+										alignItems: "center",
+										justifyContent: "center",
+										boxShadow: "0 4px 20px rgba(0, 243, 255, 0.4)",
+									}}
+								>
+									<IconCode size={24} />
+								</Button>
+
+								<ViewerPanel
+									currentCode={currentCode}
+									isGenerating={isGenerating}
+								/>
+							</div>
 						</Stack>
 					</motion.div>
 				</Container>
@@ -441,7 +523,7 @@ function ViewerPanel({
 				)}
 			</Group>
 
-			<div style={{ height: "min(600px, 70vh)", position: "relative" }}>
+			<div style={{ height: "min(600px, 70vh)", minHeight: "400px", position: "relative" }}>
 				{/* React Three Fiber Canvas with actual rendering */}
 				<div style={{ width: "100%", height: "100%", display: "block" }}>
 					<ThreeScene generatedCode={currentCode} />

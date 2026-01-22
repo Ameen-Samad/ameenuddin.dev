@@ -155,10 +155,20 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 										const textContent = (chunk as any).text || (chunk as any).delta;
 										if (textContent) {
 											// Check if the text contains a JSON tool call (fallback for models that don't support proper tool calling)
-											const jsonMatch = textContent.match(/\{"name":\s*"recommendProject",\s*"parameters":\s*\{[^}]*\}\}/);
+											// Use a more robust regex that handles nested braces and escaped quotes
+											const jsonMatch = textContent.match(/\{"name":\s*"recommendProject",\s*"parameters":\s*\{(?:[^{}]|\{[^}]*\})*\}\}/);
+
 											if (jsonMatch) {
 												try {
-													const toolCall = JSON.parse(jsonMatch[0]);
+													let jsonString = jsonMatch[0];
+
+													// Handle escaped JSON strings in parameters (e.g., "projectIds": "[\"id1\", \"id2\"]")
+													// Replace escaped quotes with regular quotes for proper parsing
+													jsonString = jsonString.replace(/\\"/g, '"');
+
+													console.log('[Portfolio Chat] Matched JSON:', jsonString);
+
+													const toolCall = JSON.parse(jsonString);
 													const params = toolCall.parameters || {};
 													let projectIds = params.projectIds;
 													const reason = params.reason || "Relevant projects for your interest";
@@ -168,11 +178,24 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 													// Handle projectIds being a string instead of array (model error)
 													if (typeof projectIds === 'string') {
 														try {
-															projectIds = JSON.parse(projectIds);
+															// Try to parse as JSON array
+															const parsed = JSON.parse(projectIds);
+															if (Array.isArray(parsed)) {
+																projectIds = parsed;
+															} else {
+																throw new Error('Not an array');
+															}
 														} catch {
 															// If it's a comma-separated string, split it
-															projectIds = projectIds.split(',').map((id: string) => id.trim());
+															projectIds = projectIds.split(',').map((id: string) => id.trim().replace(/["\[\]]/g, ''));
 														}
+													}
+
+													// Clean up projectIds - remove quotes, brackets, etc.
+													if (Array.isArray(projectIds)) {
+														projectIds = projectIds.map((id: any) =>
+															typeof id === 'string' ? id.trim().replace(/["\[\]]/g, '') : String(id)
+														).filter(id => id.length > 0);
 													}
 
 													console.log('[Portfolio Chat] Extracted projectIds:', projectIds, 'reason:', reason);
@@ -195,35 +218,30 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 																),
 															);
 														}
-														// Don't output the raw JSON text
+														// Don't output the raw JSON text - skip it entirely
 													} else {
 														console.warn('[Portfolio Chat] Invalid tool call format - missing projectIds:', JSON.stringify(params));
-														// Output the text without the JSON
-														const textWithoutJson = textContent.replace(jsonMatch[0], '').trim();
-														if (textWithoutJson) {
-															controller.enqueue(
-																encoder.encode(
-																	`data: ${JSON.stringify({ type: 'content', content: textWithoutJson })}\n\n`,
-																),
-															);
-														}
+														// Don't output anything - skip the malformed tool call
 													}
 												} catch (e) {
 													console.error('[Portfolio Chat] Failed to parse JSON tool call:', e);
-													// If parsing fails, output the text normally
+													// Don't output the malformed JSON - skip it
+												}
+											} else {
+												// Normal text content - but filter out any remaining JSON-like patterns
+												let cleanText = textContent;
+
+												// Remove any remaining JSON tool call patterns that slipped through
+												cleanText = cleanText.replace(/\{"name":\s*"[^"]+",\s*"parameters":\s*\{[^}]*\}\}/g, '');
+												cleanText = cleanText.trim();
+
+												if (cleanText) {
 													controller.enqueue(
 														encoder.encode(
-															`data: ${JSON.stringify({ type: 'content', content: textContent })}\n\n`,
+															`data: ${JSON.stringify({ type: 'content', content: cleanText })}\n\n`,
 														),
 													);
 												}
-											} else {
-												// Normal text content
-												controller.enqueue(
-													encoder.encode(
-														`data: ${JSON.stringify({ type: 'content', content: textContent })}\n\n`,
-													),
-												)
 											}
 										}
 									} else if (chunk.type === "tool-call") {
