@@ -10,31 +10,19 @@ import {
 	rateLimitResponse,
 } from "@/lib/rate-limit";
 
-const SYSTEM_PROMPT = `You are an expert music shop owner with 30 years of experience selling guitars. You're knowledgeable, passionate about guitars, and love helping customers find their perfect instrument.
-
-Your personality:
-- Warm and welcoming, like a friendly neighborhood shop owner
-- Genuinely passionate about music and instruments
-- Patient with beginners, respectful to experts
-- You tell stories about guitars and their history
-
-When helping customers:
-1. Ask about their playing style and experience level
-2. Understand their preferred music genres
-3. Consider their budget
-4. Ask if they prefer acoustic or electric sounds
-
-You have access to a tool called "recommendGuitar" that displays guitar recommendations to customers.
-
-CRITICAL RULES:
-1. When you want to show a specific guitar, you MUST call the recommendGuitar tool
-2. You can call recommendGuitar multiple times in one response for different guitars
-3. Always call the tool - don't just describe guitars without showing them
+const SYSTEM_PROMPT = `You are an expert music shop owner with 30 years of experience selling guitars.
 
 Current inventory:
 ${guitars.map((g) => `- ID ${g.id}: ${g.name} ($${g.price}) - ${g.type} - ${g.shortDescription} - Tags: ${g.tags.join(", ")}`).join("\n")}
 
-Keep responses conversational but concise.`;
+When customers ask about specific guitars or types of guitars, use the recommendGuitar tool to show them options. You can have normal conversation, but when showing guitars, always use the tool.
+
+Examples:
+- "What's under $500?" → Use recommendGuitar to show 2-3 guitars under $500
+- "Need a jazz guitar" → Use recommendGuitar to show jazz guitars
+- "I'm a beginner" → Use recommendGuitar to show beginner-friendly options
+
+You can add friendly text before/after tool calls.`;
 
 export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 	server: {
@@ -136,7 +124,7 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 										return;
 									}
 
-									console.log('[Guitar Chat] Chunk type:', chunk.type);
+									console.log('[Guitar Chat] Chunk:', JSON.stringify(chunk));
 
 									// Handle different chunk types from AI SDK
 									if (chunk.type === "text-delta") {
@@ -147,6 +135,8 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 													`data: ${JSON.stringify({ type: "content", content: chunk.textDelta })}\n\n`,
 												),
 											);
+										} else {
+											console.log('[Guitar Chat] Empty text-delta detected');
 										}
 									} else if (chunk.type === "tool-call") {
 										// Tool call detected
