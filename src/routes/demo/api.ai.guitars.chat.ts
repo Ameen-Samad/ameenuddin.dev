@@ -15,14 +15,22 @@ const SYSTEM_PROMPT = `You are an expert music shop owner with 30 years of exper
 Current inventory:
 ${guitars.map((g) => `- ID ${g.id}: ${g.name} ($${g.price}) - ${g.type} - ${g.shortDescription} - Tags: ${g.tags.join(", ")}`).join("\n")}
 
-When customers ask about specific guitars or types of guitars, use the recommendGuitar tool to show them options. You can have normal conversation, but when showing guitars, always use the tool.
+CRITICAL: When showing guitars, you MUST call the recommendGuitar function with the exact guitar ID number from the inventory above.
+
+Tool call format:
+{"name": "recommendGuitar", "parameters": {"guitarId": NUMBER, "reason": "STRING"}}
 
 Examples:
-- "What's under $500?" → Use recommendGuitar to show 2-3 guitars under $500
-- "Need a jazz guitar" → Use recommendGuitar to show jazz guitars
-- "I'm a beginner" → Use recommendGuitar to show beginner-friendly options
+Customer: "What's under $500?"
+You: "We have some great options! Let me show you a few:
+{"name": "recommendGuitar", "parameters": {"guitarId": 5, "reason": "Affordable and perfect for beginners"}}
+{"name": "recommendGuitar", "parameters": {"guitarId": 3, "reason": "Classic sound at a great price"}}"
 
-You can add friendly text before/after tool calls.`;
+Customer: "Need a jazz guitar"
+You: "Perfect! I have just the thing:
+{"name": "recommendGuitar", "parameters": {"guitarId": 8, "reason": "Hollow body design ideal for jazz tones"}}"
+
+Always use the exact ID number from the inventory list above.`;
 
 export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 	server: {
@@ -147,31 +155,55 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 													const guitarId = params.guitarId;
 													const reason = params.reason || "A great choice for your needs";
 
-													console.log('[Guitar Chat] Detected JSON tool call:', guitarId, reason);
+													console.log('[Guitar Chat] Detected JSON tool call. Full params:', JSON.stringify(params));
+													console.log('[Guitar Chat] Extracted guitarId:', guitarId, 'reason:', reason);
 
-													// Manually execute the tool
-													const guitar = guitars.find((g) => g.id === guitarId);
-													if (guitar) {
-														controller.enqueue(
-															encoder.encode(
-																`data: ${JSON.stringify({
-																	type: "recommendation",
-																	guitar: {
-																		id: guitar.id,
-																		name: guitar.name,
-																		price: guitar.price,
-																		image: guitar.image,
-																		shortDescription: guitar.shortDescription,
-																		type: guitar.type,
-																		reason,
-																	},
-																	reason
-																})}\n\n`,
-															),
-														);
+													// Validate that we have a valid guitarId
+													if (typeof guitarId === 'number') {
+														// Manually execute the tool
+														const guitar = guitars.find((g) => g.id === guitarId);
+														if (guitar) {
+															controller.enqueue(
+																encoder.encode(
+																	`data: ${JSON.stringify({
+																		type: "recommendation",
+																		guitar: {
+																			id: guitar.id,
+																			name: guitar.name,
+																			price: guitar.price,
+																			image: guitar.image,
+																			shortDescription: guitar.shortDescription,
+																			type: guitar.type,
+																			reason,
+																		},
+																		reason
+																	})}\n\n`,
+																),
+															);
+															// Don't output the raw JSON text - tool call was successful
+														} else {
+															console.warn('[Guitar Chat] Guitar ID not found:', guitarId);
+															// Output warning text instead of raw JSON
+															controller.enqueue(
+																encoder.encode(
+																	`data: ${JSON.stringify({ type: "content", content: `[Guitar ID ${guitarId} not found]` })}\n\n`,
+																),
+															);
+														}
+													} else {
+														console.warn('[Guitar Chat] Invalid tool call format - missing guitarId:', JSON.stringify(params));
+														// Output the text without the JSON
+														const textWithoutJson = textContent.replace(jsonMatch[0], '').trim();
+														if (textWithoutJson) {
+															controller.enqueue(
+																encoder.encode(
+																	`data: ${JSON.stringify({ type: "content", content: textWithoutJson })}\n\n`,
+																),
+															);
+														}
 													}
-													// Don't output the raw JSON text
 												} catch (e) {
+													console.error('[Guitar Chat] Failed to parse JSON tool call:', e);
 													// If parsing fails, output the text normally
 													controller.enqueue(
 														encoder.encode(
