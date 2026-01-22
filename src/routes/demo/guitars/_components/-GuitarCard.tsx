@@ -1,5 +1,4 @@
 import { Link } from '@tanstack/react-router'
-import { useStore } from '@tanstack/react-store'
 import type { Guitar } from '@/data/demo-guitars'
 import { cartStore, addToCart, isInCart } from '@/stores/cart-store'
 import {
@@ -9,6 +8,7 @@ import {
   isInCompare,
   canAddToCompare,
 } from '@/stores/compare-store'
+import { useHydratedStore } from '@/hooks/useHydratedStore'
 import { ShoppingCart, Check, GitCompare } from 'lucide-react'
 
 interface GuitarCardProps {
@@ -16,11 +16,14 @@ interface GuitarCardProps {
 }
 
 export function GuitarCard({ guitar }: GuitarCardProps) {
-  const inCart = useStore(cartStore, (state) => isInCart(state, guitar.id))
-  const inCompare = useStore(compareStore, (state) =>
-    isInCompare(state, guitar.id)
+  // Use hydration-safe store hooks (return false/true during SSR/hydration)
+  const inCart = useHydratedStore(cartStore, (state) => isInCart(state, guitar.id), false)
+  const inCompare = useHydratedStore(
+    compareStore,
+    (state) => isInCompare(state, guitar.id),
+    false
   )
-  const canCompare = useStore(compareStore, canAddToCompare)
+  const canCompare = useHydratedStore(compareStore, canAddToCompare, true)
 
   const handleAddToCart = (e: React.MouseEvent) => {
     e.preventDefault()

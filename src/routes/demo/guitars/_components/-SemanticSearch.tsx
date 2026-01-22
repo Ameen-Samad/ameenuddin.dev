@@ -1,7 +1,7 @@
 import { useState, useRef } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useDebouncedCallback } from '@tanstack/react-pacer/debouncer'
-import { useStore } from '@tanstack/react-store'
+import { useHydratedStore } from '@/hooks/useHydratedStore'
 import { Search, Sparkles, Loader2, X, ShoppingCart, Check, MessageSquare } from 'lucide-react'
 import type { Guitar } from '@/data/demo-guitars'
 import { cartStore, addToCart, isInCart } from '@/stores/cart-store'
@@ -191,7 +191,7 @@ function SearchResultItem({
   onSelect: () => void
 }) {
   const { guitar, relevance } = result
-  const inCart = useStore(cartStore, (state) => isInCart(state, guitar.id))
+  const inCart = useHydratedStore(cartStore, (state) => isInCart(state, guitar.id), false)
 
   const relevanceColors: Record<string, string> = {
     'Excellent match': 'bg-emerald-500/20 text-emerald-400',

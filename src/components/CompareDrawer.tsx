@@ -1,5 +1,5 @@
 import { Link } from "@tanstack/react-router";
-import { useStore } from "@tanstack/react-store";
+import { useHydratedStore } from "@/hooks/useHydratedStore";
 import {
 	Check,
 	GitCompare,
@@ -8,8 +8,18 @@ import {
 	Sparkles,
 	X,
 } from "lucide-react";
-import { useCallback, useEffect, useState } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import type { Guitar as GuitarType } from "@/data/demo-guitars";
+
+// Prevent SSR issues by only rendering on client
+function useIsMounted() {
+	const [isMounted, setIsMounted] = useState(false);
+	useEffect(() => {
+		setIsMounted(true);
+	}, []);
+	return isMounted;
+}
+
 import { addToCart, cartStore, isInCart } from "@/stores/cart-store";
 import {
 	clearCompare,
@@ -26,10 +36,12 @@ interface AIInsight {
 }
 
 export function CompareDrawer() {
-	const selectedGuitars = useStore(compareStore, getCompareGuitars);
+	const isMounted = useIsMounted();
+	const selectedGuitars = useHydratedStore(compareStore, getCompareGuitars, []);
 	const [isOpen, setIsOpen] = useState(false);
 	const [insights, setInsights] = useState<AIInsight[]>([]);
 	const [isLoadingInsights, setIsLoadingInsights] = useState(false);
+	const hasAutoOpened = useRef(false);
 
 	const fetchInsights = useCallback(async (guitars: GuitarType[]) => {
 		setIsLoadingInsights(true);
@@ -68,14 +80,20 @@ export function CompareDrawer() {
 		}
 	}, [selectedGuitars, fetchInsights]);
 
-	// Auto-open when 2 guitars are selected
+	// Auto-open when 2 guitars are selected (only once)
 	useEffect(() => {
-		if (selectedGuitars.length === 2 && !isOpen) {
+		if (selectedGuitars.length === 2 && !isOpen && !hasAutoOpened.current) {
 			setIsOpen(true);
+			hasAutoOpened.current = true;
+		}
+
+		// Reset auto-open flag when compare list is cleared
+		if (selectedGuitars.length === 0) {
+			hasAutoOpened.current = false;
 		}
 	}, [selectedGuitars.length, isOpen]);
 
-	if (selectedGuitars.length === 0) {
+	if (!isMounted || selectedGuitars.length === 0) {
 		return null;
 	}
 
@@ -260,7 +278,7 @@ function MiniGuitarCard({
 	insight?: AIInsight;
 	onRemove?: () => void;
 }) {
-	const inCart = useStore(cartStore, (state) => isInCart(state, guitar.id));
+	const inCart = useHydratedStore(cartStore, (state) => isInCart(state, guitar.id), false);
 
 	return (
 		<div className="bg-gray-900/60 rounded-xl border border-gray-800 overflow-hidden">

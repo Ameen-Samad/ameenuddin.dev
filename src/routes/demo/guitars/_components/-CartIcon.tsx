@@ -1,5 +1,5 @@
-import { useStore } from '@tanstack/react-store'
 import { cartStore, getCartItemCount } from '@/stores/cart-store'
+import { useHydratedStore } from '@/hooks/useHydratedStore'
 import { ShoppingCart } from 'lucide-react'
 
 interface CartIconProps {
@@ -7,7 +7,8 @@ interface CartIconProps {
 }
 
 export function CartIcon({ onClick }: CartIconProps) {
-  const itemCount = useStore(cartStore, getCartItemCount)
+  // Use hydration-safe store hook (returns 0 during SSR/hydration)
+  const itemCount = useHydratedStore(cartStore, getCartItemCount, 0)
 
   return (
     <button

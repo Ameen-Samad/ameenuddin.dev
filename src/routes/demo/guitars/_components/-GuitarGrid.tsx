@@ -1,6 +1,6 @@
 import { useMemo, useState } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useStore } from '@tanstack/react-store'
+import { useHydratedStore } from '@/hooks/useHydratedStore'
 import {
   useReactTable,
   getCoreRowModel,
@@ -192,7 +192,7 @@ export function GuitarGrid() {
 
 // List view item component
 function GuitarListItem({ guitar }: { guitar: Guitar }) {
-  const inCart = useStore(cartStore, (state) => isInCart(state, guitar.id))
+  const inCart = useHydratedStore(cartStore, (state) => isInCart(state, guitar.id), false)
 
   return (
     <Link

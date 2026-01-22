@@ -1,4 +1,4 @@
-import { useStore } from '@tanstack/react-store'
+import { useHydratedStore } from '@/hooks/useHydratedStore'
 import {
   cartStore,
   getCartItems,
@@ -15,8 +15,8 @@ interface CartDrawerProps {
 }
 
 export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
-  const items = useStore(cartStore, getCartItems)
-  const total = useStore(cartStore, getCartTotal)
+  const items = useHydratedStore(cartStore, getCartItems, [])
+  const total = useHydratedStore(cartStore, getCartTotal, 0)
 
   if (!isOpen) return null
 

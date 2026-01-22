@@ -52,31 +52,6 @@ interface Demo {
 
 const demos: Demo[] = [
 	{
-		id: "guitar-concierge",
-		title: "AI Guitar Concierge",
-		description:
-			"Full-stack AI-powered shopping experience with chat recommendations, semantic search, and comparison tools",
-		icon: <Guitar className="w-8 h-8" />,
-		path: "/demo/guitars",
-		badge: "Full-Stack AI",
-		color: "#10b981",
-		features: ["AI Chat", "Semantic Search", "E-commerce", "Comparison"],
-		learnings: [
-			"Building conversational AI with tool calling for product recommendations",
-			"Semantic search using vector embeddings for 'vibe-based' queries",
-			"TanStack Store for persistent shopping cart with localStorage sync",
-			"TanStack Table for sortable, filterable product grids",
-			"Side-by-side comparison with AI-generated insights",
-		],
-		technicalHighlights: [
-			"AI tool calling enables structured recommendations in chat",
-			"Vector embeddings find guitars by feel/vibe, not just keywords",
-			"TanStack Store + localStorage provides seamless cart persistence",
-			"Streaming responses give real-time AI chat feedback",
-		],
-		gitEvidence: "src/routes/demo/guitars/index.tsx",
-	},
-	{
 		id: "ai-voice",
 		title: "Voice Agent",
 		description:
@@ -97,7 +72,7 @@ const demos: Demo[] = [
 			"Binary data must be properly buffered to avoid audio glitches",
 			"Connection state must be tracked separately from recording state",
 		],
-		gitEvidence: "src/components/demo-VoiceAgent.tsx:183",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/components/demo-VoiceAgent.tsx#L183",
 	},
 	{
 		id: "chatbot",
@@ -120,7 +95,7 @@ const demos: Demo[] = [
 			"RAG reduces hallucinations by grounding responses in actual data",
 			"Context window limits require smart chunking strategies",
 		],
-		gitEvidence: "src/routes/chatbot.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/chatbot.tsx",
 	},
 	{
 		id: "tetris",
@@ -143,7 +118,32 @@ const demos: Demo[] = [
 			"AI agent uses heuristics to evaluate board states",
 			"Game loop runs independently from React render cycle",
 		],
-		gitEvidence: "src/routes/tetris.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/tetris.tsx",
+	},
+	{
+		id: "guitar-concierge",
+		title: "AI Guitar Concierge",
+		description:
+			"Full-stack AI-powered shopping experience with chat recommendations, semantic search, and comparison tools",
+		icon: <Guitar className="w-8 h-8" />,
+		path: "/demo/guitars",
+		badge: "Full-Stack AI",
+		color: "#10b981",
+		features: ["AI Chat", "Semantic Search", "E-commerce", "Comparison"],
+		learnings: [
+			"Building conversational AI with tool calling for product recommendations",
+			"Semantic search using vector embeddings for 'vibe-based' queries",
+			"TanStack Store for persistent shopping cart with localStorage sync",
+			"TanStack Table for sortable, filterable product grids",
+			"Side-by-side comparison with AI-generated insights",
+		],
+		technicalHighlights: [
+			"AI tool calling enables structured recommendations in chat",
+			"Vector embeddings find guitars by feel/vibe, not just keywords",
+			"TanStack Store + localStorage provides seamless cart persistence",
+			"Streaming responses give real-time AI chat feedback",
+		],
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/tree/main/src/routes/demo/guitars",
 	},
 	{
 		id: "builder",
@@ -166,7 +166,7 @@ const demos: Demo[] = [
 			"AI can generate parametric 3D models from text descriptions",
 			"Scene optimization is critical for smooth 60fps rendering",
 		],
-		gitEvidence: "src/routes/builder.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/builder.tsx",
 	},
 	{
 		id: "ai-image",
@@ -189,7 +189,7 @@ const demos: Demo[] = [
 			"Handle loading states during generation (15-30 seconds per image)",
 			"Convert base64 responses to downloadable files",
 		],
-		gitEvidence: "src/routes/demo/ai-image.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/ai-image.tsx",
 	},
 	{
 		id: "ai-tts",
@@ -212,7 +212,7 @@ const demos: Demo[] = [
 			"Live audio playback with HTML5 Audio API",
 			"Generate downloadable MP3 files",
 		],
-		gitEvidence: '8581789: "Removed OpenAI, used fully Cloudflare Workers"',
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/commit/8581789",
 	},
 	{
 		id: "ai-chat",
@@ -235,7 +235,7 @@ const demos: Demo[] = [
 			"Stream responses word-by-word for better UX",
 			"Maintain conversation context across multiple messages",
 		],
-		gitEvidence: "src/lib/demo-chat-hook.ts:132 lines",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/lib/demo-chat-hook.ts#L132",
 	},
 	{
 		id: "ai-structured",
@@ -257,7 +257,7 @@ const demos: Demo[] = [
 			"Type inference ensures compile-time safety",
 			"Structured outputs are more reliable than free-form text",
 		],
-		gitEvidence: "src/routes/demo/ai-structured.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/ai-structured.tsx",
 	},
 	{
 		id: "tanstack-query",
@@ -395,7 +395,7 @@ const demos: Demo[] = [
 		title: "TanStack Form (Simple)",
 		description: "Type-safe form state management with validation",
 		icon: <FormInput className="w-8 h-8" />,
-		path: "/demo/form.simple",
+		path: "/demo/form/simple",
 		badge: "TanStack",
 		color: "#ffa94d",
 		features: ["Type-safe", "Validation", "Error handling"],
@@ -410,7 +410,7 @@ const demos: Demo[] = [
 			"Validates on change, blur, or submit",
 			"Full TypeScript inference for form values",
 		],
-		gitEvidence: "src/routes/demo/form.simple.tsx",
+		gitEvidence: "src/routes/demo/form/simple.tsx",
 	},
 	{
 		id: "form-address",
@@ -432,7 +432,7 @@ const demos: Demo[] = [
 			"Dynamic validation based on other field values",
 			"Composable form components",
 		],
-		gitEvidence: "src/routes/demo/form.address.tsx",
+		gitEvidence: "src/routes/demo/form/address.tsx",
 	},
 	{
 		id: "start-ssr-index",

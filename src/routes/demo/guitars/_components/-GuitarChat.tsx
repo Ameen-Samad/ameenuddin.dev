@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from 'react'
 import { Link } from '@tanstack/react-router'
-import { useStore } from '@tanstack/react-store'
+import { useHydratedStore } from '@/hooks/useHydratedStore'
 import { Send, Loader2, User, Sparkles, ShoppingCart, X, RefreshCw } from 'lucide-react'
 import { cartStore, addToCart, isInCart } from '@/stores/cart-store'
 import guitars from '@/data/demo-guitars'
@@ -305,7 +305,7 @@ function GuitarRecommendation({
   reason: string
 }) {
   const guitar = guitars.find((g) => g.id === guitarId)
-  const inCart = useStore(cartStore, (state) => isInCart(state, guitarId))
+  const inCart = useHydratedStore(cartStore, (state) => isInCart(state, guitarId), false)
 
   if (!guitar) return null
 

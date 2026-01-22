@@ -1,5 +1,5 @@
+import { env } from "cloudflare:workers";
 import { createFileRoute } from "@tanstack/react-router";
-import { env } from 'cloudflare:workers'
 
 const SYSTEM_PROMPT = `You are a helpful assistant for a store that sells guitars.
 
@@ -20,7 +20,7 @@ IMPORTANT:
 export const Route = createFileRoute("/demo/api/ai/chat")({
 	server: {
 		handlers: {
-			POST: async ({ request}) => {
+			POST: async ({ request }) => {
 				const requestSignal = request.signal;
 
 				if (requestSignal.aborted) {
@@ -37,7 +37,8 @@ export const Route = createFileRoute("/demo/api/ai/chat")({
 							role: m.role,
 							content: m.content,
 						})),
-					];					if (!env?.AI) {
+					];
+					if (!env?.AI) {
 						return new Response(
 							JSON.stringify({
 								error: "Cloudflare AI binding not available",
@@ -62,18 +63,56 @@ export const Route = createFileRoute("/demo/api/ai/chat")({
 									},
 								);
 
+								// Handle both object chunks (production) and byte chunks (dev)
+								const decoder = new TextDecoder();
+								let buffer = "";
+
 								for await (const chunk of response) {
 									if (requestSignal.aborted) {
 										controller.close();
 										return;
 									}
 
-									if (chunk.response) {
-										const event = `data: ${JSON.stringify({
-											type: "content",
-											content: chunk.response,
-										})}\n\n`;
-										controller.enqueue(encoder.encode(event));
+									// Check if chunk is a Uint8Array (dev mode returns raw bytes)
+									if (chunk instanceof Uint8Array) {
+										// Decode bytes and parse SSE format
+										const text = decoder.decode(chunk, { stream: true });
+										buffer += text;
+
+										// Process complete SSE messages
+										const lines = buffer.split("\n\n");
+										buffer = lines.pop() || ""; // Keep incomplete message in buffer
+
+										for (const line of lines) {
+											if (line.startsWith("data: ")) {
+												const dataStr = line.slice(6);
+
+												// Skip [DONE] sentinel value
+												if (dataStr === "[DONE]") {
+													continue;
+												}
+
+												try {
+													const data = JSON.parse(dataStr);
+													if (data.response) {
+														controller.enqueue(
+															encoder.encode(
+																`data: ${JSON.stringify({ type: "content", content: data.response })}\n\n`,
+															),
+														);
+													}
+												} catch (e) {
+													// Ignore parse errors for non-JSON SSE messages
+												}
+											}
+										}
+									} else if (chunk.response !== undefined) {
+										// Production mode: chunks are objects
+										controller.enqueue(
+											encoder.encode(
+												`data: ${JSON.stringify({ type: "content", content: chunk.response })}\n\n`,
+											),
+										);
 									}
 								}
 

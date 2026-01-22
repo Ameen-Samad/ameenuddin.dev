@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { Link, createFileRoute } from '@tanstack/react-router'
-import { useStore } from '@tanstack/react-store'
+import { useHydratedStore } from '@/hooks/useHydratedStore'
 import {
   ArrowLeft,
   ShoppingCart,
@@ -31,7 +31,7 @@ interface AIInsight {
 }
 
 function ComparePage() {
-  const selectedGuitars = useStore(compareStore, getCompareGuitars)
+  const selectedGuitars = useHydratedStore(compareStore, getCompareGuitars, [])
   const [insights, setInsights] = useState<AIInsight[]>([])
   const [isLoadingInsights, setIsLoadingInsights] = useState(false)
 
@@ -224,7 +224,7 @@ function GuitarCompareCard({
   insight?: AIInsight
   onRemove: () => void
 }) {
-  const inCart = useStore(cartStore, (state) => isInCart(state, guitar.id))
+  const inCart = useHydratedStore(cartStore, (state) => isInCart(state, guitar.id), false)
 
   return (
     <div className="bg-gray-900/60 rounded-2xl border border-gray-800 overflow-hidden">

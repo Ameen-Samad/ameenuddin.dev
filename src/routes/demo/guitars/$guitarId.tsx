@@ -1,5 +1,5 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { useStore } from "@tanstack/react-store";
+import { useHydratedStore } from "@/hooks/useHydratedStore";
 import { ArrowLeft, Check, GitCompare, ShoppingCart, Tag } from "lucide-react";
 import { CompareDrawer } from "@/components/CompareDrawer";
 import guitars from "@/data/demo-guitars";
@@ -25,11 +25,11 @@ export const Route = createFileRoute("/demo/guitars/$guitarId")({
 
 function GuitarDetailPage() {
 	const guitar = Route.useLoaderData();
-	const inCart = useStore(cartStore, (state) => isInCart(state, guitar.id));
-	const inCompare = useStore(compareStore, (state) =>
+	const inCart = useHydratedStore(cartStore, (state) => isInCart(state, guitar.id), false);
+	const inCompare = useHydratedStore(compareStore, (state) =>
 		isInCompare(state, guitar.id),
 	);
-	const canCompare = useStore(compareStore, canAddToCompare);
+	const canCompare = useHydratedStore(compareStore, canAddToCompare, true);
 
 	const handleToggleCompare = () => {
 		if (inCompare) {

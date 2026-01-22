@@ -1,5 +1,5 @@
 import { Link } from '@tanstack/react-router'
-import { useStore } from '@tanstack/react-store'
+import { useHydratedStore } from '@/hooks/useHydratedStore'
 import {
   compareStore,
   getCompareGuitars,
@@ -9,7 +9,7 @@ import {
 import { X, GitCompare } from 'lucide-react'
 
 export function CompareBar() {
-  const guitars = useStore(compareStore, getCompareGuitars)
+  const guitars = useHydratedStore(compareStore, getCompareGuitars, [])
 
   if (guitars.length === 0) return null
 

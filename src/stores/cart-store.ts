@@ -10,26 +10,25 @@ export interface CartState {
   items: CartItem[]
 }
 
-// Initialize from localStorage if available
-function getInitialState(): CartState {
-  if (typeof window !== 'undefined') {
-    const saved = localStorage.getItem('guitar-cart')
-    if (saved) {
-      try {
-        return JSON.parse(saved)
-      } catch {
-        // Invalid JSON, return empty cart
+// Always initialize with empty state to avoid hydration mismatches
+export const cartStore = new Store<CartState>({ items: [] })
+
+// Hydrate from localStorage after initial render (client-side only)
+if (typeof window !== 'undefined') {
+  // Load saved state on mount
+  const saved = localStorage.getItem('guitar-cart')
+  if (saved) {
+    try {
+      const parsed = JSON.parse(saved) as CartState
+      if (parsed && Array.isArray(parsed.items)) {
+        cartStore.setState(parsed)
       }
+    } catch {
+      // Invalid JSON, keep empty state
     }
   }
-  return { items: [] }
-}
 
-// Create the cart store
-export const cartStore = new Store<CartState>(getInitialState())
-
-// Subscribe to changes and persist to localStorage
-if (typeof window !== 'undefined') {
+  // Subscribe to changes and persist to localStorage
   cartStore.subscribe(() => {
     localStorage.setItem('guitar-cart', JSON.stringify(cartStore.state))
   })
