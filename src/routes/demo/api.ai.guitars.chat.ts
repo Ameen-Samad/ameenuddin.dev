@@ -138,11 +138,55 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 										// Get text from chunk (workers-ai-provider uses 'text', AI SDK v3 uses 'delta')
 										const textContent = (chunk as any).text || (chunk as any).delta;
 										if (textContent) {
-											controller.enqueue(
-												encoder.encode(
-													`data: ${JSON.stringify({ type: "content", content: textContent })}\n\n`,
-												),
-											);
+											// Check if the text contains a JSON tool call (fallback for models that don't support proper tool calling)
+											const jsonMatch = textContent.match(/\{"name":\s*"recommendGuitar",\s*"parameters":\s*\{[^}]*\}\}/);
+											if (jsonMatch) {
+												try {
+													const toolCall = JSON.parse(jsonMatch[0]);
+													const params = toolCall.parameters || {};
+													const guitarId = params.guitarId;
+													const reason = params.reason || "A great choice for your needs";
+
+													console.log('[Guitar Chat] Detected JSON tool call:', guitarId, reason);
+
+													// Manually execute the tool
+													const guitar = guitars.find((g) => g.id === guitarId);
+													if (guitar) {
+														controller.enqueue(
+															encoder.encode(
+																`data: ${JSON.stringify({
+																	type: "recommendation",
+																	guitar: {
+																		id: guitar.id,
+																		name: guitar.name,
+																		price: guitar.price,
+																		image: guitar.image,
+																		shortDescription: guitar.shortDescription,
+																		type: guitar.type,
+																		reason,
+																	},
+																	reason
+																})}\n\n`,
+															),
+														);
+													}
+													// Don't output the raw JSON text
+												} catch (e) {
+													// If parsing fails, output the text normally
+													controller.enqueue(
+														encoder.encode(
+															`data: ${JSON.stringify({ type: "content", content: textContent })}\n\n`,
+														),
+													);
+												}
+											} else {
+												// Normal text content
+												controller.enqueue(
+													encoder.encode(
+														`data: ${JSON.stringify({ type: "content", content: textContent })}\n\n`,
+													),
+												);
+											}
 										} else {
 											console.log('[Guitar Chat] Empty text-delta detected');
 										}

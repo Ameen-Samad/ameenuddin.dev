@@ -3,7 +3,6 @@ import { createFileRoute } from "@tanstack/react-router";
 import { createWorkersAI } from "workers-ai-provider";
 import { generateText } from "ai";
 import { z } from "zod";
-import { zodToJsonSchema } from "zod-to-json-schema";
 
 // Simple hash function for cache keys
 async function hashKey(recipeName: string, mode: string): Promise<string> {
@@ -37,6 +36,80 @@ const RecipeSchema = z.object({
 });
 
 export type Recipe = z.infer<typeof RecipeSchema>;
+
+// Manual JSON Schema definition (avoids bundling issues with zod-to-json-schema)
+const recipeJsonSchema = {
+	type: "object",
+	properties: {
+		name: {
+			type: "string",
+			description: "The name of the recipe",
+		},
+		description: {
+			type: "string",
+			description: "A brief description of the dish",
+		},
+		prepTime: {
+			type: "string",
+			description: 'Preparation time (e.g., "15 minutes")',
+		},
+		cookTime: {
+			type: "string",
+			description: 'Cooking time (e.g., "30 minutes")',
+		},
+		servings: {
+			type: "number",
+			description: "Number of servings",
+		},
+		difficulty: {
+			type: "string",
+			enum: ["easy", "medium", "hard"],
+			description: "Difficulty level",
+		},
+		ingredients: {
+			type: "array",
+			description: "List of ingredients",
+			items: {
+				type: "object",
+				properties: {
+					item: {
+						type: "string",
+						description: "Ingredient name",
+					},
+					amount: {
+						type: "string",
+						description: 'Amount needed (e.g., "2 cups")',
+					},
+				},
+				required: ["item", "amount"],
+			},
+		},
+		instructions: {
+			type: "array",
+			description: "Step-by-step cooking instructions",
+			items: {
+				type: "string",
+			},
+		},
+		tips: {
+			type: "array",
+			description: "Optional cooking tips",
+			items: {
+				type: "string",
+			},
+		},
+	},
+	required: [
+		"name",
+		"description",
+		"prepTime",
+		"cookTime",
+		"servings",
+		"difficulty",
+		"ingredients",
+		"instructions",
+	],
+};
 
 export const Route = createFileRoute("/demo/api/ai/structured")({
 	server: {
@@ -94,17 +167,11 @@ export const Route = createFileRoute("/demo/api/ai/structured")({
 					let responseData;
 
 					if (mode === "structured") {
-						// Convert Zod schema to JSON Schema
-						const jsonSchemaObject = zodToJsonSchema(RecipeSchema, {
-							name: "RecipeSchema",
-							$refStrategy: "none",
-						});
-
 						const prompt = `Generate a complete recipe for: ${recipeName}.
 
 Include all details: ingredients with amounts, step-by-step instructions, prep/cook times, difficulty level, and optional tips.`;
 
-						// Use NATIVE Cloudflare AI structured output
+						// Use NATIVE Cloudflare AI structured output with json_schema
 						const aiResponse = await env.AI.run(
 							"@cf/meta/llama-4-scout-17b-16e-instruct",
 							{
@@ -121,13 +188,15 @@ Include all details: ingredients with amounts, step-by-step instructions, prep/c
 								],
 								max_tokens: 2048,
 								temperature: 0.7,
-								// Native json_schema support - guarantees valid JSON
+								// Native json_schema support - guarantees valid, complete JSON
 								response_format: {
 									type: "json_schema",
-									json_schema: jsonSchemaObject,
+									json_schema: recipeJsonSchema,
 								},
 							},
 						);
+
+						console.log("AI Response type:", typeof aiResponse);
 
 						// Parse the response
 						let recipe;
@@ -135,13 +204,24 @@ Include all details: ingredients with amounts, step-by-step instructions, prep/c
 							recipe = JSON.parse(aiResponse);
 						} else if (aiResponse && typeof aiResponse === "object") {
 							if ("response" in aiResponse) {
-								recipe = JSON.parse((aiResponse as any).response);
+								const responseText = (aiResponse as any).response;
+								recipe =
+									typeof responseText === "string"
+										? JSON.parse(responseText)
+										: responseText;
 							} else if ("text" in aiResponse) {
-								recipe = JSON.parse((aiResponse as any).text);
+								const textContent = (aiResponse as any).text;
+								recipe =
+									typeof textContent === "string"
+										? JSON.parse(textContent)
+										: textContent;
 							} else {
+								// Already an object
 								recipe = aiResponse;
 							}
 						}
+
+						console.log("Parsed recipe:", recipe);
 
 						// Validate with Zod
 						const validated = RecipeSchema.parse(recipe);
