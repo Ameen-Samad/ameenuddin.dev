@@ -52,6 +52,31 @@ interface Demo {
 
 const demos: Demo[] = [
 	{
+		id: "guitar-concierge",
+		title: "AI Guitar Concierge",
+		description:
+			"Full-stack AI-powered shopping experience with chat recommendations, semantic search, and comparison tools",
+		icon: <Guitar className="w-8 h-8" />,
+		path: "/demo/guitars",
+		badge: "Full-Stack AI",
+		color: "#10b981",
+		features: ["AI Chat", "Semantic Search", "E-commerce", "Comparison"],
+		learnings: [
+			"Building conversational AI with tool calling for product recommendations",
+			"Semantic search using vector embeddings for 'vibe-based' queries",
+			"TanStack Store for persistent shopping cart with localStorage sync",
+			"TanStack Table for sortable, filterable product grids",
+			"Side-by-side comparison with AI-generated insights",
+		],
+		technicalHighlights: [
+			"AI tool calling enables structured recommendations in chat",
+			"Vector embeddings find guitars by feel/vibe, not just keywords",
+			"TanStack Store + localStorage provides seamless cart persistence",
+			"Streaming responses give real-time AI chat feedback",
+		],
+		gitEvidence: "src/routes/demo/guitars/index.tsx",
+	},
+	{
 		id: "ai-voice",
 		title: "Voice Agent",
 		description:
@@ -540,31 +565,6 @@ const demos: Demo[] = [
 			"Can use middleware for auth, logging, etc.",
 		],
 		gitEvidence: "src/routes/demo/start.api-request.tsx",
-	},
-	{
-		id: "guitar-concierge",
-		title: "AI Guitar Concierge",
-		description:
-			"Full-stack AI-powered shopping experience with chat recommendations, semantic search, and comparison tools",
-		icon: <Guitar className="w-8 h-8" />,
-		path: "/demo/guitars",
-		badge: "Full-Stack AI",
-		color: "#10b981",
-		features: ["AI Chat", "Semantic Search", "E-commerce", "Comparison"],
-		learnings: [
-			"Building conversational AI with tool calling for product recommendations",
-			"Semantic search using vector embeddings for 'vibe-based' queries",
-			"TanStack Store for persistent shopping cart with localStorage sync",
-			"TanStack Table for sortable, filterable product grids",
-			"Side-by-side comparison with AI-generated insights",
-		],
-		technicalHighlights: [
-			"AI tool calling enables structured recommendations in chat",
-			"Vector embeddings find guitars by feel/vibe, not just keywords",
-			"TanStack Store + localStorage provides seamless cart persistence",
-			"Streaming responses give real-time AI chat feedback",
-		],
-		gitEvidence: "src/routes/demo/guitars/index.tsx",
 	},
 ];
 
