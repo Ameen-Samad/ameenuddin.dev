@@ -79,7 +79,7 @@ export function ThreeScene({ generatedCode }: ThreeSceneProps) {
 				display: "block",
 			}}
 			title="Three.js Scene"
-			sandbox="allow-scripts allow-same-origin"
+			sandbox="allow-scripts"
 		/>
 	);
 }

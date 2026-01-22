@@ -24,12 +24,12 @@ export function CartDrawer({ isOpen, onClose }: CartDrawerProps) {
     <>
       {/* Backdrop */}
       <div
-        className="fixed inset-0 bg-black/60 backdrop-blur-sm z-40"
+        className="fixed inset-0 md:left-[280px] bg-black/60 backdrop-blur-sm z-40"
         onClick={onClose}
       />
 
       {/* Drawer */}
-      <div className="fixed right-0 top-0 h-full w-full max-w-md bg-gray-900 border-l border-gray-800 z-50 flex flex-col">
+      <div className="fixed right-0 top-0 h-full w-full max-w-md md:max-w-lg bg-gray-900 border-l border-gray-800 z-50 flex flex-col shadow-2xl">
         {/* Header */}
         <div className="flex items-center justify-between p-4 border-b border-gray-800">
           <h2 className="text-xl font-bold text-white flex items-center gap-2">

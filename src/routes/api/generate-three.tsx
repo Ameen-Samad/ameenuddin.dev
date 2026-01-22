@@ -247,7 +247,7 @@ NOW GENERATE GEOMETRY CODE FOR THE USER'S REQUEST.`;
 					if (generateFullScene) {
 						// Complete scene - minimal template (AI controls background and lighting)
 						generatedCode = `import * as THREE from 'https://esm.sh/three@0.182.0';
-import { OrbitControls } from 'https://esm.sh/three@0.182.0/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from 'https://esm.sh/three@0.182.0/examples/jsm/controls/OrbitControls.js';
 
 export async function createScene(canvas) {
   // Initialize scene (AI will set background)
@@ -298,7 +298,7 @@ export async function createScene(canvas) {
 					} else {
 						// Simple object - bright template with controlled lighting
 						generatedCode = `import * as THREE from 'https://esm.sh/three@0.182.0';
-import { OrbitControls } from 'https://esm.sh/three@0.182.0/examples/jsm/controls/OrbitControls';
+import { OrbitControls } from 'https://esm.sh/three@0.182.0/examples/jsm/controls/OrbitControls.js';
 
 export async function createScene(canvas) {
   // Initialize scene with bright background

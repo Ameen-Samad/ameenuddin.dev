@@ -125,8 +125,8 @@ export function CompareDrawer() {
 
 			{/* Drawer */}
 			<div
-				className={`fixed inset-y-0 right-0 md:left-[280px] md:right-auto z-50 bg-black/95 backdrop-blur-xl border-l border-gray-800 shadow-2xl transition-all duration-300 ease-out ${
-					isOpen ? "w-full md:w-[600px] lg:w-[800px]" : "translate-x-full"
+				className={`fixed inset-y-0 right-0 z-50 bg-black/95 backdrop-blur-xl border-l border-gray-800 shadow-2xl transition-all duration-300 ease-out ${
+					isOpen ? "w-full md:w-[90vw] lg:w-[800px] xl:w-[900px]" : "translate-x-full md:translate-x-full"
 				}`}
 			>
 				{/* Header */}
@@ -181,7 +181,7 @@ export function CompareDrawer() {
 						{guitar2 && (
 							<>
 								{/* Side by Side */}
-								<div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-8">
+								<div className="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-8">
 									<MiniGuitarCard
 										guitar={guitar1}
 										insight={insight1}
@@ -199,42 +199,49 @@ export function CompareDrawer() {
 									<h3 className="px-6 py-4 font-bold bg-gray-900/80 border-b border-gray-800">
 										Feature Comparison
 									</h3>
-									<table className="w-full">
-										<tbody>
-											<CompareRow
-												label="Price"
-												value1={`$${guitar1.price}`}
-												value2={`$${guitar2.price}`}
-												highlight={guitar1.price < guitar2.price ? 1 : 2}
-											/>
-											<CompareRow
-												label="Type"
-												value1={guitar1.type}
-												value2={guitar2.type}
-											/>
-											<CompareRow
-												label="Features"
-												value1={guitar1.features.join(", ")}
-												value2={guitar2.features.join(", ")}
-											/>
-											{insight1 && insight2 && (
-												<>
-													<CompareRow
-														label="Best For"
-														value1={insight1.bestFor}
-														value2={insight2.bestFor}
-														isAI
-													/>
-													<CompareRow
-														label="Sound Profile"
-														value1={insight1.soundProfile}
-														value2={insight2.soundProfile}
-														isAI
-													/>
-												</>
-											)}
-										</tbody>
-									</table>
+									<div className="overflow-x-auto">
+										<table className="w-full table-auto">
+											<colgroup>
+												<col className="w-1/4 min-w-[120px]" />
+												<col className="w-3/8" />
+												<col className="w-3/8" />
+											</colgroup>
+											<tbody>
+												<CompareRow
+													label="Price"
+													value1={`$${guitar1.price}`}
+													value2={`$${guitar2.price}`}
+													highlight={guitar1.price < guitar2.price ? 1 : 2}
+												/>
+												<CompareRow
+													label="Type"
+													value1={guitar1.type}
+													value2={guitar2.type}
+												/>
+												<CompareRow
+													label="Features"
+													value1={guitar1.features.join(", ")}
+													value2={guitar2.features.join(", ")}
+												/>
+												{insight1 && insight2 && (
+													<>
+														<CompareRow
+															label="Best For"
+															value1={insight1.bestFor}
+															value2={insight2.bestFor}
+															isAI
+														/>
+														<CompareRow
+															label="Sound Profile"
+															value1={insight1.soundProfile}
+															value2={insight2.soundProfile}
+															isAI
+														/>
+													</>
+												)}
+											</tbody>
+										</table>
+									</div>
 								</div>
 							</>
 						)}
@@ -304,28 +311,28 @@ function MiniGuitarCard({
 			</div>
 
 			{/* Content */}
-			<div className="p-4">
+			<div className="p-4 space-y-3">
 				<Link
 					to="/demo/guitars/$guitarId"
 					params={{ guitarId: guitar.id.toString() }}
-					className="text-lg font-bold text-white hover:text-emerald-400 transition-colors"
+					className="text-lg font-bold text-white hover:text-emerald-400 transition-colors block line-clamp-2"
 				>
 					{guitar.name}
 				</Link>
-				<div className="text-xl font-bold text-emerald-400 mt-1">
+				<div className="text-xl font-bold text-emerald-400">
 					${guitar.price}
 				</div>
 
 				{/* AI Insight */}
 				{insight && (
-					<div className="mt-3 p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
-						<div className="flex items-center gap-2 mb-1">
-							<Sparkles className="w-3.5 h-3.5 text-emerald-400" />
+					<div className="p-3 bg-emerald-500/10 border border-emerald-500/30 rounded-lg">
+						<div className="flex items-center gap-2 mb-1.5">
+							<Sparkles className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
 							<span className="text-xs font-medium text-emerald-400">
 								AI Recommendation
 							</span>
 						</div>
-						<p className="text-gray-300 text-xs italic">
+						<p className="text-gray-300 text-xs italic leading-relaxed">
 							"{insight.whyChoose}"
 						</p>
 					</div>
@@ -371,25 +378,25 @@ function CompareRow({
 }) {
 	return (
 		<tr className="border-b border-gray-800/50 last:border-0">
-			<td className="px-6 py-3 text-gray-400 text-sm">
+			<td className="px-4 py-3 text-gray-400 text-sm align-top whitespace-nowrap">
 				<div className="flex items-center gap-2">
-					{isAI && <Sparkles className="w-3.5 h-3.5 text-emerald-400" />}
-					{label}
+					{isAI && <Sparkles className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />}
+					<span className="font-medium">{label}</span>
 				</div>
 			</td>
 			<td
-				className={`px-4 py-3 text-sm text-center ${
+				className={`px-4 py-3 text-sm align-top ${
 					highlight === 1 ? "text-emerald-400 font-medium" : "text-gray-300"
 				}`}
 			>
-				{value1}
+				<div className="break-words">{value1}</div>
 			</td>
 			<td
-				className={`px-4 py-3 text-sm text-center ${
+				className={`px-4 py-3 text-sm align-top ${
 					highlight === 2 ? "text-emerald-400 font-medium" : "text-gray-300"
 				}`}
 			>
-				{value2}
+				<div className="break-words">{value2}</div>
 			</td>
 		</tr>
 	);
