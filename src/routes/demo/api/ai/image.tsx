@@ -51,38 +51,69 @@ export const Route = createFileRoute("/demo/api/ai/image")({
 							},
 						);
 
-						// Log response for debugging
-						console.log("AI Response type:", typeof response);
-						console.log("Is Uint8Array:", response instanceof Uint8Array);
-						console.log("Response:", response);
+						// Convert response to Uint8Array
+						let imageData: Uint8Array;
+
+						if (response instanceof Uint8Array) {
+							imageData = response;
+						} else if (response instanceof ReadableStream) {
+							// Read the stream to get the image data
+							const reader = response.getReader();
+							const chunks: Uint8Array[] = [];
+							let totalLength = 0;
+
+							while (true) {
+								const { done, value } = await reader.read();
+								if (done) break;
+								chunks.push(value);
+								totalLength += value.length;
+							}
+
+							// Combine all chunks into a single Uint8Array
+							imageData = new Uint8Array(totalLength);
+							let offset = 0;
+							for (const chunk of chunks) {
+								imageData.set(chunk, offset);
+								offset += chunk.length;
+							}
+						} else if (response && typeof response === "object" && "image" in response) {
+							const imgData = (response as any).image;
+							if (imgData instanceof Uint8Array) {
+								imageData = imgData;
+							} else if (imgData instanceof ReadableStream) {
+								// Read the stream
+								const reader = imgData.getReader();
+								const chunks: Uint8Array[] = [];
+								let totalLength = 0;
+
+								while (true) {
+									const { done, value } = await reader.read();
+									if (done) break;
+									chunks.push(value);
+									totalLength += value.length;
+								}
+
+								imageData = new Uint8Array(totalLength);
+								let offset = 0;
+								for (const chunk of chunks) {
+									imageData.set(chunk, offset);
+									offset += chunk.length;
+								}
+							} else {
+								throw new Error("Unexpected image data type in response object");
+							}
+						} else {
+							console.error("Unexpected response type:", typeof response, response);
+							throw new Error("Could not generate image - unexpected response format");
+						}
+
+						// Check if we have valid image data
+						if (!imageData || imageData.length === 0) {
+							throw new Error("AI returned empty image data");
+						}
 
 						// Convert Uint8Array to base64 string
-						let base64String = "";
-						if (response instanceof Uint8Array) {
-							if (response.length === 0) {
-								console.error("Received empty Uint8Array from AI");
-								throw new Error("AI returned empty image data");
-							}
-							base64String = btoa(String.fromCharCode(...response));
-						} else if (typeof response === "string") {
-							base64String = response;
-						} else if (response && typeof response === "object") {
-							// Handle object response (might have image property)
-							console.log("Response keys:", Object.keys(response));
-							if ("image" in response) {
-								const imgData = (response as any).image;
-								if (imgData instanceof Uint8Array) {
-									base64String = btoa(String.fromCharCode(...imgData));
-								} else if (typeof imgData === "string") {
-									base64String = imgData;
-								}
-							}
-						}
-
-						if (!base64String) {
-							console.error("Failed to extract image data from response");
-							throw new Error("Could not generate image - empty response from AI");
-						}
+						const base64String = btoa(String.fromCharCode(...imageData));
 
 						images.push({
 							b64Json: base64String,
