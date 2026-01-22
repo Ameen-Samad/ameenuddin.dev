@@ -204,7 +204,7 @@ function About({ commits }: { commits: number }) {
 							>
 								I'm{" "}
 								<span style={{ color: "#00f3ff", fontWeight: 700 }}>
-									Ameen Samad
+									Ameenuddin Bin Abdul Samad
 								</span>
 								, a fast learner who proves it through working code. I don't
 								claim expertise—I show evidence of learning through

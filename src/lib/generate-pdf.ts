@@ -36,7 +36,7 @@ export async function generateResumePDF(): Promise<Blob> {
 	doc.setFontSize(20);
 	doc.setFont("helvetica", "bold");
 	doc.setTextColor(40, 40, 40);
-	doc.text("AMEENUDDIN BIN SAMAD", pageWidth / 2, yPos, { align: "center" });
+	doc.text("AMEENUDDIN BIN ABDUL SAMAD", pageWidth / 2, yPos, { align: "center" });
 	yPos += 8;
 
 	doc.setFontSize(12);
@@ -185,17 +185,21 @@ export async function generateResumePDF(): Promise<Blob> {
 
 	jobs.forEach((job: Job, index: number) => {
 		doc.setFontSize(12);
+		doc.setFont("helvetica", "bold");
 		doc.setTextColor(40, 40, 40);
 		doc.text(`${job.company}`, margin, yPos);
+		
 		doc.setFontSize(10);
+		doc.setFont("helvetica", "normal");
 		doc.setTextColor(60, 60, 60);
-		doc.text(job.location, margin + contentWidth / 2, yPos);
-		yPos += 10;
+		doc.text(job.location, pageWidth - margin, yPos, { align: "right" });
+		yPos += 8;
 
-		doc.setFontSize(12);
+		doc.setFontSize(11);
+		doc.setFont("helvetica", "normal");
 		doc.setTextColor(80, 80, 80);
 		doc.text(job.jobTitle, margin, yPos);
-		yPos += 10;
+		yPos += 8;
 
 		const jobSummaryLines = doc.splitTextToSize(
 			job.summary,
@@ -204,6 +208,7 @@ export async function generateResumePDF(): Promise<Blob> {
 		);
 		jobSummaryLines.forEach((line: string) => {
 			doc.setFontSize(10);
+			doc.setFont("helvetica", "normal");
 			doc.setTextColor(60, 60, 60);
 			doc.text(line, margin, yPos);
 			yPos += 6;
@@ -212,6 +217,7 @@ export async function generateResumePDF(): Promise<Blob> {
 		yPos += 8;
 
 		doc.setFontSize(10);
+		doc.setFont("helvetica", "normal");
 		doc.setTextColor(60, 60, 60);
 		const duration =
 			job.endDate && job.endDate !== "Present"
@@ -219,24 +225,33 @@ export async function generateResumePDF(): Promise<Blob> {
 				: `${job.startDate} – Present`;
 
 		doc.text(duration, margin, yPos);
-		yPos += 10;
+		yPos += 8;
 
-		job.tags.forEach((tag: string) => {
+		if (job.tags.length > 0) {
 			doc.setFontSize(9);
+			doc.setFont("helvetica", "italic");
 			doc.setTextColor(80, 80, 80);
-			doc.text(tag, margin + 5, yPos);
-			const tagWidth = doc.getTextWidth(tag);
-			const nextX = margin + 5 + tagWidth + 10;
+			let currentX = margin + 5;
+			let currentY = yPos;
 
-			if (nextX > pageWidth - margin) {
-				yPos += 7;
-				doc.text(tag, margin, yPos);
-			}
-		});
+			job.tags.forEach((tag: string, index: number) => {
+				const tagWidth = doc.getTextWidth(tag);
+				const spacing = 10;
 
-		yPos += 10;
+				if (currentX + tagWidth > pageWidth - margin && index > 0) {
+					currentY += 7;
+					currentX = margin + 5;
+				}
+
+				doc.text(tag, currentX, currentY);
+				currentX += tagWidth + spacing;
+			});
+
+			yPos = currentY + 8;
+		}
 
 		doc.setFontSize(10);
+		doc.setFont("helvetica", "normal");
 		doc.setTextColor(60, 60, 60);
 
 		const contentLines = doc.splitTextToSize(
@@ -279,6 +294,7 @@ export async function generateResumePDF(): Promise<Blob> {
 
 	educations.forEach((edu: Education) => {
 		doc.setFontSize(12);
+		doc.setFont("helvetica", "bold");
 		doc.setTextColor(40, 40, 40);
 		doc.text(edu.school, margin, yPos);
 		yPos += 8;
@@ -287,7 +303,7 @@ export async function generateResumePDF(): Promise<Blob> {
 		doc.setFont("helvetica", "bold");
 		doc.setTextColor(60, 60, 60);
 		doc.text(edu.summary, margin, yPos);
-		yPos += 10;
+		yPos += 8;
 
 		const duration =
 			edu.endDate && edu.endDate !== "Present"
@@ -295,24 +311,32 @@ export async function generateResumePDF(): Promise<Blob> {
 				: `${edu.startDate} – Present`;
 
 		doc.setFont("helvetica", "normal");
-		doc.text(duration, margin + contentWidth / 2, yPos);
-		yPos += 10;
+		doc.setTextColor(60, 60, 60);
+		doc.text(duration, margin, yPos);
+		yPos += 8;
 
-		edu.tags.forEach((tag: string) => {
+		if (edu.tags.length > 0) {
 			doc.setFontSize(9);
 			doc.setFont("helvetica", "italic");
 			doc.setTextColor(80, 80, 80);
-			doc.text(tag, margin + 5, yPos);
-			const tagWidth = doc.getTextWidth(tag);
-			const nextX = margin + 5 + tagWidth + 10;
+			let currentX = margin + 5;
+			let currentY = yPos;
 
-			if (nextX > pageWidth - margin) {
-				yPos += 7;
-				doc.text(tag, margin, yPos);
-			}
-		});
+			edu.tags.forEach((tag: string, index: number) => {
+				const tagWidth = doc.getTextWidth(tag);
+				const spacing = 10;
 
-		yPos += 10;
+				if (currentX + tagWidth > pageWidth - margin && index > 0) {
+					currentY += 7;
+					currentX = margin + 5;
+				}
+
+				doc.text(tag, currentX, currentY);
+				currentX += tagWidth + spacing;
+			});
+
+			yPos = currentY + 8;
+		}
 
 		const contentLines = doc.splitTextToSize(
 			edu.content,
@@ -409,19 +433,28 @@ export async function generateResumePDF(): Promise<Blob> {
 
 		yPos += 8;
 
-		doc.setFontSize(9);
-		project.tech.forEach((tech) => {
+		if (project.tech.length > 0) {
+			doc.setFontSize(9);
 			doc.setFont("helvetica", "italic");
 			doc.setTextColor(80, 80, 80);
-			doc.text(tech, margin + 5, yPos);
-			const techWidth = doc.getTextWidth(tech);
-			const nextX = margin + 5 + techWidth + 8;
+			let currentX = margin + 5;
+			let currentY = yPos;
 
-			if (nextX > pageWidth - margin) {
-				yPos += 7;
-				doc.text(tech, margin, yPos);
-			}
-		});
+			project.tech.forEach((tech: string, index: number) => {
+				const techWidth = doc.getTextWidth(tech);
+				const spacing = 8;
+
+				if (currentX + techWidth > pageWidth - margin && index > 0) {
+					currentY += 7;
+					currentX = margin + 5;
+				}
+
+				doc.text(tech, currentX, currentY);
+				currentX += techWidth + spacing;
+			});
+
+			yPos = currentY + 8;
+		}
 
 		if (yPos > pageHeight - 30) {
 			doc.addPage();
