@@ -112,8 +112,14 @@ export const Route = createFileRoute("/demo/api/ai/image")({
 							throw new Error("AI returned empty image data");
 						}
 
-						// Convert Uint8Array to base64 string
-						const base64String = btoa(String.fromCharCode(...imageData));
+						// Convert Uint8Array to base64 string in chunks to avoid stack overflow
+						let binaryString = '';
+						const chunkSize = 8192; // Process 8KB at a time
+						for (let i = 0; i < imageData.length; i += chunkSize) {
+							const chunk = imageData.subarray(i, i + chunkSize);
+							binaryString += String.fromCharCode(...chunk);
+						}
+						const base64String = btoa(binaryString);
 
 						images.push({
 							b64Json: base64String,

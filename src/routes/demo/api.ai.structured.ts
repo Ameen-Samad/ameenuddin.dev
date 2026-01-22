@@ -1,8 +1,9 @@
 import { env } from "cloudflare:workers";
 import { createFileRoute } from "@tanstack/react-router";
 import { createWorkersAI } from "workers-ai-provider";
-import { generateObject, generateText } from "ai";
+import { generateText } from "ai";
 import { z } from "zod";
+import { zodToJsonSchema } from "zod-to-json-schema";
 
 // Simple hash function for cache keys
 async function hashKey(recipeName: string, mode: string): Promise<string> {
@@ -13,7 +14,7 @@ async function hashKey(recipeName: string, mode: string): Promise<string> {
 	return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
 }
 
-// Schema for structured recipe output
+// Simplified schema for more reliable output
 const RecipeSchema = z.object({
 	name: z.string().describe("The name of the recipe"),
 	description: z.string().describe("A brief description of the dish"),
@@ -26,7 +27,6 @@ const RecipeSchema = z.object({
 			z.object({
 				item: z.string().describe("Ingredient name"),
 				amount: z.string().describe('Amount needed (e.g., "2 cups")'),
-				notes: z.string().optional().describe("Optional preparation notes"),
 			}),
 		)
 		.describe("List of ingredients"),
@@ -34,15 +34,6 @@ const RecipeSchema = z.object({
 		.array(z.string())
 		.describe("Step-by-step cooking instructions"),
 	tips: z.array(z.string()).optional().describe("Optional cooking tips"),
-	nutritionPerServing: z
-		.object({
-			calories: z.number().optional(),
-			protein: z.string().optional(),
-			carbs: z.string().optional(),
-			fat: z.string().optional(),
-		})
-		.optional()
-		.describe("Nutritional information per serving"),
 });
 
 export type Recipe = z.infer<typeof RecipeSchema>;
@@ -100,33 +91,73 @@ export const Route = createFileRoute("/demo/api/ai/structured")({
 						}
 					}
 
-					// Create Workers AI provider
-					const workersai = createWorkersAI({ binding: env.AI });
-					const model = workersai("@cf/meta/llama-4-scout-17b-16e-instruct");
-
 					let responseData;
 
 					if (mode === "structured") {
+						// Convert Zod schema to JSON Schema
+						const jsonSchemaObject = zodToJsonSchema(RecipeSchema, {
+							name: "RecipeSchema",
+							$refStrategy: "none",
+						});
+
 						const prompt = `Generate a complete recipe for: ${recipeName}.
 
-Include all ingredients with amounts, step-by-step instructions, prep/cook times, difficulty level, and nutritional info.`;
+Include all details: ingredients with amounts, step-by-step instructions, prep/cook times, difficulty level, and optional tips.`;
 
-						// Use AI SDK's generateObject for structured output
-						const result = await generateObject({
-							model,
-							schema: RecipeSchema,
-							system: "You are a helpful recipe generator that creates detailed, well-structured recipes.",
-							prompt,
-							maxTokens: 2048, // Ensure enough tokens for complete recipe JSON
-						});
+						// Use NATIVE Cloudflare AI structured output
+						const aiResponse = await env.AI.run(
+							"@cf/meta/llama-4-scout-17b-16e-instruct",
+							{
+								messages: [
+									{
+										role: "system",
+										content:
+											"You are a helpful recipe generator that creates detailed, well-structured recipes.",
+									},
+									{
+										role: "user",
+										content: prompt,
+									},
+								],
+								max_tokens: 2048,
+								temperature: 0.7,
+								// Native json_schema support - guarantees valid JSON
+								response_format: {
+									type: "json_schema",
+									json_schema: jsonSchemaObject,
+								},
+							},
+						);
+
+						// Parse the response
+						let recipe;
+						if (typeof aiResponse === "string") {
+							recipe = JSON.parse(aiResponse);
+						} else if (aiResponse && typeof aiResponse === "object") {
+							if ("response" in aiResponse) {
+								recipe = JSON.parse((aiResponse as any).response);
+							} else if ("text" in aiResponse) {
+								recipe = JSON.parse((aiResponse as any).text);
+							} else {
+								recipe = aiResponse;
+							}
+						}
+
+						// Validate with Zod
+						const validated = RecipeSchema.parse(recipe);
 
 						responseData = {
 							mode: "structured",
-							recipe: result.object,
+							recipe: validated,
 							provider: "cloudflare",
 							model: "@cf/meta/llama-4-scout-17b-16e-instruct",
+							method: "native_json_schema",
 						};
 					} else {
+						// Create Workers AI provider for markdown mode
+						const workersai = createWorkersAI({ binding: env.AI });
+						const model = workersai("@cf/meta/llama-4-scout-17b-16e-instruct");
+
 						const markdownPrompt = `Generate a complete recipe for: ${recipeName}.
 
 Format the recipe in beautiful markdown with:
@@ -136,14 +167,14 @@ Format the recipe in beautiful markdown with:
 - Ingredients list with amounts
 - Numbered step-by-step instructions
 - Optional tips section
-- Nutritional info if applicable
 
 Make it detailed and easy to follow.`;
 
 						// Use AI SDK's generateText for markdown output
 						const result = await generateText({
 							model,
-							system: "You are a helpful recipe generator that creates well-formatted markdown recipes.",
+							system:
+								"You are a helpful recipe generator that creates well-formatted markdown recipes.",
 							prompt: markdownPrompt,
 							maxTokens: 8192,
 						});

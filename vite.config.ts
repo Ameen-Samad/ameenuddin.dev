@@ -47,7 +47,7 @@ export default defineConfig({
 		sourcemap: false, // Disable sourcemaps to reduce memory usage
 		minify: 'esbuild', // esbuild is faster and uses less memory than terser
 		rollupOptions: {
-			external: ["@cloudflare/ai", "cloudflare:ai", "cloudflare:workers"],
+			external: ["@cloudflare/ai", "cloudflare:ai", "cloudflare:workers", "zod-to-json-schema"],
 			output: {
 				manualChunks(id) {
 					// Only split out the truly massive libraries (>1MB each)
