@@ -32,7 +32,13 @@ export default defineConfig({
 		},
 	},
 	optimizeDeps: {
-		exclude: ['@cloudflare/ai', 'cloudflare:ai', '@tanstack/react-router-ssr-query'],
+		exclude: [
+			'@cloudflare/ai',
+			'cloudflare:ai',
+			'cloudflare:workers',
+			'@tanstack/react-router-ssr-query',
+			'@tanstack/store',
+		],
 	},
 	ssr: {
 		noExternal: ['react', 'react-dom'],
@@ -41,7 +47,7 @@ export default defineConfig({
 		sourcemap: false, // Disable sourcemaps to reduce memory usage
 		minify: 'esbuild', // esbuild is faster and uses less memory than terser
 		rollupOptions: {
-			external: ["@cloudflare/ai", "cloudflare:ai"],
+			external: ["@cloudflare/ai", "cloudflare:ai", "cloudflare:workers"],
 			output: {
 				manualChunks(id) {
 					// Only split out the truly massive libraries (>1MB each)

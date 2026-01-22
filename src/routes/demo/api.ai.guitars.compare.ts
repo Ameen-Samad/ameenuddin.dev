@@ -2,12 +2,6 @@ import { createFileRoute } from '@tanstack/react-router'
 import { env } from 'cloudflare:workers'
 import { checkRateLimit } from '@/lib/rate-limit'
 
-export const Route = createFileRoute('/demo/api/ai/guitars/compare')({
-  staticData: {
-    skipLayoutWrapper: true,
-  },
-})
-
 interface GuitarInput {
   id: number
   name: string
@@ -18,7 +12,10 @@ interface GuitarInput {
   features: string[]
 }
 
-export async function POST(request: Request) {
+export const Route = createFileRoute('/demo/api/ai/guitars/compare')({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
   try {
     // Rate limiting
     const clientIP = request.headers.get('cf-connecting-ip') || 'unknown'
@@ -141,4 +138,7 @@ Be specific and helpful. This helps the customer decide. Return ONLY the JSON, n
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     )
   }
-}
+      },
+    },
+  },
+})

@@ -3,19 +3,16 @@ import { env } from 'cloudflare:workers'
 import { checkRateLimit } from '@/lib/rate-limit'
 import guitars from '@/data/demo-guitars'
 
-export const Route = createFileRoute('/demo/api/ai/guitars/search')({
-  staticData: {
-    skipLayoutWrapper: true,
-  },
-})
-
 // Pre-computed text representations for each guitar (for embedding)
 const guitarTexts = guitars.map((g) => ({
   id: g.id,
   text: `${g.name}. ${g.type} guitar. ${g.description} ${g.tags.join(', ')}. Features: ${g.features.join(', ')}.`,
 }))
 
-export async function POST(request: Request) {
+export const Route = createFileRoute('/demo/api/ai/guitars/search')({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
   try {
     // Rate limiting
     const clientIP = request.headers.get('cf-connecting-ip') || 'unknown'
@@ -95,7 +92,10 @@ export async function POST(request: Request) {
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     )
   }
-}
+      },
+    },
+  },
+})
 
 function cosineSimilarity(a: number[], b: number[]): number {
   if (a.length !== b.length || a.length === 0) return 0

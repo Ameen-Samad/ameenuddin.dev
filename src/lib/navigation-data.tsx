@@ -53,16 +53,16 @@ export const navItems: NavItem[] = [
 				icon: <IconRobot size={18} />,
 				children: [
 					{
+						id: "demo-guitar-concierge",
+						label: "Guitar Concierge",
+						icon: <IconRobot size={16} />,
+						path: "/demo/guitars",
+					},
+					{
 						id: "demo-ai-voice",
 						label: "Voice Agent",
 						icon: <IconRobot size={16} />,
 						path: "/demo/ai-voice",
-					},
-					{
-						id: "demo-chatbot",
-						label: "Chatbot with RAG",
-						icon: <IconRobot size={16} />,
-						path: "/chatbot",
 					},
 					{
 						id: "demo-tetris",
@@ -70,6 +70,13 @@ export const navItems: NavItem[] = [
 						icon: <IconRobot size={16} />,
 						path: "/tetris",
 					},
+					{
+						id: "demo-chatbot",
+						label: "Chatbot with RAG",
+						icon: <IconRobot size={16} />,
+						path: "/chatbot",
+					},
+
 					{
 						id: "demo-builder",
 						label: "3D Builder",

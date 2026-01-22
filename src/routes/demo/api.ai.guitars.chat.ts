@@ -3,12 +3,6 @@ import { env } from 'cloudflare:workers'
 import { checkRateLimit } from '@/lib/rate-limit'
 import guitars from '@/data/demo-guitars'
 
-export const Route = createFileRoute('/demo/api/ai/guitars/chat')({
-  staticData: {
-    skipLayoutWrapper: true,
-  },
-})
-
 const SYSTEM_PROMPT = `You are an expert music shop owner with 30 years of experience selling guitars. You're knowledgeable, passionate about guitars, and love helping customers find their perfect instrument.
 
 Your personality:
@@ -65,7 +59,10 @@ const TOOLS = [
   },
 ]
 
-export async function POST(request: Request) {
+export const Route = createFileRoute('/demo/api/ai/guitars/chat')({
+  server: {
+    handlers: {
+      POST: async ({ request }) => {
   try {
     // Rate limiting
     const clientIP = request.headers.get('cf-connecting-ip') || 'unknown'
@@ -183,7 +180,10 @@ export async function POST(request: Request) {
       { status: 500, headers: { 'Content-Type': 'application/json' } }
     )
   }
-}
+      },
+    },
+  },
+})
 
 // Handle tool execution
 function executeToolCall(
