@@ -134,11 +134,12 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 
 									// Handle different chunk types
 									if (chunk.type === "text-delta") {
-										// Text content - only send if textDelta is not empty
-										if (chunk.textDelta) {
+										// Get text from chunk (workers-ai-provider uses 'text', AI SDK v3 uses 'delta')
+										const textContent = (chunk as any).text || (chunk as any).delta;
+										if (textContent) {
 											controller.enqueue(
 												encoder.encode(
-													`data: ${JSON.stringify({ type: 'content', content: chunk.textDelta })}\n\n`,
+													`data: ${JSON.stringify({ type: 'content', content: textContent })}\n\n`,
 												),
 											)
 										}
