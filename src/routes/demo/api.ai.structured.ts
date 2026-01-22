@@ -117,6 +117,7 @@ Include all ingredients with amounts, step-by-step instructions, prep/cook times
 							schema: RecipeSchema,
 							system: "You are a helpful recipe generator that creates detailed, well-structured recipes.",
 							prompt,
+							maxTokens: 2048, // Ensure enough tokens for complete recipe JSON
 						});
 
 						responseData = {
