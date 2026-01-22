@@ -4,6 +4,8 @@
  * Handles semantic search over portfolio documents using embeddings
  */
 
+import { createWorkersAI } from "workers-ai-provider";
+import { embedMany } from "ai";
 import type { PortfolioDocument } from './portfolio-documents'
 
 export interface RelevantDocument {
@@ -47,7 +49,7 @@ export function cosineSimilarity(a: number[], b: number[]): number {
  * @param threshold Minimum similarity score (default: 0.3)
  */
 export async function findRelevantDocuments(
-	aiBinding: any,
+	aiBinding: Ai,
 	query: string,
 	documents: PortfolioDocument[],
 	topK = 5,
@@ -55,14 +57,20 @@ export async function findRelevantDocuments(
 ): Promise<RelevantDocument[]> {
 	console.log('[RAG] Generating embeddings for query + documents')
 
-	// Generate embeddings for query and all documents
-	const embeddingsResponse = await aiBinding.run('@cf/baai/bge-base-en-v1.5', {
-		text: [query, ...documents.map((doc) => doc.content)],
-	})
+	// Create Workers AI provider
+	const workersai = createWorkersAI({ binding: aiBinding });
+	const embeddingModel = workersai.textEmbeddingModel('@cf/baai/bge-base-en-v1.5');
 
-	const embeddings = embeddingsResponse.data as number[][]
-	const queryEmbedding = embeddings[0]
-	const docEmbeddings = embeddings.slice(1)
+	// Generate embeddings for query and all documents in a single batch
+	const allTexts = [query, ...documents.map((doc) => doc.content)];
+
+	const { embeddings } = await embedMany({
+		model: embeddingModel,
+		values: allTexts,
+	});
+
+	const queryEmbedding = embeddings[0];
+	const docEmbeddings = embeddings.slice(1);
 
 	// Calculate similarities
 	const similarities = documents.map((doc, idx) => {

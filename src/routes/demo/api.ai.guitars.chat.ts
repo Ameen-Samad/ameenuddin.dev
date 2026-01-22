@@ -1,5 +1,8 @@
 import { env } from "cloudflare:workers";
 import { createFileRoute } from "@tanstack/react-router";
+import { createWorkersAI } from "workers-ai-provider";
+import { streamText, tool } from "ai";
+import { z } from "zod";
 import guitars from "@/data/demo-guitars";
 import {
 	checkRateLimit,
@@ -41,28 +44,6 @@ ${guitars.map((g) => `- ID ${g.id}: ${g.name} ($${g.price}) - ${g.type} - ${g.sh
 
 Keep responses conversational but concise. After understanding their needs, use the recommendGuitar tool to show specific guitars.`;
 
-const TOOLS = [
-	{
-		name: "recommendGuitar",
-		description:
-			"Display a guitar recommendation to the customer with a nice card UI. Use this when you want to show a specific guitar to the customer.",
-		parameters: {
-			type: "object",
-			properties: {
-				guitarId: {
-					type: "integer",
-					description: "The ID of the guitar to recommend",
-				},
-				reason: {
-					type: "string",
-					description: "Why you are recommending this guitar (1-2 sentences)",
-				},
-			},
-			required: ["guitarId", "reason"],
-		},
-	},
-];
-
 export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 	server: {
 		handlers: {
@@ -95,185 +76,105 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 						);
 					}
 
-					// Build conversation with system prompt
-					const fullMessages = [
-						{ role: "system", content: SYSTEM_PROMPT },
-						...messages,
-					];
-					
-					console.log('[Guitar Chat] Full messages being sent:', JSON.stringify(fullMessages, null, 2));
-					console.log('[Guitar Chat] System prompt length:', SYSTEM_PROMPT.length);
-
 					// Check if AI binding is available - FAIL FAST, NO FALLBACK
 					if (!env?.AI) {
 						console.error('[Guitar Chat] Cloudflare AI binding is not available. Run "npm run dev:worker" to enable it.');
 						return new Response(
-							JSON.stringify({ 
-								error: "Cloudflare Workers AI is not available. You must run 'npm run build && npm run dev:worker' to use this feature." 
+							JSON.stringify({
+								error: "Cloudflare Workers AI is not available. You must run 'npm run build && npm run dev:worker' to use this feature."
 							}),
-							{ 
-								status: 503, 
-								headers: { "Content-Type": "application/json" } 
+							{
+								status: 503,
+								headers: { "Content-Type": "application/json" }
 							}
 						);
 					}
+
+					// Create Workers AI provider
+					const workersai = createWorkersAI({ binding: env.AI });
+					const model = workersai("@cf/meta/llama-4-scout-17b-16e-instruct");
+
+					console.log('[Guitar Chat] Streaming with AI SDK, message count:', messages.length);
 
 					// Create SSE streaming response
 					const encoder = new TextEncoder();
 					const stream = new ReadableStream({
 						async start(controller) {
 							try {
-								console.log('[Guitar Chat] Sending to AI:', {
-									model: "@cf/meta/llama-4-scout-17b-16e-instruct",
-									messageCount: fullMessages.length,
-									lastMessage: fullMessages[fullMessages.length - 1],
-									toolsCount: TOOLS.length
-								});
-								
-								const response = await env.AI.run(
-									"@cf/meta/llama-4-scout-17b-16e-instruct",
-									{
-										messages: fullMessages,
-										tools: TOOLS,
-										stream: false, // Try non-streaming
+								// Define tools using AI SDK format
+								const result = await streamText({
+									model,
+									system: SYSTEM_PROMPT,
+									messages: messages.map((m: any) => ({
+										role: m.role,
+										content: m.content,
+									})),
+									tools: {
+										recommendGuitar: tool({
+											description: "Display a guitar recommendation to the customer with a nice card UI. Use this when you want to show a specific guitar to the customer.",
+											parameters: z.object({
+												guitarId: z.number().describe("The ID of the guitar to recommend"),
+												reason: z.string().describe("Why you are recommending this guitar (1-2 sentences)"),
+											}),
+											execute: async ({ guitarId, reason }) => {
+												console.log('[Guitar Chat] Tool executed:', guitarId, reason);
+												const guitar = guitars.find((g) => g.id === guitarId);
+												if (!guitar) {
+													return { error: "Guitar not found" };
+												}
+												return {
+													id: guitar.id,
+													name: guitar.name,
+													price: guitar.price,
+													image: guitar.image,
+													shortDescription: guitar.shortDescription,
+													type: guitar.type,
+													reason,
+												};
+											},
+										}),
 									},
-								);
+								});
 
-								// Handle both object chunks (production) and byte chunks (dev)
-								const decoder = new TextDecoder();
-								let buffer = "";
-								let fullResponse = "";
-
-								for await (const chunk of response) {
+								// Stream the response
+								for await (const chunk of result.fullStream) {
 									if (requestSignal.aborted) {
 										controller.close();
 										return;
 									}
 
-									// Check if chunk is a Uint8Array (dev mode returns raw bytes)
-									if (chunk instanceof Uint8Array) {
-										// Decode bytes and parse SSE format
-										const text = decoder.decode(chunk, { stream: true });
-										buffer += text;
-
-										// Process complete SSE messages
-										const lines = buffer.split("\n\n");
-										buffer = lines.pop() || ""; // Keep incomplete message in buffer
-
-										for (const line of lines) {
-											if (line.startsWith("data: ")) {
-												const dataStr = line.slice(6);
-
-												// Skip [DONE] sentinel value
-												if (dataStr === "[DONE]") {
-													continue;
-												}
-
-												try {
-													const data = JSON.parse(dataStr);
-													if (data.response) {
-														fullResponse += data.response;
-														controller.enqueue(
-															encoder.encode(
-																`data: ${JSON.stringify({ type: "content", content: data.response })}\n\n`,
-															),
-														);
-													}
-													if (data.tool_calls) {
-														// Handle tool calls
-														console.log('[Guitar Chat] Tool calls detected:', JSON.stringify(data.tool_calls));
-														for (const toolCall of data.tool_calls) {
-															console.log('[Guitar Chat] Executing tool:', toolCall.name, toolCall.arguments);
-															const result = executeToolCall(
-																toolCall.name,
-																toolCall.arguments,
-															);
-															console.log('[Guitar Chat] Tool result:', result);
-															if (
-																result &&
-																typeof result === "object" &&
-																"type" in result &&
-																result.type === "recommendation"
-															) {
-																console.log('[Guitar Chat] Sending recommendation:', result.guitar?.name);
-																controller.enqueue(
-																	encoder.encode(
-																		`data: ${JSON.stringify({ type: "recommendation", guitar: result.guitar, reason: result.reason })}\n\n`,
-																	),
-																);
-															}
-														}
-													}
-												} catch (e) {
-													// Ignore parse errors for non-JSON SSE messages
-												}
-											}
-										}
-									} else if (chunk.response !== undefined) {
-										// Production mode: chunks are objects
-										fullResponse += chunk.response;
+									// Handle different chunk types
+									if (chunk.type === "text-delta") {
+										// Text content
 										controller.enqueue(
 											encoder.encode(
-												`data: ${JSON.stringify({ type: "content", content: chunk.response })}\n\n`,
+												`data: ${JSON.stringify({ type: "content", content: chunk.text })}\n\n`,
 											),
 										);
-									} else if (chunk.tool_calls) {
-										// Handle tool calls in production mode
-										console.log('[Guitar Chat] Tool calls detected (production):', JSON.stringify(chunk.tool_calls));
-										for (const toolCall of chunk.tool_calls) {
-											console.log('[Guitar Chat] Executing tool (production):', toolCall.name, toolCall.arguments);
-											const result = executeToolCall(
-												toolCall.name,
-												toolCall.arguments,
-											);
-											console.log('[Guitar Chat] Tool result (production):', result);
-											if (
-												result &&
-												typeof result === "object" &&
-												"type" in result &&
-												result.type === "recommendation"
-											) {
-												console.log('[Guitar Chat] Sending recommendation (production):', result.guitar?.name);
-												controller.enqueue(
-													encoder.encode(
-														`data: ${JSON.stringify({ type: "recommendation", guitar: result.guitar, reason: result.reason })}\n\n`,
-													),
-												);
-											}
-										}
-									}
-								}
-
-								// Check if full response contains tool call pattern (fallback parsing)
-								if (fullResponse.includes("recommendGuitar")) {
-									const toolCallMatch = fullResponse.match(
-										/recommendGuitar\s*\(\s*guitar_id\s*=\s*(\d+)/,
-									);
-									if (toolCallMatch) {
-										const guitarId = parseInt(toolCallMatch[1], 10);
-										const guitar = guitars.find((g) => g.id === guitarId);
-										if (guitar) {
+									} else if (chunk.type === "tool-call") {
+										// Tool call started
+										console.log('[Guitar Chat] Tool call:', chunk.toolName, chunk.input);
+									} else if (chunk.type === "tool-result") {
+										// Tool result - send guitar recommendation
+										console.log('[Guitar Chat] Tool result:', chunk.output);
+										const output = chunk.output as any;
+										if (output && typeof output === "object" && "name" in output) {
 											controller.enqueue(
 												encoder.encode(
 													`data: ${JSON.stringify({
 														type: "recommendation",
-														guitar: {
-															id: guitar.id,
-															name: guitar.name,
-															price: guitar.price,
-															image: guitar.image,
-															shortDescription: guitar.shortDescription,
-															type: guitar.type,
-														},
-														reason:
-															"Based on your preferences, this guitar would be a great fit.",
+														guitar: output,
+														reason: output.reason
 													})}\n\n`,
 												),
 											);
 										}
+									} else if (chunk.type === "error") {
+										console.error('[Guitar Chat] Stream error:', chunk.error);
 									}
 								}
 
+								// Send done event
 								controller.enqueue(
 									encoder.encode(
 										`data: ${JSON.stringify({ type: "done" })}\n\n`,
@@ -281,7 +182,7 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 								);
 								controller.close();
 							} catch (error) {
-								console.error("AI streaming error:", error);
+								console.error("[Guitar Chat] Streaming error:", error);
 								controller.enqueue(
 									encoder.encode(
 										`data: ${JSON.stringify({ type: "error", content: "Failed to generate response" })}\n\n`,
@@ -311,45 +212,3 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 		},
 	},
 });
-
-// Handle tool execution
-function executeToolCall(
-	toolName: string,
-	toolInput: Record<string, unknown>,
-): unknown {
-	switch (toolName) {
-		case "getGuitars":
-			return guitars.map((g) => ({
-				id: g.id,
-				name: g.name,
-				price: g.price,
-				type: g.type,
-				shortDescription: g.shortDescription,
-				tags: g.tags,
-			}));
-
-		case "recommendGuitar": {
-			// Handle both camelCase and snake_case from different AI models
-			const guitarId = (toolInput.guitarId || toolInput.guitar_id) as number;
-			const guitar = guitars.find((g) => g.id === guitarId);
-			if (!guitar) {
-				return { error: "Guitar not found" };
-			}
-			return {
-				type: "recommendation",
-				guitar: {
-					id: guitar.id,
-					name: guitar.name,
-					price: guitar.price,
-					image: guitar.image,
-					shortDescription: guitar.shortDescription,
-					type: guitar.type,
-				},
-				reason: toolInput.reason,
-			};
-		}
-
-		default:
-			return { error: `Unknown tool: ${toolName}` };
-	}
-}

@@ -1,5 +1,7 @@
 import { env } from "cloudflare:workers";
 import { createFileRoute } from "@tanstack/react-router";
+import { createWorkersAI } from "workers-ai-provider";
+import { generateObject, generateText } from "ai";
 import { z } from "zod";
 
 // Simple hash function for cache keys
@@ -44,106 +46,6 @@ const RecipeSchema = z.object({
 });
 
 export type Recipe = z.infer<typeof RecipeSchema>;
-
-// Convert Zod schema to JSON Schema for Cloudflare JSON Mode
-const recipeJsonSchema = {
-	type: "object",
-	properties: {
-		name: {
-			type: "string",
-			description: "The name of the recipe",
-		},
-		description: {
-			type: "string",
-			description: "A brief description of the dish",
-		},
-		prepTime: {
-			type: "string",
-			description: 'Preparation time (e.g., "15 minutes")',
-		},
-		cookTime: {
-			type: "string",
-			description: 'Cooking time (e.g., "30 minutes")',
-		},
-		servings: {
-			type: "number",
-			description: "Number of servings",
-		},
-		difficulty: {
-			type: "string",
-			enum: ["easy", "medium", "hard"],
-			description: "Difficulty level",
-		},
-		ingredients: {
-			type: "array",
-			description: "List of ingredients",
-			items: {
-				type: "object",
-				properties: {
-					item: {
-						type: "string",
-						description: "Ingredient name",
-					},
-					amount: {
-						type: "string",
-						description: 'Amount needed (e.g., "2 cups")',
-					},
-					notes: {
-						type: "string",
-						description: "Optional preparation notes",
-					},
-				},
-				required: ["item", "amount"],
-			},
-		},
-		instructions: {
-			type: "array",
-			description: "Step-by-step cooking instructions",
-			items: {
-				type: "string",
-			},
-		},
-		tips: {
-			type: "array",
-			description: "Optional cooking tips",
-			items: {
-				type: "string",
-			},
-		},
-		nutritionPerServing: {
-			type: "object",
-			description: "Nutritional information per serving",
-			properties: {
-				calories: {
-					type: "number",
-					description: "Calories per serving",
-				},
-				protein: {
-					type: "string",
-					description: 'Protein amount (e.g., "25g")',
-				},
-				carbs: {
-					type: "string",
-					description: 'Carbohydrates amount (e.g., "50g")',
-				},
-				fat: {
-					type: "string",
-					description: 'Fat amount (e.g., "15g")',
-				},
-			},
-		},
-	},
-	required: [
-		"name",
-		"description",
-		"prepTime",
-		"cookTime",
-		"servings",
-		"difficulty",
-		"ingredients",
-		"instructions",
-	],
-};
 
 export const Route = createFileRoute("/demo/api/ai/structured")({
 	server: {
@@ -198,6 +100,10 @@ export const Route = createFileRoute("/demo/api/ai/structured")({
 						}
 					}
 
+					// Create Workers AI provider
+					const workersai = createWorkersAI({ binding: env.AI });
+					const model = workersai("@cf/meta/llama-4-scout-17b-16e-instruct");
+
 					let responseData;
 
 					if (mode === "structured") {
@@ -205,49 +111,17 @@ export const Route = createFileRoute("/demo/api/ai/structured")({
 
 Include all ingredients with amounts, step-by-step instructions, prep/cook times, difficulty level, and nutritional info.`;
 
-						const aiResponse = await env.AI.run(
-							"@cf/meta/llama-4-scout-17b-16e-instruct",
-							{
-								messages: [
-									{
-										role: "system",
-										content:
-											"You are a helpful recipe generator that creates detailed, well-structured recipes.",
-									},
-									{ role: "user", content: prompt },
-								],
-								response_format: {
-									type: "json_schema",
-									json_schema: recipeJsonSchema,
-								},
-								max_tokens: 8192,
-							},
-						);
-
-						// The AI response is already validated against the schema
-						const recipeData = aiResponse.response || aiResponse;
-
-						// Validate with Zod for additional type safety
-						try {
-							RecipeSchema.parse(recipeData);
-						} catch (parseError: any) {
-							console.error("Schema validation error:", parseError);
-							return new Response(
-								JSON.stringify({
-									error: "Schema validation failed",
-									details: parseError.message,
-									rawResponse: recipeData,
-								}),
-								{
-									status: 500,
-									headers: { "Content-Type": "application/json" },
-								},
-							);
-						}
+						// Use AI SDK's generateObject for structured output
+						const result = await generateObject({
+							model,
+							schema: RecipeSchema,
+							system: "You are a helpful recipe generator that creates detailed, well-structured recipes.",
+							prompt,
+						});
 
 						responseData = {
 							mode: "structured",
-							recipe: recipeData,
+							recipe: result.object,
 							provider: "cloudflare",
 							model: "@cf/meta/llama-4-scout-17b-16e-instruct",
 						};
@@ -265,26 +139,17 @@ Format the recipe in beautiful markdown with:
 
 Make it detailed and easy to follow.`;
 
-						const aiResponse = await env.AI.run(
-							"@cf/meta/llama-4-scout-17b-16e-instruct",
-							{
-								messages: [
-									{
-										role: "system",
-										content:
-											"You are a helpful recipe generator that creates well-formatted markdown recipes.",
-									},
-									{ role: "user", content: markdownPrompt },
-								],
-								max_tokens: 8192,
-							},
-						);
-
-						const markdown = aiResponse.response || JSON.stringify(aiResponse);
+						// Use AI SDK's generateText for markdown output
+						const result = await generateText({
+							model,
+							system: "You are a helpful recipe generator that creates well-formatted markdown recipes.",
+							prompt: markdownPrompt,
+							maxTokens: 8192,
+						});
 
 						responseData = {
 							mode: "oneshot",
-							markdown,
+							markdown: result.text,
 							provider: "cloudflare",
 							model: "@cf/meta/llama-4-scout-17b-16e-instruct",
 						};
@@ -302,22 +167,16 @@ Make it detailed and easy to follow.`;
 						}
 					}
 
-					return new Response(
-						JSON.stringify({
-							...responseData,
-							cached: false,
-						}),
-						{
-							status: 200,
-							headers: { "Content-Type": "application/json" },
-						},
-					);
-				} catch (error: any) {
+					return new Response(JSON.stringify(responseData), {
+						status: 200,
+						headers: { "Content-Type": "application/json" },
+					});
+				} catch (error) {
 					console.error("Recipe generation error:", error);
 					return new Response(
 						JSON.stringify({
-							error:
-								error.message || "An error occurred during recipe generation",
+							error: "Failed to generate recipe",
+							details: error instanceof Error ? error.message : String(error),
 						}),
 						{
 							status: 500,

@@ -1,6 +1,8 @@
 import { env } from "cloudflare:workers";
 import { createFileRoute } from "@tanstack/react-router";
 import { json } from "@tanstack/react-start";
+import { createWorkersAI } from "workers-ai-provider";
+import { streamText, embedMany } from "ai";
 
 export const Route = createFileRoute("/api/chat")({
 	server: {
@@ -33,15 +35,24 @@ export const Route = createFileRoute("/api/chat")({
 						score: number;
 					}> = [];
 
+					// RAG: Generate embeddings and find relevant documents
 					if (documents.length > 0 && userQuery) {
-						const embeddingsResponse = await ai.run("@cf/baai/bge-base-en-v1.5", {
-							text: [userQuery, ...documents.map((doc) => doc.content)],
+						// Create Workers AI provider
+						const workersai = createWorkersAI({ binding: ai });
+						const embeddingModel = workersai.textEmbeddingModel('@cf/baai/bge-base-en-v1.5');
+
+						// Generate embeddings for query and all documents
+						const allTexts = [userQuery, ...documents.map((doc) => doc.content)];
+
+						const { embeddings } = await embedMany({
+							model: embeddingModel,
+							values: allTexts,
 						});
 
-						const embeddings = (embeddingsResponse as { data: number[][] }).data;
 						const queryEmbedding = embeddings[0];
 						const docEmbeddings = embeddings.slice(1);
 
+						// Calculate cosine similarity
 						const similarities = documents.map((doc, idx) => {
 							const docEmbedding = docEmbeddings[idx];
 							let dotProduct = 0;
@@ -77,71 +88,41 @@ export const Route = createFileRoute("/api/chat")({
 
 					const systemPrompt = `You are an AI assistant helping users. Be helpful and concise. ${relevantContext}`;
 
+					// Create Workers AI provider for text generation
+					const workersai = createWorkersAI({ binding: ai });
+					const model = workersai("@cf/meta/llama-4-scout-17b-16e-instruct");
+
 					const encoder = new TextEncoder();
 					const stream = new ReadableStream({
 						async start(controller) {
 							try {
+								// Send context first
 								controller.enqueue(
 									encoder.encode(
 										`data: ${JSON.stringify({ type: "context", context: contextDocs })}\n\n`,
 									),
 								);
 
-								const response = await ai.run(
-									"@cf/meta/llama-4-scout-17b-16e-instruct",
-									{
-										messages: [
-											{ role: "system", content: systemPrompt },
-											...messages,
-										],
-										stream: true,
-									},
-								);
-								// Handle both object chunks (production) and byte chunks (dev)
-								const decoder = new TextDecoder();
-								let buffer = "";
+								// Stream AI response
+								const result = await streamText({
+									model,
+									system: systemPrompt,
+									messages: messages.map((m) => ({
+										role: m.role as "user" | "assistant" | "system",
+										content: m.content,
+									})),
+								});
 
-								for await (const chunk of response) {
-									// Check if chunk is a Uint8Array (dev mode returns raw bytes)
-									if (chunk instanceof Uint8Array) {
-										// Decode bytes and parse SSE format
-										const text = decoder.decode(chunk, { stream: true });
-										buffer += text;
-
-										// Process complete SSE messages
-										const lines = buffer.split('\n\n');
-										buffer = lines.pop() || ''; // Keep incomplete message in buffer
-
-										for (const line of lines) {
-											if (line.startsWith('data: ')) {
-												const dataStr = line.slice(6);
-
-												// Skip [DONE] sentinel value
-												if (dataStr === '[DONE]') {
-													continue;
-												}
-
-												try {
-													const data = JSON.parse(dataStr);
-													if (data.response) {
-														controller.enqueue(
-															encoder.encode(
-																`data: ${JSON.stringify({ type: "content", content: data.response })}\n\n`,
-															),
-														);
-													}
-												} catch (e) {
-													// Ignore parse errors for non-JSON SSE messages
-												}
-											}
-										}
-									} else if (chunk.response !== undefined) {
-										// Production mode: chunks are objects
+								// Stream the response
+								for await (const chunk of result.fullStream) {
+									if (chunk.type === "text-delta") {
 										controller.enqueue(
 											encoder.encode(
-												`data: ${JSON.stringify({ type: "content", content: chunk.response })}\n\n`,
+												`data: ${JSON.stringify({ type: "content", content: chunk.text })}\n\n`,
 											),
 										);
+									} else if (chunk.type === "error") {
+										console.error('[Chat API] Stream error:', chunk.error);
 									}
 								}
 

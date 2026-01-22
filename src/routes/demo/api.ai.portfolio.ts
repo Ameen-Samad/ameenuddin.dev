@@ -12,9 +12,12 @@
 
 import { env } from "cloudflare:workers";
 import { createFileRoute } from "@tanstack/react-router";
+import { createWorkersAI } from "workers-ai-provider";
+import { streamText, tool } from "ai";
+import { z } from "zod";
 import { getPortfolioDocuments } from "@/lib/portfolio-documents";
 import { findRelevantDocuments, formatContextForPrompt } from "@/lib/portfolio-rag";
-import { PORTFOLIO_TOOLS, executePortfolioTool } from "@/lib/portfolio-tools";
+import { executePortfolioTool } from "@/lib/portfolio-tools";
 import { PORTFOLIO_SYSTEM_PROMPT } from "@/lib/portfolio-prompt";
 
 export const Route = createFileRoute("/demo/api/ai/portfolio")({
@@ -72,110 +75,85 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 
 								// PHASE 2: LLM - Stream AI response with tool calling
 								const contextPrompt = formatContextForPrompt(relevantDocs);
-								const aiMessages = [
-									{
-										role: "system",
-										content: contextPrompt + PORTFOLIO_SYSTEM_PROMPT,
-									},
-									...messages.map((m: any) => ({
+
+								// Create Workers AI provider
+								const workersai = createWorkersAI({ binding: env.AI });
+								const model = workersai("@cf/meta/llama-4-scout-17b-16e-instruct");
+
+								console.log('[Portfolio Chat] Streaming with AI SDK');
+
+								// Stream AI response with tools
+								const result = await streamText({
+									model,
+									system: contextPrompt + PORTFOLIO_SYSTEM_PROMPT,
+									messages: messages.map((m: any) => ({
 										role: m.role,
 										content: m.content,
 									})),
-								]
-
-								console.log('[Portfolio Chat] Streaming AI response with tools');
-
-								const response = await env.AI.run(
-									"@cf/meta/llama-4-scout-17b-16e-instruct",
-									{
-										messages: aiMessages,
-										tools: PORTFOLIO_TOOLS,
-										stream: true,
+									tools: {
+										recommendProject: tool({
+											description: 'Recommend one or more projects to showcase a specific skill or technology. This displays interactive project cards with images, descriptions, and links.',
+											parameters: z.object({
+												projectIds: z.array(z.string()).describe("Array of project IDs to recommend (e.g., ['tetris-ai', 'guitar-concierge'])"),
+												reason: z.string().describe('Why these projects demonstrate the requested skill/technology (1-2 sentences)'),
+											}),
+											execute: async ({ projectIds, reason }) => {
+												console.log('[Portfolio Chat] Tool executed: recommendProject', projectIds);
+												return executePortfolioTool('recommendProject', { projectIds, reason });
+											},
+										}),
+										explainSkill: tool({
+											description: 'Provide detailed information about a specific technical skill, including proficiency level, years of experience, and related projects',
+											parameters: z.object({
+												skillName: z.string().describe("Name of the skill (e.g., 'React', 'Cloudflare Workers', 'TypeScript')"),
+											}),
+											execute: async ({ skillName }) => {
+												console.log('[Portfolio Chat] Tool executed: explainSkill', skillName);
+												return executePortfolioTool('explainSkill', { skillName });
+											},
+										}),
+										getExperience: tool({
+											description: 'Retrieve work experience details, either for all companies or a specific company',
+											parameters: z.object({
+												company: z.string().optional().describe('Company name (optional - if not provided, returns all experience)'),
+											}),
+											execute: async ({ company }) => {
+												console.log('[Portfolio Chat] Tool executed: getExperience', company);
+												return executePortfolioTool('getExperience', { company });
+											},
+										}),
 									},
-								)
+								});
 
-								// Handle streaming response
-								const decoder = new TextDecoder();
-								let buffer = ""
-
-								for await (const chunk of response) {
+								// Stream the response
+								for await (const chunk of result.fullStream) {
 									if (requestSignal.aborted) {
 										controller.close()
 										return
 									}
 
-									// Dev mode: chunks are Uint8Array (SSE format)
-									if (chunk instanceof Uint8Array) {
-										const text = decoder.decode(chunk, { stream: true });
-										buffer += text
-
-										const lines = buffer.split("\n\n");
-										buffer = lines.pop() || ""
-
-										for (const line of lines) {
-											if (line.startsWith("data: ")) {
-												const dataStr = line.slice(6)
-												if (dataStr === "[DONE]") continue
-
-												try {
-													const data = JSON.parse(dataStr)
-
-													// Handle content
-													if (data.response !== undefined) {
-														controller.enqueue(
-															encoder.encode(
-																`data: ${JSON.stringify({ type: 'content', content: data.response })}\n\n`,
-															),
-														)
-													}
-
-													// Handle tool calls
-													if (data.tool_calls) {
-														console.log('[Portfolio Chat] Tool calls:', JSON.stringify(data.tool_calls));
-														for (const toolCall of data.tool_calls) {
-															const result = executePortfolioTool(
-																toolCall.name,
-																toolCall.arguments,
-															)
-
-															if (result && typeof result === "object" && "type" in result) {
-																controller.enqueue(
-																	encoder.encode(`data: ${JSON.stringify(result)}\n\n`),
-																)
-															}
-														}
-													}
-												} catch (e) {
-													// Ignore parse errors
-												}
-											}
-										}
-									} else {
-										// Production mode: chunks are objects
-										if (chunk.response !== undefined) {
+									// Handle different chunk types
+									if (chunk.type === "text-delta") {
+										// Text content
+										controller.enqueue(
+											encoder.encode(
+												`data: ${JSON.stringify({ type: 'content', content: chunk.text })}\n\n`,
+											),
+										)
+									} else if (chunk.type === "tool-call") {
+										// Tool call started
+										console.log('[Portfolio Chat] Tool call:', chunk.toolName, chunk.input);
+									} else if (chunk.type === "tool-result") {
+										// Tool result - send to frontend
+										console.log('[Portfolio Chat] Tool result:', chunk.output);
+										const output = chunk.output as any;
+										if (output && typeof output === "object" && "type" in output) {
 											controller.enqueue(
-												encoder.encode(
-													`data: ${JSON.stringify({ type: 'content', content: chunk.response })}\n\n`,
-												),
+												encoder.encode(`data: ${JSON.stringify(output)}\n\n`),
 											)
 										}
-
-										// Handle tool calls in production
-										if (chunk.tool_calls) {
-											console.log('[Portfolio Chat] Tool calls (prod):', JSON.stringify(chunk.tool_calls));
-											for (const toolCall of chunk.tool_calls) {
-												const result = executePortfolioTool(
-													toolCall.name,
-													toolCall.arguments,
-												)
-
-												if (result && typeof result === "object" && "type" in result) {
-													controller.enqueue(
-														encoder.encode(`data: ${JSON.stringify(result)}\n\n`),
-													)
-												}
-											}
-										}
+									} else if (chunk.type === "error") {
+										console.error('[Portfolio Chat] Stream error:', chunk.error);
 									}
 								}
 
