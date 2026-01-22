@@ -100,9 +100,20 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 											}),
 											execute: async ({ projectIds, reason }) => {
 												console.log('[Portfolio Chat] Tool executed: recommendProject', projectIds);
-												// Return semantic description for model
-												const projectNames = projectIds.join(', ');
-												return `Showed ${projectIds.length} project(s): ${projectNames}. ${reason}`;
+
+												// Execute tool to validate and get structured data
+												const toolResult = executePortfolioTool('recommendProject', { projectIds, reason });
+
+												if ('error' in toolResult) {
+													return toolResult.error;
+												}
+
+												// Return both semantic + structured data
+												const projectNames = toolResult.projects.map(p => p.title).join(', ');
+												return JSON.stringify({
+													semantic: `Showed ${toolResult.projects.length} project(s): ${projectNames}. ${reason}`,
+													projectData: toolResult
+												});
 											},
 										}),
 										explainSkill: tool({
@@ -158,28 +169,33 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 										console.log('[Portfolio Chat] Tool call:', toolName, args);
 										pendingToolCalls.set(toolCallId, { toolName, args });
 									} else if (chunk.type === "tool-result") {
-										// Tool executed - reconstruct project data for frontend
+										// Tool executed - extract project data for frontend
 										const toolCallId = (chunk as any).toolCallId;
-										const toolCall = pendingToolCalls.get(toolCallId);
+										const result = chunk.result as any;
 
-										console.log('[Portfolio Chat] Tool result:', chunk.result);
+										console.log('[Portfolio Chat] Tool result:', result);
 
-										if (toolCall && toolCall.toolName === 'recommendProject') {
-											const { projectIds, reason } = toolCall.args;
-
-											// Execute tool to get structured data
-											const toolResult = executePortfolioTool('recommendProject', { projectIds, reason });
-
-											// Send to frontend if successful
-											if (toolResult && 'type' in toolResult) {
-												controller.enqueue(
-													encoder.encode(`data: ${JSON.stringify(toolResult)}\n\n`),
-												)
+										// Parse tool result (could be string or object)
+										let parsedResult;
+										if (typeof result === 'string') {
+											try {
+												parsedResult = JSON.parse(result);
+											} catch {
+												parsedResult = null;
 											}
-
-											// Clean up
-											pendingToolCalls.delete(toolCallId);
+										} else {
+											parsedResult = result;
 										}
+
+										// If tool returned structured data, send to frontend
+										if (parsedResult && parsedResult.projectData) {
+											controller.enqueue(
+												encoder.encode(`data: ${JSON.stringify(parsedResult.projectData)}\n\n`),
+											)
+										}
+
+										// Clean up
+										pendingToolCalls.delete(toolCallId);
 									} else if (chunk.type === "error") {
 										console.error('[Portfolio Chat] Stream error:', chunk.error);
 									}

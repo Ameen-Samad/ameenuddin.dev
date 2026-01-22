@@ -97,8 +97,19 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 									if (!guitar) {
 										return `Sorry, I couldn't find guitar ID ${guitarId} in our inventory.`;
 									}
-									// Return only semantic description for model
-									return `Showed the ${guitar.name} ($${guitar.price}) - ${reason}`;
+									// Return both semantic + structured data
+									return JSON.stringify({
+										semantic: `Showed the ${guitar.name} ($${guitar.price}) - ${reason}`,
+										guitarData: {
+											id: guitar.id,
+											name: guitar.name,
+											price: guitar.price,
+											image: guitar.image,
+											shortDescription: guitar.shortDescription,
+											type: guitar.type,
+											reason,
+										}
+									});
 								},
 							}),
 						},
@@ -144,39 +155,39 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 										console.log('[Guitar Chat] Tool call:', toolName, args);
 										pendingToolCalls.set(toolCallId, { toolName, args });
 									} else if (chunk.type === "tool-result") {
-										// Tool executed - reconstruct guitar data for frontend
+										// Tool executed - extract guitar data for frontend
 										const toolCallId = (chunk as any).toolCallId;
-										const toolCall = pendingToolCalls.get(toolCallId);
+										const result = chunk.result as any;
 
-										console.log('[Guitar Chat] Tool result:', chunk.result);
+										console.log('[Guitar Chat] Tool result:', result);
 
-										if (toolCall && toolCall.toolName === 'recommendGuitar') {
-											const { guitarId, reason } = toolCall.args;
-											const guitar = guitars.find((g) => g.id === guitarId);
-
-											if (guitar) {
-												// Send structured data to frontend for card display
-												controller.enqueue(
-													encoder.encode(
-														`data: ${JSON.stringify({
-															type: "recommendation",
-															guitar: {
-																id: guitar.id,
-																name: guitar.name,
-																price: guitar.price,
-																image: guitar.image,
-																shortDescription: guitar.shortDescription,
-																type: guitar.type,
-																reason,
-															}
-														})}\n\n`,
-													),
-												);
+										// Parse tool result (could be string or object)
+										let parsedResult;
+										if (typeof result === 'string') {
+											try {
+												parsedResult = JSON.parse(result);
+											} catch {
+												parsedResult = null;
 											}
-
-											// Clean up
-											pendingToolCalls.delete(toolCallId);
+										} else {
+											parsedResult = result;
 										}
+
+										// If tool returned structured data, send to frontend
+										if (parsedResult && parsedResult.guitarData) {
+											controller.enqueue(
+												encoder.encode(
+													`data: ${JSON.stringify({
+														type: "recommendation",
+														guitar: parsedResult.guitarData,
+														reason: parsedResult.guitarData.reason
+													})}\n\n`,
+												),
+											);
+										}
+
+										// Clean up
+										pendingToolCalls.delete(toolCallId);
 									} else if (chunk.type === "error") {
 										console.error('[Guitar Chat] Stream error:', chunk.error);
 									} else if (chunk.type === "finish") {
