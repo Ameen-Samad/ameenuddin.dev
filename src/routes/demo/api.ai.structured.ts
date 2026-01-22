@@ -174,7 +174,7 @@ export const Route = createFileRoute("/demo/api/ai/structured")({
 Include all ingredients with amounts, step-by-step instructions, prep/cook times, difficulty level, and nutritional info.`;
 
 						const aiResponse = await env.AI.run(
-							"@cf/meta/llama-3.1-8b-instruct",
+							"@cf/meta/llama-4-scout-17b-16e-instruct",
 							{
 								messages: [
 									{
@@ -188,6 +188,7 @@ Include all ingredients with amounts, step-by-step instructions, prep/cook times
 									type: "json_schema",
 									json_schema: recipeJsonSchema,
 								},
+								max_tokens: 8192,
 							},
 						);
 
@@ -217,7 +218,7 @@ Include all ingredients with amounts, step-by-step instructions, prep/cook times
 								mode: "structured",
 								recipe: recipeData,
 								provider: "cloudflare",
-								model: "@cf/meta/llama-3.1-8b-instruct",
+								model: "@cf/meta/llama-4-scout-17b-16e-instruct",
 							}),
 							{
 								status: 200,
@@ -239,7 +240,7 @@ Format the recipe in beautiful markdown with:
 Make it detailed and easy to follow.`;
 
 						const aiResponse = await env.AI.run(
-							"@cf/meta/llama-3.1-8b-instruct",
+							"@cf/meta/llama-4-scout-17b-16e-instruct",
 							{
 								messages: [
 									{
@@ -249,6 +250,7 @@ Make it detailed and easy to follow.`;
 									},
 									{ role: "user", content: markdownPrompt },
 								],
+								max_tokens: 8192,
 							},
 						);
 
@@ -259,7 +261,7 @@ Make it detailed and easy to follow.`;
 								mode: "oneshot",
 								markdown,
 								provider: "cloudflare",
-								model: "@cf/meta/llama-3.1-8b-instruct",
+								model: "@cf/meta/llama-4-scout-17b-16e-instruct",
 							}),
 							{
 								status: 200,

@@ -1,16 +1,27 @@
-import { Paper, Text, Badge, Group } from "@mantine/core";
-import { motion } from "framer-motion";
+import { Badge, Group, Paper, Text } from "@mantine/core";
 import { useNavigate } from "@tanstack/react-router";
+import {
+	motion,
+	type PanInfo,
+	useAnimation,
+	useMotionValue,
+} from "framer-motion";
+import { useEffect, useState } from "react";
 import type { Project } from "../lib/projects-data";
 import { projects } from "../lib/projects-data";
 
 export function ProjectCarousel() {
 	const navigate = useNavigate();
+	const x = useMotionValue(0);
+	const controls = useAnimation();
+	const [isDragging, setIsDragging] = useState(false);
+	const [dragDistance, setDragDistance] = useState(0);
 
-	// Duplicate projects for seamless loop
 	const duplicatedProjects = [...projects, ...projects, ...projects];
 
-	const handleProjectClick = (project: Project) => {
+	const handleProjectClick = (project: Project, e: React.MouseEvent) => {
+		e.stopPropagation();
+		if (isDragging || Math.abs(dragDistance) > 5) return;
 		if (project.link.startsWith("/")) {
 			navigate({ to: project.link });
 		} else {
@@ -18,8 +29,49 @@ export function ProjectCarousel() {
 		}
 	};
 
+	const handleDragStart = () => {
+		setIsDragging(true);
+		setDragDistance(0);
+		controls.stop();
+	};
+
+	const handleDrag = (_: any, info: PanInfo) => {
+		setDragDistance(info.offset.x);
+		x.set(info.offset.x);
+	};
+
+	const handleDragEnd = () => {
+		setIsDragging(false);
+		setDragDistance(0);
+		controls.start({
+			x: ["0%", "-33.333%"],
+			transition: {
+				x: {
+					repeat: Infinity,
+					repeatType: "loop",
+					duration: 30,
+					ease: "linear",
+				},
+			},
+		});
+	};
+
+	useEffect(() => {
+		controls.start({
+			x: ["0%", "-33.333%"],
+			transition: {
+				x: {
+					repeat: Infinity,
+					repeatType: "loop",
+					duration: 30,
+					ease: "linear",
+				},
+			},
+		});
+	}, [controls]);
+
 	return (
-		<div
+		<motion.div
 			style={{
 				width: "100%",
 				overflow: "hidden",
@@ -28,7 +80,6 @@ export function ProjectCarousel() {
 				marginBottom: "2rem",
 			}}
 		>
-			{/* Gradient overlays for fade effect */}
 			<div
 				style={{
 					position: "absolute",
@@ -55,29 +106,29 @@ export function ProjectCarousel() {
 			/>
 
 			<motion.div
-				animate={{
-					x: ["0%", "-33.333%"],
-				}}
-				transition={{
-					x: {
-						repeat: Infinity,
-						repeatType: "loop",
-						duration: 30,
-						ease: "linear",
-					},
-				}}
+				animate={controls}
+				drag="x"
+				dragConstraints={{ left: -2000, right: 2000 }}
+				dragElastic={0.1}
+				dragMomentum={false}
+				onDragStart={handleDragStart}
+				onDrag={handleDrag}
+				onDragEnd={handleDragEnd}
 				style={{
 					display: "flex",
 					gap: "1rem",
 					width: "max-content",
+					cursor: "grab",
+					userSelect: "none",
 				}}
+				whileDrag={{ cursor: "grabbing" }}
 			>
 				{duplicatedProjects.map((project, index) => (
 					<motion.div
 						key={`${project.id}-${index}`}
 						whileHover={{ scale: 1.05, y: -5 }}
 						whileTap={{ scale: 0.95 }}
-						onClick={() => handleProjectClick(project)}
+						onClick={(e) => handleProjectClick(project, e)}
 						style={{ cursor: "pointer" }}
 					>
 						<Paper
@@ -149,6 +200,6 @@ export function ProjectCarousel() {
 					</motion.div>
 				))}
 			</motion.div>
-		</div>
+		</motion.div>
 	);
 }

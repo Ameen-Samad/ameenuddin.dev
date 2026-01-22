@@ -13,3 +13,8 @@ count.txt
 todos.json
 workers/.dev.vars
 src/wasm/target
+
+# Lockfiles - using bun.lock only
+package-lock.json
+pnpm-lock.yaml
+yarn.lock

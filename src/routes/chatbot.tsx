@@ -27,7 +27,6 @@ import {
 	IconEdit,
 	IconFileText,
 	IconMessage,
-	IconRefresh,
 	IconSend,
 	IconSparkles,
 	IconTool,
@@ -78,7 +77,10 @@ function Chatbot() {
 	const [showRagDescription, setShowRagDescription] = useState(false);
 	const [drawerOpened, setDrawerOpened] = useState(false);
 	const [drawerContent, setDrawerContent] = useState<ContextDoc | null>(null);
-	const [editingDocument, setEditingDocument] = useState<{ id: string; content: string } | null>(null);
+	const [editingDocument, setEditingDocument] = useState<{
+		id: string;
+		content: string;
+	} | null>(null);
 	const [editingContent, setEditingContent] = useState("");
 	const messagesEndRef = useRef<HTMLDivElement>(null);
 	const isStreamingRef = useRef(false);
@@ -144,51 +146,51 @@ function Chatbot() {
 										</Group>
 									),
 									message: (
-													<div style={{ maxHeight: "300px", overflowY: "auto" }}>
+										<div style={{ maxHeight: "300px", overflowY: "auto" }}>
+											<Stack gap="xs">
+												{data.context.map((doc: ContextDoc) => (
+													<Paper
+														key={doc.id}
+														p="sm"
+														radius="sm"
+														style={{
+															background: "rgba(0, 243, 255, 0.1)",
+															border: "1px solid rgba(0, 243, 255, 0.2)",
+															cursor: "pointer",
+														}}
+														onClick={() => {
+															setDrawerContent(doc);
+															setDrawerOpened(true);
+														}}
+													>
 														<Stack gap="xs">
-															{data.context.map((doc: ContextDoc) => (
-												<Paper
-													key={doc.id}
-													p="sm"
-													radius="sm"
-													style={{
-														background: "rgba(0, 243, 255, 0.1)",
-														border: "1px solid rgba(0, 243, 255, 0.2)",
-														cursor: "pointer",
-													}}
-													onClick={() => {
-														setDrawerContent(doc);
-														setDrawerOpened(true);
-													}}
-												>
-													<Stack gap="xs">
-														<Group justify="space-between">
-															<Text size="xs" fw={600} c="#00f3ff">
-																Document {doc.id}
+															<Group justify="space-between">
+																<Text size="xs" fw={600} c="#00f3ff">
+																	Document {doc.id}
+																</Text>
+																<Badge size="xs" variant="light" color="cyan">
+																	{Math.round(doc.score * 100)}% match
+																</Badge>
+															</Group>
+															<Text size="xs" c="dimmed">
+																{doc.snippet}
 															</Text>
-															<Badge size="xs" variant="light" color="cyan">
-																{Math.round(doc.score * 100)}% match
-															</Badge>
-														</Group>
-														<Text size="xs" c="dimmed">
-															{doc.snippet}
-														</Text>
-														<Text
-															size="xs"
-															c="#00f3ff"
-															style={{
-																display: "flex",
-																alignItems: "center",
-																gap: 4,
-															}}
-														>
-															Click to expand <IconChevronDown size={12} />
-														</Text>
-													</Stack>
-												</Paper>
-											))}
-										</Stack>
-													</div>
+															<Text
+																size="xs"
+																c="#00f3ff"
+																style={{
+																	display: "flex",
+																	alignItems: "center",
+																	gap: 4,
+																}}
+															>
+																Click to expand <IconChevronDown size={12} />
+															</Text>
+														</Stack>
+													</Paper>
+												))}
+											</Stack>
+										</div>
 									),
 									color: "cyan",
 									autoClose: 8000,
@@ -210,10 +212,10 @@ function Chatbot() {
 								},
 							]);
 						} else if (data.type === "done") {
-						setMessages((prev) => [
-							...prev,
-							{ role: "assistant", content: fullContent },
-						]);
+							setMessages((prev) => [
+								...prev,
+								{ role: "assistant", content: fullContent },
+							]);
 							setStreamingContent("");
 							isStreamingRef.current = false;
 						}
@@ -224,7 +226,10 @@ function Chatbot() {
 			console.error("Chat error:", error);
 			setMessages((prev) => [
 				...prev,
-				{ role: "assistant", content: "Sorry, I encountered an error. Please try again." },
+				{
+					role: "assistant",
+					content: "Sorry, I encountered an error. Please try again.",
+				},
 			]);
 			setStreamingContent("");
 			isStreamingRef.current = false;
@@ -303,22 +308,79 @@ function Chatbot() {
 
 	return (
 		<div style={{ minHeight: "100vh", background: "#0a0a0a" }}>
-			<Container size="xl" py="xl">
+			<style>{`
+				@media (min-width: 576px) {
+					.chatbot-container {
+						padding: 1rem !important;
+					}
+				}
+				@media (min-width: 768px) {
+					.chatbot-container {
+						padding: 1.5rem !important;
+					}
+				}
+				@media (min-width: 768px) {
+					.chatbot-title {
+						text-align: left !important;
+						width: auto !important;
+					}
+				}
+				@media (max-width: 767px) {
+					.chatbot-title {
+						text-align: center !important;
+						width: 100% !important;
+					}
+				}
+				@media (max-width: 767px) {
+					.rag-flow-container {
+						flex-direction: column !important;
+					}
+				}
+				@media (max-width: 767px) {
+					.rag-flow-item {
+						flex: auto !important;
+						min-width: 100% !important;
+					}
+				}
+				@media (max-width: 767px) {
+					.rag-arrow-horizontal {
+						display: none !important;
+					}
+				}
+				@media (min-width: 768px) {
+					.rag-arrow-vertical {
+						display: none !important;
+					}
+				}
+				@media (max-width: 767px) {
+					.main-grid {
+						grid-template-columns: 1fr !important;
+						height: auto !important;
+					}
+				}
+				@media (min-width: 768px) {
+					.main-grid {
+						grid-template-columns: 280px 1fr !important;
+					}
+				}
+			`}</style>
+			<Container size="xl" py="xl" className="chatbot-container">
 				<motion.div
 					initial={{ opacity: 0, y: 20 }}
 					animate={{ opacity: 1, y: 0 }}
 					transition={{ duration: 0.6 }}
 				>
-					<Group justify="space-between" mb="xl">
+					<Group justify="space-between" mb="xl" wrap="wrap">
 						<Link to="/">
 							<Button
 								variant="outline"
+								size="xs"
 								style={{ borderColor: "#00f3ff", color: "#00f3ff" }}
 							>
 								← Back to Portfolio
 							</Button>
 						</Link>
-						<Title order={1} c="white">
+						<Title order={1} c="white" className="chatbot-title">
 							AI Chatbot with RAG
 						</Title>
 					</Group>
@@ -341,7 +403,7 @@ function Chatbot() {
 									border: "1px solid rgba(0, 243, 255, 0.2)",
 								}}
 							>
-								<Group justify="space-between" mb="sm">
+								<Group justify="space-between" mb="sm" wrap="nowrap">
 									<Group gap="sm">
 										<IconSparkles size={20} style={{ color: "#00f3ff" }} />
 										<Title order={4} c="white">
@@ -357,10 +419,11 @@ function Chatbot() {
 									</ActionIcon>
 								</Group>
 								<Stack gap="md">
-									<Group gap="md">
+									<Group gap="md" className="rag-flow-container">
 										<Paper
 											p="sm"
 											radius="sm"
+											className="rag-flow-item"
 											style={{
 												background: "rgba(0, 0, 0, 0.3)",
 												flex: 1,
@@ -378,12 +441,16 @@ function Chatbot() {
 												Knowledge base
 											</Text>
 										</Paper>
-										<Text size="xl" c="dimmed">
+										<Text size="xl" c="dimmed" className="rag-arrow-horizontal">
 											→
+										</Text>
+										<Text size="lg" c="dimmed" className="rag-arrow-vertical">
+											↓
 										</Text>
 										<Paper
 											p="sm"
 											radius="sm"
+											className="rag-flow-item"
 											style={{
 												background: "rgba(0, 0, 0, 0.3)",
 												flex: 1,
@@ -401,12 +468,16 @@ function Chatbot() {
 												Semantic matching
 											</Text>
 										</Paper>
-										<Text size="xl" c="dimmed">
+										<Text size="xl" c="dimmed" className="rag-arrow-horizontal">
 											→
+										</Text>
+										<Text size="lg" c="dimmed" className="rag-arrow-vertical">
+											↓
 										</Text>
 										<Paper
 											p="sm"
 											radius="sm"
+											className="rag-flow-item"
 											style={{
 												background: "rgba(0, 0, 0, 0.3)",
 												flex: 1,
@@ -424,12 +495,16 @@ function Chatbot() {
 												Relevant info
 											</Text>
 										</Paper>
-										<Text size="xl" c="dimmed">
+										<Text size="xl" c="dimmed" className="rag-arrow-horizontal">
 											→
+										</Text>
+										<Text size="lg" c="dimmed" className="rag-arrow-vertical">
+											↓
 										</Text>
 										<Paper
 											p="sm"
 											radius="sm"
+											className="rag-flow-item"
 											style={{
 												background: "rgba(0, 0, 0, 0.3)",
 												flex: 1,
@@ -463,6 +538,7 @@ function Chatbot() {
 					)}
 
 					<Stack
+						className="main-grid"
 						style={{
 							display: "grid",
 							gridTemplateColumns: "280px 1fr",
@@ -475,9 +551,8 @@ function Chatbot() {
 						<DocumentSidebar
 							documents={documents}
 							onAdd={addDocument}
-							onUpdate={updateDocument}
 							onRemove={removeDocument}
-						onEdit={openEditModal}
+							onEdit={openEditModal}
 						/>
 
 						<ChatArea
@@ -487,8 +562,8 @@ function Chatbot() {
 							onSendMessage={handleSendMessage}
 							onSimulate={handleSimulate}
 							messagesEndRef={messagesEndRef}
-						input={input}
-						setInput={setInput}
+							input={input}
+							setInput={setInput}
 						/>
 					</Stack>
 				</motion.div>
@@ -592,7 +667,7 @@ function Chatbot() {
 					<Stack gap="md">
 						<Textarea
 							value={editingContent}
-							onChange={(e) => setEditingContent(e.target.value)}
+							onChange={(e) => setEditingContent(e.currentTarget.value)}
 							placeholder="Enter document content..."
 							minRows={10}
 							maxRows={20}
@@ -633,13 +708,11 @@ function Chatbot() {
 function DocumentSidebar({
 	documents,
 	onAdd,
-	onUpdate,
 	onRemove,
 	onEdit,
 }: {
 	documents: Array<{ id: string; content: string }>;
 	onAdd: () => void;
-	onUpdate: (id: string, content: string) => void;
 	onRemove: (id: string) => void;
 	onEdit: (doc: { id: string; content: string }) => void;
 }) {
@@ -832,7 +905,7 @@ function ChatArea({
 
 					{messages.map((msg, idx) => (
 						<motion.div
-							key={idx}
+							key={`${msg.role}-${idx}`}
 							initial={{ opacity: 0, y: 20 }}
 							animate={{ opacity: 1, y: 0 }}
 							transition={{ duration: 0.3 }}
@@ -930,7 +1003,7 @@ function ChatArea({
 			<Group p="md" gap="md" align="flex-end" style={{ flexWrap: "nowrap" }}>
 				<Textarea
 					value={input}
-					onChange={(e) => setInput(e.target.value)}
+					onChange={(e) => setInput(e.currentTarget.value)}
 					placeholder="Type your message here... (RAG context from documents will be applied)"
 					minRows={2}
 					onKeyDown={(e) => {

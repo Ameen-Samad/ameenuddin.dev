@@ -93,7 +93,7 @@ function ImagePage() {
 					showRateLimitNotification({
 						title: "Rate Limit Exceeded! 🚫",
 						message:
-							"Hey, I'm just a poor student trying to keep costs down! Please don't spam my API. You've used up your daily allowance of 3 image generations. Come back tomorrow!",
+							"Hey, I'm just a poor student trying to keep costs down! Please don't spam my API. You've used up your daily allowance of 6 image generations. Come back tomorrow!",
 						color: "yellow",
 					});
 					throw new Error("Rate limit exceeded");

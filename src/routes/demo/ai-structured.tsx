@@ -320,7 +320,7 @@ function StructuredPage() {
 								<code className="bg-gray-700 px-1 rounded">json_schema</code>.
 								The model (
 								<code className="bg-gray-700 px-1 rounded">
-									@cf/meta/llama-3.1-8b-instruct
+									@cf/meta/llama-4-scout-17b-16e-instruct
 								</code>
 								) natively enforces the schema, guaranteeing valid JSON output
 								without prompt engineering.
@@ -340,7 +340,7 @@ function StructuredPage() {
 							<p className="text-xs text-gray-400">
 								<strong className="text-white">Tech Stack:</strong> TanStack
 								Start API routes → Cloudflare Workers AI
-								(@cf/meta/llama-3.1-8b-instruct) → JSON Mode with
+								(@cf/meta/llama-4-scout-17b-16e-instruct) → JSON Mode with
 								response_format → Zod validation
 							</p>
 						</div>
@@ -391,7 +391,7 @@ function StructuredPage() {
 								<span className="text-gray-400">
 									Not all Cloudflare models support JSON Mode. Must use{" "}
 									<code className="bg-gray-700 px-1 rounded">
-										@cf/meta/llama-3.1-8b-instruct
+										@cf/meta/llama-4-scout-17b-16e-instruct
 									</code>{" "}
 									or other supported models.
 								</span>

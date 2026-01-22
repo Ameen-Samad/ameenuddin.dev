@@ -1,6 +1,5 @@
 import {
 	ActionIcon,
-	Badge,
 	Button,
 	Code,
 	Container,
@@ -19,12 +18,11 @@ import {
 	IconClock,
 	IconCode,
 	IconCube,
-	IconRefresh,
 	IconTrash,
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useState } from "react";
 import { ThreeScene } from "@/components/ThreeScene";
 
 export const Route = createFileRoute("/builder")({
@@ -122,54 +120,86 @@ function Builder() {
 	];
 
 	return (
-		<div style={{ minHeight: "100vh", background: "#0a0a0a" }}>
-			<Container size="xl" py="xl">
-				<motion.div
-					initial={{ opacity: 0, y: 20 }}
-					animate={{ opacity: 1, y: 0 }}
-					transition={{ duration: 0.6 }}
-				>
-					<Group justify="space-between" mb="xl">
-						<Link to="/">
-							<Button
-								variant="outline"
-								style={{ borderColor: "#00f3ff", color: "#00f3ff" }}
-							>
-								← Back to Portfolio
-							</Button>
-						</Link>
-						<Title order={1} c="white">
-							AI-Powered 3D Builder
-						</Title>
-					</Group>
-
-					<Stack
-						style={{
-							display: "grid",
-							gridTemplateColumns: "350px 1fr",
-							gap: "lg",
-						}}
+		<>
+			<style>{`
+				.builder-grid {
+					grid-template-columns: 350px 1fr;
+				}
+				@media (max-width: 768px) {
+					.builder-grid {
+						grid-template-columns: 1fr;
+					}
+					.builder-paper {
+						margin-bottom: 1rem;
+					}
+				}
+				@media (max-width: 480px) {
+					.builder-paper {
+						padding: 0.75rem !important;
+					}
+				}
+			`}</style>
+			<div
+				style={{
+					minHeight: "100vh",
+					background: "#0a0a0a",
+					paddingBottom: "2rem",
+				}}
+			>
+				<Container size="xl" py={{ base: "md", md: "xl" }}>
+					<motion.div
+						initial={{ opacity: 0, y: 20 }}
+						animate={{ opacity: 1, y: 0 }}
+						transition={{ duration: 0.6 }}
 					>
-						<BuilderPanel
-							prompt={prompt}
-							setPrompt={setPrompt}
-							isGenerating={isGenerating}
-							onGenerate={handleGenerate}
-							examplePrompts={examplePrompts}
-							history={history}
-							onReplay={handleReplay}
-							onDelete={handleDelete}
-							onClearHistory={handleClearHistory}
-						/>
+						<Group
+							justify="space-between"
+							mb={{ base: "md", md: "xl" }}
+							wrap="nowrap"
+						>
+							<Link to="/">
+								<Button
+									variant="outline"
+									size="compact-md"
+									style={{ borderColor: "#00f3ff", color: "#00f3ff" }}
+								>
+									← Back
+								</Button>
+							</Link>
+							<Title order={3} c="white">
+								AI 3D Builder
+							</Title>
+						</Group>
 
-						<ViewerPanel
-							currentCode={currentCode}
-							isGenerating={isGenerating}
-						/>
-					</Stack>
-				</motion.div>
-			</Container>
-		</div>
+						<Stack
+							style={{
+								display: "grid",
+								gridTemplateColumns: "350px 1fr",
+								gap: "lg",
+							}}
+							className="builder-grid"
+						>
+							<BuilderPanel
+								prompt={prompt}
+								setPrompt={setPrompt}
+								isGenerating={isGenerating}
+								onGenerate={handleGenerate}
+								examplePrompts={examplePrompts}
+								history={history}
+								onReplay={handleReplay}
+								onDelete={handleDelete}
+								onClearHistory={handleClearHistory}
+							/>
+
+							<ViewerPanel
+								currentCode={currentCode}
+								isGenerating={isGenerating}
+							/>
+						</Stack>
+					</motion.div>
+				</Container>
+			</div>
+		</>
 	);
 }
 
@@ -198,7 +228,8 @@ function BuilderPanel({
 		<Paper
 			shadow="xl"
 			radius="lg"
-			p="xl"
+			p={{ base: "md", md: "xl" }}
+			className="builder-paper"
 			style={{
 				background: "rgba(26, 26, 26, 0.8)",
 				border: "1px solid rgba(0, 243, 255, 0.1)",
@@ -259,9 +290,9 @@ function BuilderPanel({
 						Quick Examples
 					</Title>
 					<Stack gap="xs">
-						{examplePrompts.map((ex, idx) => (
+						{examplePrompts.map((ex) => (
 							<Button
-								key={idx}
+								key={`example-${ex.slice(0, 20)}`}
 								size="xs"
 								variant="light"
 								fullWidth
@@ -289,7 +320,7 @@ function BuilderPanel({
 					</Group>
 
 					{history.length === 0 ? (
-						<Text c="dimmed" align="center" py="xl">
+						<Text c="dimmed" ta="center" py="xl">
 							No generations yet. Create your first 3D object!
 						</Text>
 					) : (
@@ -355,6 +386,7 @@ function ViewerPanel({
 			shadow="xl"
 			radius="lg"
 			p={0}
+			className="builder-paper"
 			style={{
 				background: "rgba(26, 26, 26, 0.8)",
 				border: "1px solid rgba(0, 102, 255, 0.1)",
@@ -382,7 +414,7 @@ function ViewerPanel({
 				)}
 			</Group>
 
-			<div style={{ height: "600px", position: "relative" }}>
+			<div style={{ height: "min(600px, 70vh)", position: "relative" }}>
 				{/* React Three Fiber Canvas with actual rendering */}
 				<div style={{ width: "100%", height: "100%", display: "block" }}>
 					<ThreeScene generatedCode={currentCode} />

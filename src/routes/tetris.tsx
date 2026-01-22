@@ -2,7 +2,6 @@ import {
 	ActionIcon,
 	Badge,
 	Button,
-	Code,
 	Container,
 	Group,
 	Paper,
@@ -13,13 +12,17 @@ import {
 	Title,
 } from "@mantine/core";
 import {
+	IconArrowDown,
+	IconArrowLeft,
+	IconArrowRight,
+	IconArrowUp,
+	IconHandGrab,
 	IconHistory,
 	IconPlayerPause,
 	IconPlayerPlay,
 	IconPlayerStop,
 	IconRefresh,
 	IconRobot,
-	IconTrash,
 	IconTrophy,
 } from "@tabler/icons-react";
 import { createFileRoute, Link } from "@tanstack/react-router";
@@ -35,6 +38,142 @@ export const Route = createFileRoute("/tetris")({
 	component: TetrisPage,
 });
 
+function MobileKeyboard({
+	gameInstance,
+	isPaused,
+}: {
+	gameInstance: any;
+	isPaused: boolean;
+}) {
+	const handleKeyPress = (action: string) => {
+		if (!gameInstance || isPaused) return;
+
+		const scene = gameInstance.scene.keys["TetrisGame"];
+		if (!scene) return;
+
+		switch (action) {
+			case "left":
+				scene.moveLeft();
+				break;
+			case "right":
+				scene.moveRight();
+				break;
+			case "rotate":
+				scene.rotatePiece();
+				break;
+			case "down":
+				scene.moveDown();
+				break;
+			case "drop":
+				scene.hardDrop();
+				break;
+			case "hold":
+				scene.holdPiece();
+				break;
+		}
+	};
+
+	return (
+		<Paper
+			shadow="xl"
+			radius="lg"
+			p="md"
+			style={{
+				background: "rgba(26, 26, 26, 0.9)",
+				border: "1px solid rgba(0, 243, 255, 0.3)",
+			}}
+		>
+			<Stack gap="md">
+				<Text ta="center" c="white" fw={600}>
+					Touch Controls
+				</Text>
+
+				<Group justify="center" gap="sm">
+					<ActionIcon
+						variant="filled"
+						size="xl"
+						radius="md"
+						color="blue"
+						onClick={() => handleKeyPress("left")}
+						disabled={isPaused}
+						style={{ width: "60px", height: "60px" }}
+					>
+						<IconArrowLeft size={28} />
+					</ActionIcon>
+
+					<ActionIcon
+						variant="filled"
+						size="xl"
+						radius="md"
+						color="violet"
+						onClick={() => handleKeyPress("rotate")}
+						disabled={isPaused}
+						style={{ width: "60px", height: "60px" }}
+					>
+						<IconArrowUp size={28} />
+					</ActionIcon>
+
+					<ActionIcon
+						variant="filled"
+						size="xl"
+						radius="md"
+						color="blue"
+						onClick={() => handleKeyPress("right")}
+						disabled={isPaused}
+						style={{ width: "60px", height: "60px" }}
+					>
+						<IconArrowRight size={28} />
+					</ActionIcon>
+				</Group>
+
+				<Group justify="center" gap="sm">
+					<ActionIcon
+						variant="filled"
+						size="xl"
+						radius="md"
+						color="teal"
+						onClick={() => handleKeyPress("down")}
+						disabled={isPaused}
+						style={{ width: "60px", height: "60px" }}
+					>
+						<IconArrowDown size={28} />
+					</ActionIcon>
+
+					<ActionIcon
+						variant="filled"
+						size="xl"
+						radius="md"
+						color="red"
+						onClick={() => handleKeyPress("drop")}
+						disabled={isPaused}
+						style={{ width: "60px", height: "60px" }}
+					>
+						⬇️
+					</ActionIcon>
+
+					<ActionIcon
+						variant="filled"
+						size="xl"
+						radius="md"
+						color="orange"
+						onClick={() => handleKeyPress("hold")}
+						disabled={isPaused}
+						style={{ width: "60px", height: "60px" }}
+					>
+						<IconHandGrab size={28} />
+					</ActionIcon>
+				</Group>
+
+				<Stack gap="xs" mt="sm">
+					<Text size="xs" c="dimmed" ta="center">
+						↔️ Move | ⬆️ Rotate | ⬇️ Soft Drop | ⬇️⬇️ Hard Drop | ✊ Hold
+					</Text>
+				</Stack>
+			</Stack>
+		</Paper>
+	);
+}
+
 function TetrisPage() {
 	const [gameStarted, setGameStarted] = useState(false);
 	const [useAI, setUseAI] = useState(false);
@@ -46,6 +185,7 @@ function TetrisPage() {
 	const [gameInstance, setGameInstance] = useState<any | null>(null);
 	const [isLoadingGame, setIsLoadingGame] = useState(false);
 	const canvasRef = useRef<HTMLDivElement>(null);
+	const [isMobile, setIsMobile] = useState(false);
 	const [highScores, setHighScores] = useState<
 		Array<{
 			id: number;
@@ -70,6 +210,21 @@ function TetrisPage() {
 	const [selectedPlayer, setSelectedPlayer] = useState<string | null>(null);
 	const [loading, setLoading] = useState(false);
 	const [playerName, setPlayerName] = useState("");
+
+	useEffect(() => {
+		const checkMobile = () => {
+			const userAgent = navigator.userAgent || navigator.vendor;
+			const isMobileDevice =
+				/android|iphone|ipad|ipod|blackberry|iemobile|opera mini/i.test(
+					userAgent,
+				);
+			setIsMobile(isMobileDevice);
+		};
+
+		checkMobile();
+		window.addEventListener("resize", checkMobile);
+		return () => window.removeEventListener("resize", checkMobile);
+	}, []);
 
 	const fetchLeaderboard = useCallback(async () => {
 		try {
@@ -116,12 +271,21 @@ function TetrisPage() {
 		setIsLoadingGame(true);
 		Promise.all([loadPhaser(), loadTetrisGame()])
 			.then(([Phaser, TetrisGameService]) => {
+				const gameWidth = isMobile
+					? Math.min(window.innerWidth - 32, 300)
+					: 300;
+				const gameHeight = gameWidth * 2;
+
 				const config: any = {
 					type: Phaser.CANVAS,
-					width: 300,
-					height: 600,
+					width: gameWidth,
+					height: gameHeight,
 					parent: canvasRef.current,
 					background: "#000",
+					scale: {
+						mode: Phaser.Scale.FIT,
+						autoCenter: Phaser.Scale.CENTER_BOTH,
+					},
 					physics: {
 						default: "arcade",
 						arcade: {
@@ -136,7 +300,7 @@ function TetrisPage() {
 
 				const scene = new TetrisGameService();
 				game.scene.add("TetrisGame", scene);
-				game.scene.start("TetrisGame"); // Start the scene!
+				game.scene.start("TetrisGame");
 
 				const handleScoreChange = (event: Event) => {
 					const customEvent = event as CustomEvent<{
@@ -166,7 +330,6 @@ function TetrisPage() {
 				window.addEventListener("tetris-gameover", handleGameOver);
 				setIsLoadingGame(false);
 
-				// Cleanup function returned from Promise
 				return () => {
 					window.removeEventListener("tetris-score", handleScoreChange);
 					window.removeEventListener("tetris-gameover", handleGameOver);
@@ -185,7 +348,7 @@ function TetrisPage() {
 				gameInstance.destroy(true);
 			}
 		};
-	}, [gameStarted]);
+	}, [gameStarted, isMobile]);
 
 	const handleStartGame = () => {
 		setGameOver(false);
@@ -338,48 +501,64 @@ function TetrisPage() {
 					<div
 						style={{
 							display: "grid",
-							gridTemplateColumns: "400px 1fr 1fr",
+							gridTemplateColumns: isMobile ? "1fr" : "400px 1fr 1fr",
 							gap: "lg",
 						}}
 					>
-						<GamePanel
-							gameStarted={gameStarted}
-							gameOver={gameOver}
-							isPaused={isPaused}
-							score={score}
-							level={level}
-							lines={lines}
-							onStart={handleStartGame}
-							onRestart={handleRestart}
-							onToggleAI={handleToggleAI}
-							useAI={useAI}
-							canvasRef={canvasRef}
-							playerName={playerName}
-							setPlayerName={setPlayerName}
-							onSaveScore={handleSaveScore}
-						/>
+						<div style={isMobile ? { gridColumn: "1 / -1" } : {}}>
+							<GamePanel
+								gameStarted={gameStarted}
+								gameOver={gameOver}
+								isPaused={isPaused}
+								score={score}
+								level={level}
+								lines={lines}
+								onStart={handleStartGame}
+								onRestart={handleRestart}
+								onToggleAI={handleToggleAI}
+								useAI={useAI}
+								canvasRef={canvasRef}
+								playerName={playerName}
+								setPlayerName={setPlayerName}
+								onSaveScore={handleSaveScore}
+								isMobile={isMobile}
+							/>
+						</div>
 
-						<ControlsPanel
-							gameStarted={gameStarted}
-							isPaused={isPaused}
-							onStart={handleStartGame}
-							onRestart={handleRestart}
-							onTogglePause={handleTogglePause}
-							onStop={handleStopGame}
-							onToggleAI={handleToggleAI}
-							useAI={useAI}
-						/>
+						{isMobile && gameStarted && !gameOver && !useAI && (
+							<div style={{ gridColumn: "1 / -1" }}>
+								<MobileKeyboard
+									gameInstance={gameInstance}
+									isPaused={isPaused}
+								/>
+							</div>
+						)}
 
-						<LeaderboardPanel
-							highScores={highScores}
-							onToggleHistory={handleToggleHistory}
-							showHistory={showHistory}
-							historyData={historyData}
-							loading={loading}
-							selectedPlayer={selectedPlayer}
-							onPlayerChange={handlePlayerChange}
-							playerNames={playerNames}
-						/>
+						<div style={isMobile ? { gridColumn: "1 / -1" } : {}}>
+							<ControlsPanel
+								gameStarted={gameStarted}
+								isPaused={isPaused}
+								onStart={handleStartGame}
+								onRestart={handleRestart}
+								onTogglePause={handleTogglePause}
+								onStop={handleStopGame}
+								onToggleAI={handleToggleAI}
+								useAI={useAI}
+							/>
+						</div>
+
+						<div style={isMobile ? { gridColumn: "1 / -1" } : {}}>
+							<LeaderboardPanel
+								highScores={highScores}
+								onToggleHistory={handleToggleHistory}
+								showHistory={showHistory}
+								historyData={historyData}
+								loading={loading}
+								selectedPlayer={selectedPlayer}
+								onPlayerChange={handlePlayerChange}
+								playerNames={playerNames}
+							/>
+						</div>
 					</div>
 				</motion.div>
 			</Container>
@@ -402,6 +581,7 @@ function GamePanel({
 	playerName,
 	setPlayerName,
 	onSaveScore,
+	isMobile,
 }: {
 	gameStarted: boolean;
 	gameOver: boolean;
@@ -417,7 +597,10 @@ function GamePanel({
 	playerName: string;
 	setPlayerName: (name: string) => void;
 	onSaveScore: () => void;
+	isMobile: boolean;
 }) {
+	const canvasHeight = isMobile ? "auto" : "600px";
+
 	return (
 		<Paper
 			shadow="xl"
@@ -465,10 +648,14 @@ function GamePanel({
 			<div
 				ref={canvasRef}
 				style={{
-					height: "600px",
+					height: canvasHeight,
+					minHeight: isMobile ? "400px" : "600px",
 					background: "#000",
 					borderBottom: "1px solid rgba(0, 243, 255, 0.2)",
 					position: "relative",
+					display: "flex",
+					alignItems: "center",
+					justifyContent: "center",
 				}}
 			>
 				{!gameStarted && (

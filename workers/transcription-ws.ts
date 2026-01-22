@@ -111,11 +111,21 @@ ws.onmessage = (event) => {
 
       console.log('Connecting to AI Gateway:', aiGatewayUrl);
 
-      // In Cloudflare Workers, outbound WebSocket connections use the subprotocol for authentication
-      // Format: "cf-aig-authorization.<your-token>"
-      const authProtocol = `cf-aig-authorization.${env.CLOUDFLARE_API_TOKEN}`;
-      console.log('Auth protocol format:', authProtocol.substring(0, 40) + '...');
-      const aiWebSocket = new WebSocket(aiGatewayUrl, [authProtocol]);
+      // In Cloudflare Workers, use fetch() with WebSocket upgrade headers for authentication
+      // The AI Gateway expects header-based auth when connecting from Workers (not browser subprotocol)
+      const upgradeResponse = await fetch(aiGatewayUrl, {
+        headers: {
+          'Upgrade': 'websocket',
+          'cf-aig-authorization': `Bearer ${env.CLOUDFLARE_API_TOKEN}`,
+        },
+      });
+
+      if (!upgradeResponse.webSocket) {
+        throw new Error(`WebSocket upgrade failed: HTTP ${upgradeResponse.status}`);
+      }
+
+      const aiWebSocket = upgradeResponse.webSocket;
+      aiWebSocket.accept();
 
       // Track connection state
       let aiConnected = false;
