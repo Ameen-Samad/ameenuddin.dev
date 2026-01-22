@@ -46,6 +46,9 @@ function VoiceAgentPage() {
 	const streamRef = useRef<MediaStream | null>(null);
 
 	const stopRecording = useCallback(() => {
+		console.log('[MIC] stopRecording() called');
+		console.trace('[MIC] stopRecording call stack');
+
 		// Stop audio processing
 		if (workletNodeRef.current) {
 			workletNodeRef.current.disconnect();
@@ -200,22 +203,40 @@ function VoiceAgentPage() {
 		}
 
 		try {
-			// Request microphone access
+			// Request microphone access with minimal constraints
+			// Let the device use whatever it supports natively
 			const stream = await navigator.mediaDevices.getUserMedia({
-				audio: {
-					channelCount: 1,
-					sampleRate: 16000,
-					echoCancellation: true,
-					noiseSuppression: true,
-					autoGainControl: true,
-				},
+				audio: true, // Accept any audio configuration the device supports
 			});
 
 			streamRef.current = stream;
+			const settings = stream.getTracks()[0].getSettings();
+			console.log('[MIC] Microphone acquired:', settings);
+
+			// Monitor track status
+			const track = stream.getTracks()[0];
+			track.onended = () => {
+				console.error('[MIC] ⚠️ Microphone track ENDED unexpectedly!');
+				setError('Microphone stopped unexpectedly');
+				stopRecording();
+			};
+			track.onmute = () => {
+				console.warn('[MIC] Microphone track MUTED');
+			};
+			track.onunmute = () => {
+				console.log('[MIC] Microphone track UNMUTED');
+			};
 
 			// Create audio context for processing
 			const audioContext = new AudioContext({ sampleRate: 16000 });
 			audioContextRef.current = audioContext;
+			console.log('[MIC] AudioContext created, state:', audioContext.state, ', sample rate:', audioContext.sampleRate);
+
+			// Resume AudioContext if suspended (required in some browsers)
+			if (audioContext.state === 'suspended') {
+				await audioContext.resume();
+				console.log('[MIC] AudioContext resumed, new state:', audioContext.state);
+			}
 
 			// Create inline AudioWorklet processor
 			const processorCode = `
@@ -223,13 +244,20 @@ function VoiceAgentPage() {
           constructor() {
             super();
             this.chunkCount = 0;
+            console.log('[WORKLET] AudioProcessor initialized');
           }
 
           process(inputs, outputs) {
+            this.chunkCount++;
+
+            // Debug: Log first 5 calls to see what's happening
+            if (this.chunkCount <= 5) {
+              console.log('[WORKLET] process() called #' + this.chunkCount + ', inputs.length:', inputs.length, ', inputs[0]?.length:', inputs[0]?.length);
+            }
+
             const input = inputs[0];
-            if (input.length > 0) {
+            if (input && input.length > 0) {
               const audioData = input[0];
-              this.chunkCount++;
 
               // Convert Float32Array to Int16Array (linear16 format)
               const int16Data = new Int16Array(audioData.length);
@@ -245,6 +273,8 @@ function VoiceAgentPage() {
 
               // Send to main thread
               this.port.postMessage(int16Data.buffer);
+            } else if (this.chunkCount <= 5) {
+              console.warn('[WORKLET] No input data on chunk #' + this.chunkCount);
             }
             return true;
           }
@@ -271,8 +301,15 @@ function VoiceAgentPage() {
 
 			// Handle messages from worklet (audio data)
 			let chunkCount = 0;
+			let droppedCount = 0;
 			workletNode.port.onmessage = (event) => {
 				chunkCount++;
+
+				// Log first few messages to verify receiving
+				if (chunkCount <= 3) {
+					console.log(`[AUDIO] Received chunk #${chunkCount} from worklet, size: ${event.data.byteLength} bytes`);
+				}
+
 				if (wsRef.current && wsRef.current.readyState === WebSocket.OPEN) {
 					const byteLength = event.data.byteLength || event.data.length;
 					if (chunkCount % 10 === 0) { // Log every 10th chunk to avoid spam
@@ -280,15 +317,36 @@ function VoiceAgentPage() {
 					}
 					wsRef.current.send(event.data);
 				} else {
-					if (chunkCount === 1) { // Only log first miss
-						console.warn('[AUDIO] WebSocket not ready, state:', wsRef.current?.readyState);
+					droppedCount++;
+					if (droppedCount === 1 || droppedCount % 50 === 0) { // Log first drop and every 50th
+						console.warn(`[AUDIO] Dropped chunk #${chunkCount} (total dropped: ${droppedCount}), WS state: ${wsRef.current?.readyState || 'null'}`);
 					}
 				}
 			};
 
 			// Connect nodes
 			const source = audioContext.createMediaStreamSource(stream);
+			console.log('[MIC] MediaStreamSource created');
+
+			// Create an analyzer to verify audio is flowing
+			const analyzer = audioContext.createAnalyser();
+			analyzer.fftSize = 256;
+			const dataArray = new Uint8Array(analyzer.frequencyBinCount);
+
+			// Test if audio is flowing from source
+			source.connect(analyzer);
+			setTimeout(() => {
+				analyzer.getByteTimeDomainData(dataArray);
+				const hasAudio = dataArray.some(val => val !== 128); // 128 is silence
+				console.log('[MIC] Audio flowing from source:', hasAudio, 'Sample values:', Array.from(dataArray.slice(0, 10)));
+			}, 1000);
+
 			source.connect(workletNode);
+
+			// CRITICAL: Connect worklet to destination to activate processing
+			// Without this, the worklet's process() method never gets called!
+			workletNode.connect(audioContext.destination);
+			console.log('[MIC] Audio pipeline connected: Mic → Worklet → Destination');
 
 			setIsRecording(true);
 			setError(null);

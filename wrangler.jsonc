@@ -33,11 +33,13 @@
   "kv_namespaces": [
     {
       "binding": "PROJECT_CACHE",
-      "id": "3b6fc452a52e4906be204952436b588b"
+      "id": "3b6fc452a52e4906be204952436b588b",
+      "preview_id": "2a33e19c8d384fd9b240fcea60bd0667"
     },
     {
       "binding": "RATE_LIMIT",
-      "id": "3b6fc452a52e4906be204952436b588b"
+      "id": "3b6fc452a52e4906be204952436b588b",
+      "preview_id": "d5845270411141669765c891b29d8346"
     }
   ],
   "account_id": "90183697cb6664ac7b540cb2b3d9b66d"

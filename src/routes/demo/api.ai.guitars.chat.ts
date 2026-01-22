@@ -110,6 +110,9 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 						{ role: "system", content: SYSTEM_PROMPT },
 						...messages,
 					];
+					
+					console.log('[Guitar Chat] Full messages being sent:', JSON.stringify(fullMessages, null, 2));
+					console.log('[Guitar Chat] System prompt length:', SYSTEM_PROMPT.length);
 
 					// Check if AI binding is available - FAIL FAST, NO FALLBACK
 					if (!env?.AI) {
@@ -130,6 +133,13 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 					const stream = new ReadableStream({
 						async start(controller) {
 							try {
+								console.log('[Guitar Chat] Sending to AI:', {
+									model: "@cf/meta/llama-4-scout-17b-16e-instruct",
+									messageCount: fullMessages.length,
+									lastMessage: fullMessages[fullMessages.length - 1],
+									toolsCount: TOOLS.length
+								});
+								
 								const response = await env.AI.run(
 									"@cf/meta/llama-4-scout-17b-16e-instruct",
 									{
