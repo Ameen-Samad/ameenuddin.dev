@@ -1,5 +1,5 @@
 # Wrangler configuration for TTS WebSocket Worker
-# Real-time text-to-speech using Deepgram Aura-1 via AI Gateway
+# Real-time text-to-speech using Deepgram Aura-2-EN via Workers AI
 
 name = "ameenuddin-tts-ws"
 main = "tts-ws.ts"
@@ -11,13 +11,9 @@ compatibility_flags = ["nodejs_compat"]
 pattern = "ameenuddin.dev/demo/api/ai/tts-stream"
 zone_name = "ameenuddin.dev"
 
-# Environment variables (non-sensitive)
-[vars]
-CLOUDFLARE_ACCOUNT_ID = "90183697cb6664ac7b540cb2b3d9b66d"
-CLOUDFLARE_GATEWAY_ID = "ameenuddin-ai-gateway"
-
-# Secrets (set via `wrangler secret put CLOUDFLARE_API_TOKEN`)
-# Run: npx wrangler secret put CLOUDFLARE_API_TOKEN --config workers/wrangler-tts.toml
+# AI binding for Workers AI models
+[ai]
+binding = "AI"
 
 # Observability
 [observability]
