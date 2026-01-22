@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { env } from 'cloudflare:workers'
-import { checkRateLimit } from '@/lib/rate-limit'
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limit'
 import guitars from '@/data/demo-guitars'
 
 const SYSTEM_PROMPT = `You are an expert music shop owner with 30 years of experience selling guitars. You're knowledgeable, passionate about guitars, and love helping customers find their perfect instrument.
@@ -65,28 +65,15 @@ export const Route = createFileRoute('/demo/api/ai/guitars/chat')({
       POST: async ({ request }) => {
   try {
     // Rate limiting
-    const clientIP = request.headers.get('cf-connecting-ip') || 'unknown'
     const rateLimitResult = await checkRateLimit(
-      env.RATE_LIMIT,
-      `guitar-chat:${clientIP}`,
-      20,
-      60
+      request,
+      'guitar-chat',
+      RATE_LIMITS.CHAT,
+      env.RATE_LIMIT
     )
 
-    if (!rateLimitResult.allowed) {
-      return new Response(
-        JSON.stringify({
-          error: 'Rate limit exceeded. Please wait before sending more messages.',
-        }),
-        {
-          status: 429,
-          headers: {
-            'Content-Type': 'application/json',
-            'X-RateLimit-Remaining': '0',
-            'X-RateLimit-Reset': rateLimitResult.reset?.toString() || '',
-          },
-        }
-      )
+    if (!rateLimitResult.success) {
+      return rateLimitResponse(rateLimitResult)
     }
 
     const { messages } = await request.json()
