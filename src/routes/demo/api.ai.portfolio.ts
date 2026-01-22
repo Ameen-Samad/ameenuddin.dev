@@ -154,11 +154,77 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 										// Get text from chunk (workers-ai-provider uses 'text', AI SDK v3 uses 'delta')
 										const textContent = (chunk as any).text || (chunk as any).delta;
 										if (textContent) {
-											controller.enqueue(
-												encoder.encode(
-													`data: ${JSON.stringify({ type: 'content', content: textContent })}\n\n`,
-												),
-											)
+											// Check if the text contains a JSON tool call (fallback for models that don't support proper tool calling)
+											const jsonMatch = textContent.match(/\{"name":\s*"recommendProject",\s*"parameters":\s*\{[^}]*\}\}/);
+											if (jsonMatch) {
+												try {
+													const toolCall = JSON.parse(jsonMatch[0]);
+													const params = toolCall.parameters || {};
+													let projectIds = params.projectIds;
+													const reason = params.reason || "Relevant projects for your interest";
+
+													console.log('[Portfolio Chat] Detected JSON tool call. Full params:', JSON.stringify(params));
+
+													// Handle projectIds being a string instead of array (model error)
+													if (typeof projectIds === 'string') {
+														try {
+															projectIds = JSON.parse(projectIds);
+														} catch {
+															// If it's a comma-separated string, split it
+															projectIds = projectIds.split(',').map((id: string) => id.trim());
+														}
+													}
+
+													console.log('[Portfolio Chat] Extracted projectIds:', projectIds, 'reason:', reason);
+
+													// Validate that we have valid projectIds
+													if (Array.isArray(projectIds) && projectIds.length > 0) {
+														// Manually execute the tool
+														const toolResult = executePortfolioTool('recommendProject', { projectIds, reason });
+
+														if ('projectData' in toolResult) {
+															controller.enqueue(
+																encoder.encode(`data: ${JSON.stringify(toolResult.projectData)}\n\n`),
+															);
+														} else {
+															console.warn('[Portfolio Chat] Tool execution failed:', toolResult.error);
+															// Output warning instead of raw JSON
+															controller.enqueue(
+																encoder.encode(
+																	`data: ${JSON.stringify({ type: 'content', content: `[${toolResult.error}]` })}\n\n`,
+																),
+															);
+														}
+														// Don't output the raw JSON text
+													} else {
+														console.warn('[Portfolio Chat] Invalid tool call format - missing projectIds:', JSON.stringify(params));
+														// Output the text without the JSON
+														const textWithoutJson = textContent.replace(jsonMatch[0], '').trim();
+														if (textWithoutJson) {
+															controller.enqueue(
+																encoder.encode(
+																	`data: ${JSON.stringify({ type: 'content', content: textWithoutJson })}\n\n`,
+																),
+															);
+														}
+													}
+												} catch (e) {
+													console.error('[Portfolio Chat] Failed to parse JSON tool call:', e);
+													// If parsing fails, output the text normally
+													controller.enqueue(
+														encoder.encode(
+															`data: ${JSON.stringify({ type: 'content', content: textContent })}\n\n`,
+														),
+													);
+												}
+											} else {
+												// Normal text content
+												controller.enqueue(
+													encoder.encode(
+														`data: ${JSON.stringify({ type: 'content', content: textContent })}\n\n`,
+													),
+												)
+											}
 										}
 									} else if (chunk.type === "tool-call") {
 										// Store tool call args for later
