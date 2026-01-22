@@ -1,21 +1,54 @@
 import { env } from "cloudflare:workers";
 import { createFileRoute } from "@tanstack/react-router";
+import guitars from "@/data/demo-guitars";
 
-const SYSTEM_PROMPT = `You are a helpful assistant for a store that sells guitars.
+const SYSTEM_PROMPT = `You are an AI assistant helping visitors learn about Ameen Uddin, a software engineer specializing in AI-native applications.
 
-CRITICAL INSTRUCTIONS - YOU MUST FOLLOW THIS EXACT WORKFLOW:
+Your role:
+- Answer questions about Ameen's background, skills, and experience
+- Provide insights into his projects and technical expertise
+- Help visitors understand his capabilities in AI/ML, full-stack development, and cloud infrastructure
+- Be professional, helpful, and conversational
 
-When a user asks for a guitar recommendation:
-1. You have access to guitar information
-2. Provide helpful recommendations based on what the user is looking for
-3. Be friendly and helpful
+Key areas of expertise you can discuss:
+- AI/ML: LLM integration, RAG systems, vector databases, embeddings
+- Full-Stack: React, TypeScript, TanStack ecosystem, Node.js
+- Cloud: Cloudflare Workers, D1, KV, AI bindings
+- Specializations: AI-powered applications, semantic search, real-time systems
 
-IMPORTANT:
-- You have access to a catalog of guitars
-- Recommend guitars based on user preferences (price, style, brand)
-- Be specific about features when making recommendations
-- Include details like wood type, pickups, and electronics when relevant
+IMPORTANT: When users ask about guitars, recommendations, or what guitars to buy, you MUST use the recommendGuitar tool to show them specific guitars.
+You can recommend multiple guitars at once if appropriate.
+
+When you don't have specific information, acknowledge it honestly and suggest what might be helpful instead.
 `;
+
+// Define the guitar recommendation tool
+const TOOLS = [
+	{
+		name: "recommendGuitar",
+		description:
+			"Recommends one or more guitars to the user based on their preferences. Use this when users ask about guitar recommendations, what guitars are available, or express interest in specific types of music or playing styles.",
+		parameters: {
+			type: "object",
+			properties: {
+				guitarIds: {
+					type: "array",
+					items: {
+						type: "number",
+					},
+					description:
+						"Array of guitar IDs to recommend. Available IDs: 1 (TanStack Ukelele - warm, mellow, tropical), 2 (Video Game Guitar - gaming, modern, fun), 3 (Superhero Guitar - powerful, rock, metal), 4 (Motherboard Guitar - tech, futuristic, electronic), 5 (Racing Guitar - fast, precision, lightweight), 6 (Steamer Trunk Guitar - vintage, jazz, blues), 7 (Travelin' Man Guitar - travel, folk, singer-songwriter), 8 (Flowerly Love Guitar - warm, romantic, folk)",
+				},
+				reason: {
+					type: "string",
+					description:
+						"A brief explanation of why these guitars were recommended (1-2 sentences)",
+				},
+			},
+			required: ["guitarIds", "reason"],
+		},
+	},
+];
 
 export const Route = createFileRoute("/demo/api/ai/chat")({
 	server: {
@@ -38,6 +71,7 @@ export const Route = createFileRoute("/demo/api/ai/chat")({
 							content: m.content,
 						})),
 					];
+
 					if (!env?.AI) {
 						return new Response(
 							JSON.stringify({
@@ -59,6 +93,7 @@ export const Route = createFileRoute("/demo/api/ai/chat")({
 									"@cf/meta/llama-4-scout-17b-16e-instruct",
 									{
 										messages: aiMessages,
+										tools: TOOLS,
 										stream: true,
 									},
 								);
@@ -94,6 +129,8 @@ export const Route = createFileRoute("/demo/api/ai/chat")({
 
 												try {
 													const data = JSON.parse(dataStr);
+
+													// Handle content
 													if (data.response) {
 														controller.enqueue(
 															encoder.encode(
@@ -101,18 +138,68 @@ export const Route = createFileRoute("/demo/api/ai/chat")({
 															),
 														);
 													}
+
+													// Handle tool calls
+													if (data.tool_calls && data.tool_calls.length > 0) {
+														for (const toolCall of data.tool_calls) {
+															if (toolCall.name === "recommendGuitar") {
+																const args =
+																	typeof toolCall.arguments === "string"
+																		? JSON.parse(toolCall.arguments)
+																		: toolCall.arguments;
+
+																// Get guitar data
+																const recommendedGuitars = args.guitarIds
+																	.map((id: number) =>
+																		guitars.find((g) => g.id === id),
+																	)
+																	.filter(Boolean);
+
+																controller.enqueue(
+																	encoder.encode(
+																		`data: ${JSON.stringify({ type: "tool_call", tool: "recommendGuitar", guitars: recommendedGuitars, reason: args.reason })}\n\n`,
+																	),
+																);
+															}
+														}
+													}
 												} catch (e) {
 													// Ignore parse errors for non-JSON SSE messages
 												}
 											}
 										}
-									} else if (chunk.response !== undefined) {
+									} else {
 										// Production mode: chunks are objects
-										controller.enqueue(
-											encoder.encode(
-												`data: ${JSON.stringify({ type: "content", content: chunk.response })}\n\n`,
-											),
-										);
+										if (chunk.response !== undefined) {
+											controller.enqueue(
+												encoder.encode(
+													`data: ${JSON.stringify({ type: "content", content: chunk.response })}\n\n`,
+												),
+											);
+										}
+
+										// Handle tool calls in production
+										if (chunk.tool_calls && chunk.tool_calls.length > 0) {
+											for (const toolCall of chunk.tool_calls) {
+												if (toolCall.name === "recommendGuitar") {
+													const args =
+														typeof toolCall.arguments === "string"
+															? JSON.parse(toolCall.arguments)
+															: toolCall.arguments;
+
+													// Get guitar data
+													const recommendedGuitars = args.guitarIds
+														.map((id: number) => guitars.find((g) => g.id === id))
+														.filter(Boolean);
+
+													controller.enqueue(
+														encoder.encode(
+															`data: ${JSON.stringify({ type: "tool_call", tool: "recommendGuitar", guitars: recommendedGuitars, reason: args.reason })}\n\n`,
+														),
+													);
+												}
+											}
+										}
 									}
 								}
 

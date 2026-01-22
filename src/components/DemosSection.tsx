@@ -286,7 +286,7 @@ const demos: Demo[] = [
 			"QueryClient: manual cache manipulation",
 			"TanStack Table + Virtual: large datasets",
 		],
-		gitEvidence: "src/routes/demo/tanstack-query.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/tanstack-query.tsx",
 	},
 	{
 		id: "store",
@@ -315,7 +315,7 @@ const demos: Demo[] = [
 			"Performance: component only re-renders on accessed state changes",
 			"Framework-agnostic: works with React, Vue, Solid, Svelte",
 		],
-		gitEvidence: "src/routes/demo/store.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/store.tsx",
 	},
 	{
 		id: "pacer",
@@ -341,7 +341,7 @@ const demos: Demo[] = [
 			"Batch: collect and process together",
 			"Queue: sequential processing with delays",
 		],
-		gitEvidence: "src/routes/demo/pacer.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/pacer.tsx",
 	},
 	{
 		id: "table",
@@ -366,7 +366,7 @@ const demos: Demo[] = [
 			"Full TypeScript inference for column types",
 			"50,000 rows with instant sorting and filtering",
 		],
-		gitEvidence: "src/routes/demo/table.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/table.tsx",
 	},
 	{
 		id: "trpc-todo",
@@ -388,7 +388,7 @@ const demos: Demo[] = [
 			"No GraphQL schema or REST endpoints needed",
 			"Automatic IDE autocomplete for API calls",
 		],
-		gitEvidence: "src/routes/demo/trpc-todo.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/trpc-todo.tsx",
 	},
 	{
 		id: "form-simple",
@@ -410,7 +410,7 @@ const demos: Demo[] = [
 			"Validates on change, blur, or submit",
 			"Full TypeScript inference for form values",
 		],
-		gitEvidence: "src/routes/demo/form/simple.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/form/simple.tsx",
 	},
 	{
 		id: "form-address",
@@ -432,7 +432,7 @@ const demos: Demo[] = [
 			"Dynamic validation based on other field values",
 			"Composable form components",
 		],
-		gitEvidence: "src/routes/demo/form/address.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/form/address.tsx",
 	},
 	{
 		id: "start-ssr-index",
@@ -454,7 +454,7 @@ const demos: Demo[] = [
 			"SSR improves initial load and SEO",
 			"Streaming SSR for progressive hydration",
 		],
-		gitEvidence: "src/routes/demo/start.ssr.index.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/start.ssr.index.tsx",
 	},
 	{
 		id: "start-ssr-full",
@@ -476,7 +476,7 @@ const demos: Demo[] = [
 			"React hydrates the server-rendered markup",
 			"Fastest First Contentful Paint (FCP)",
 		],
-		gitEvidence: "src/routes/demo/start.ssr.full-ssr.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/start.ssr.full-ssr.tsx",
 	},
 	{
 		id: "start-ssr-data",
@@ -498,7 +498,7 @@ const demos: Demo[] = [
 			"Client receives pre-loaded data and renders",
 			"Good middle ground between SPA and full SSR",
 		],
-		gitEvidence: "src/routes/demo/start.ssr.data-only.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/start.ssr.data-only.tsx",
 	},
 	{
 		id: "start-ssr-spa",
@@ -520,7 +520,7 @@ const demos: Demo[] = [
 			"No server complexity, easier deployment",
 			"Slower initial load but simpler architecture",
 		],
-		gitEvidence: "src/routes/demo/start.ssr.spa-mode.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/start.ssr.spa-mode.tsx",
 	},
 	{
 		id: "start-server-funcs",
@@ -542,7 +542,7 @@ const demos: Demo[] = [
 			"No need to create API routes manually",
 			"Full type safety from server to client",
 		],
-		gitEvidence: "src/routes/demo/start.server-funcs.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/start.server-funcs.tsx",
 	},
 	{
 		id: "start-api-request",
@@ -564,7 +564,7 @@ const demos: Demo[] = [
 			"Access to Request/Response objects",
 			"Can use middleware for auth, logging, etc.",
 		],
-		gitEvidence: "src/routes/demo/start.api-request.tsx",
+		gitEvidence: "https://github.com/Ameen-Samad/ameenuddin.dev/blob/main/src/routes/demo/start.api-request.tsx",
 	},
 ];
 

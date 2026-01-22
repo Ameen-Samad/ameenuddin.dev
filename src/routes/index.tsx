@@ -65,10 +65,10 @@ function Home() {
 		<>
 			<Hero commits={commits} />
 			<About commits={commits} />
-			<DemosSection />
+			<ProjectsSection />
 			<SkillsDashboard />
 			<ExperienceTimeline />
-			<ProjectsSection />
+			<DemosSection />
 			<ContactSection />
 		</>
 	);

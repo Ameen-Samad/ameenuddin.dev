@@ -12,7 +12,8 @@ import guitars, { type Guitar } from '@/data/demo-guitars'
 import { cartStore, addToCart, isInCart } from '@/stores/cart-store'
 import { GuitarCard } from './-GuitarCard'
 import { GuitarFilters, getDefaultFilters, type FilterState } from './-GuitarFilters'
-import { ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, List, ShoppingCart, Check } from 'lucide-react'
+import { ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, List as ListIcon, ShoppingCart, Check, Lightbulb } from 'lucide-react'
+import { Accordion, List } from '@mantine/core'
 
 type ViewMode = 'grid' | 'list'
 type SortField = 'name' | 'price' | null
@@ -155,7 +156,7 @@ export function GuitarGrid() {
                 }`}
                 aria-label="List view"
               >
-                <List className="w-4 h-4" />
+                <ListIcon className="w-4 h-4" />
               </button>
             </div>
           </div>
@@ -195,76 +196,129 @@ function GuitarListItem({ guitar }: { guitar: Guitar }) {
   const inCart = useHydratedStore(cartStore, (state) => isInCart(state, guitar.id), false)
 
   return (
-    <Link
-      to="/demo/guitars/$guitarId"
-      params={{ guitarId: guitar.id.toString() }}
-      className="flex gap-4 bg-gray-900/60 backdrop-blur-md rounded-xl border border-gray-800/50 p-4 hover:border-emerald-500/30 transition-colors"
-    >
-      <div className="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
-        <img
-          src={guitar.image}
-          alt={guitar.name}
-          className="w-full h-full object-cover"
-        />
-      </div>
-      <div className="flex-1 min-w-0">
-        <div className="flex items-start justify-between gap-4">
-          <div>
-            <h3 className="text-lg font-bold text-white">{guitar.name}</h3>
-            <span
-              className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
-                guitar.type === 'acoustic'
-                  ? 'bg-amber-500/20 text-amber-400'
-                  : guitar.type === 'electric'
-                    ? 'bg-purple-500/20 text-purple-400'
-                    : 'bg-cyan-500/20 text-cyan-400'
-              }`}
-            >
-              {guitar.type}
-            </span>
+    <div className="flex gap-4 bg-gray-900/60 backdrop-blur-md rounded-xl border border-gray-800/50 p-4 hover:border-emerald-500/30 transition-colors">
+      <Link
+        to="/demo/guitars/$guitarId"
+        params={{ guitarId: guitar.id.toString() }}
+        className="flex gap-4 flex-1 min-w-0"
+      >
+        <div className="w-32 h-32 rounded-lg overflow-hidden flex-shrink-0">
+          <img
+            src={guitar.image}
+            alt={guitar.name}
+            className="w-full h-full object-cover"
+          />
+        </div>
+        <div className="flex-1 min-w-0">
+          <div className="flex items-start justify-between gap-4">
+            <div>
+              <h3 className="text-lg font-bold text-white">{guitar.name}</h3>
+              <span
+                className={`inline-block px-2 py-0.5 rounded-full text-xs font-medium mt-1 ${
+                  guitar.type === 'acoustic'
+                    ? 'bg-amber-500/20 text-amber-400'
+                    : guitar.type === 'electric'
+                      ? 'bg-purple-500/20 text-purple-400'
+                      : 'bg-cyan-500/20 text-cyan-400'
+                }`}
+              >
+                {guitar.type}
+              </span>
+            </div>
+            <div className="flex items-center gap-3">
+              <span className="text-xl font-bold text-emerald-400">
+                ${guitar.price}
+              </span>
+              <button
+                onClick={(e) => {
+                  e.preventDefault()
+                  e.stopPropagation()
+                  addToCart(guitar.id)
+                }}
+                className={`px-3 py-1.5 rounded-lg font-medium text-sm flex items-center gap-1.5 transition-colors ${
+                  inCart
+                    ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-600/30'
+                    : 'bg-emerald-600 hover:bg-emerald-500 text-white'
+                }`}
+              >
+                {inCart ? (
+                  <>
+                    <Check className="w-4 h-4" /> Added
+                  </>
+                ) : (
+                  <>
+                    <ShoppingCart className="w-4 h-4" /> Add
+                  </>
+                )}
+              </button>
+            </div>
           </div>
-          <div className="flex items-center gap-3">
-            <span className="text-xl font-bold text-emerald-400">
-              ${guitar.price}
-            </span>
-            <button
-              onClick={(e) => {
-                e.preventDefault()
-                e.stopPropagation()
-                addToCart(guitar.id)
-              }}
-              className={`px-3 py-1.5 rounded-lg font-medium text-sm flex items-center gap-1.5 transition-colors ${
-                inCart
-                  ? 'bg-emerald-600/20 text-emerald-400 border border-emerald-600/30'
-                  : 'bg-emerald-600 hover:bg-emerald-500 text-white'
-              }`}
-            >
-              {inCart ? (
-                <>
-                  <Check className="w-4 h-4" /> Added
-                </>
-              ) : (
-                <>
-                  <ShoppingCart className="w-4 h-4" /> Add
-                </>
-              )}
-            </button>
+          <p className="text-gray-400 text-sm mt-2 line-clamp-2">
+            {guitar.shortDescription}
+          </p>
+          <div className="flex flex-wrap gap-1 mt-2">
+            {guitar.tags.slice(0, 5).map((tag) => (
+              <span
+                key={tag}
+                className="px-2 py-0.5 bg-gray-800 text-gray-400 text-xs rounded-full"
+              >
+                {tag}
+              </span>
+            ))}
           </div>
         </div>
-        <p className="text-gray-400 text-sm mt-2 line-clamp-2">
-          {guitar.shortDescription}
-        </p>
-        <div className="flex flex-wrap gap-1 mt-2">
-          {guitar.tags.slice(0, 5).map((tag) => (
-            <span
-              key={tag}
-              className="px-2 py-0.5 bg-gray-800 text-gray-400 text-xs rounded-full"
-            >
-              {tag}
-            </span>
-          ))}
+      </Link>
+
+      {/* Design Details Accordion */}
+      {guitar.designHighlights && guitar.designHighlights.length > 0 && (
+        <div className="w-full mt-3">
+          <Accordion
+            variant="separated"
+            onClick={(e) => e.stopPropagation()}
+            styles={{
+              root: { marginTop: 0 },
+              item: {
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              },
+              control: {
+                padding: '8px 12px',
+                '&:hover': {
+                  background: 'rgba(255, 255, 255, 0.05)',
+                },
+              },
+              label: {
+                color: '#10b981',
+                fontSize: '14px',
+                fontWeight: 600,
+              },
+              content: {
+                padding: '12px',
+                fontSize: '13px',
+              },
+            }}
+          >
+            <Accordion.Item value="design">
+              <Accordion.Control icon={<Lightbulb size={16} color="#10b981" />}>
+                Design Details
+              </Accordion.Control>
+              <Accordion.Panel>
+                <List
+                  spacing="xs"
+                  size="sm"
+                  styles={{
+                    item: { color: 'rgba(255, 255, 255, 0.8)' },
+                  }}
+                >
+                  {guitar.designHighlights.map((highlight, idx) => (
+                    <List.Item key={idx}>{highlight}</List.Item>
+                  ))}
+                </List>
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
         </div>
-      </div>
-    </Link>
+      )}
+    </div>
   )
 }

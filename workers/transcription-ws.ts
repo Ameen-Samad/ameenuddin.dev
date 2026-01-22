@@ -240,7 +240,9 @@ ws.onclose = () => {
           event.code,
           event.reason
         );
-        server.close(event.code, event.reason || 'AI connection closed');
+        // 1006 is reserved and cannot be used in close() - use 1011 (internal error) instead
+        const closeCode = event.code === 1006 || event.code === 1005 || event.code === 1015 ? 1011 : event.code;
+        server.close(closeCode, event.reason || 'AI connection closed');
       });
 
       // Handle client WebSocket close
@@ -250,7 +252,9 @@ ws.onclose = () => {
           event.code,
           event.reason
         );
-        aiWebSocket.close(event.code, event.reason || 'Client disconnected');
+        // 1006 is reserved and cannot be used in close() - use 1011 (internal error) instead
+        const closeCode = event.code === 1006 || event.code === 1005 || event.code === 1015 ? 1011 : event.code;
+        aiWebSocket.close(closeCode, event.reason || 'Client disconnected');
       });
 
       // Handle client WebSocket errors

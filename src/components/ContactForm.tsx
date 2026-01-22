@@ -168,7 +168,6 @@ export function ContactForm({ onSubmit, isSubmitting }: ContactFormProps) {
 			transition={{ duration: 0.5, ease: "easeOut" }}
 			onSubmit={handleSubmit}
 			style={{ width: "100%" }}
-			suppressHydrationWarning
 		>
 			<Stack gap="lg">
 				<Title

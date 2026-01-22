@@ -94,21 +94,6 @@ export function ProjectsSection() {
 					onFilterChange={projectsActions.setActiveFilter}
 				/>
 
-				{!searchQuery && (
-					<motion.div
-						initial={{ opacity: 0, y: 20 }}
-						animate={{ opacity: 1, y: 0 }}
-						transition={{ delay: 0.3 }}
-						style={{ marginBottom: "60px" }}
-					>
-						<AIRecommendations
-							type="trending"
-							projects={projectsStore.state.projects}
-							limit={4}
-						/>
-					</motion.div>
-				)}
-
 				{filteredProjects.length === 0 ? (
 					<motion.div
 						initial={{ opacity: 0 }}

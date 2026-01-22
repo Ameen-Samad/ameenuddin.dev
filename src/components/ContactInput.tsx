@@ -43,20 +43,15 @@ export function ContactInput({
 	};
 
 	if (!mounted) {
-		return (
-			<div style={{ opacity: 0 }} suppressHydrationWarning>
-				<TextInput {...props} disabled />
-			</div>
-		);
+		return null;
 	}
 
 	return (
-		<motion.div animate={controls} suppressHydrationWarning>
+		<motion.div animate={controls}>
 			<TextInput
 				{...props}
 				onFocus={handleFocus}
 				onBlur={handleBlur}
-				suppressHydrationWarning
 				styles={{
 					input: {
 						background: "rgba(26, 26, 26, 0.6)",

@@ -9,7 +9,14 @@ interface ContactSuccessProps {
 
 export function ContactSuccess({ onReset }: ContactSuccessProps) {
 	const [countdown, setCountdown] = useState(3);
-	const [particles, setParticles] = useState<number[]>([]);
+	const [particles, setParticles] = useState<
+		Array<{
+			id: number;
+			left: number;
+			duration: number;
+			color: string;
+		}>
+	>([]);
 
 	useEffect(() => {
 		const timer = setInterval(() => {
@@ -26,7 +33,14 @@ export function ContactSuccess({ onReset }: ContactSuccessProps) {
 	}, []);
 
 	useEffect(() => {
-		setParticles(Array.from({ length: 50 }).map((_, i) => i));
+		const colors = ["#ff6b6b", "#4ecdc4", "#45b7d1", "#96ceb4", "#ffeaa7"];
+		const particleData = Array.from({ length: 50 }).map((_, i) => ({
+			id: i,
+			left: Math.random() * 100,
+			duration: Math.random() * 1 + 0.5,
+			color: colors[Math.floor(Math.random() * colors.length)],
+		}));
+		setParticles(particleData);
 		const timer = setTimeout(() => setParticles([]), 3000);
 		return () => clearTimeout(timer);
 	}, []);
@@ -51,9 +65,9 @@ export function ContactSuccess({ onReset }: ContactSuccessProps) {
 					overflow: "hidden",
 				}}
 			>
-				{particles.map((i) => (
+				{particles.map((particle) => (
 					<motion.div
-						key={i}
+						key={particle.id}
 						initial={{
 							opacity: 0,
 							scale: 0,
@@ -65,23 +79,17 @@ export function ContactSuccess({ onReset }: ContactSuccessProps) {
 							y: -200,
 						}}
 						transition={{
-							duration: Math.random() * 1 + 0.5,
-							delay: i * 0.03,
+							duration: particle.duration,
+							delay: particle.id * 0.03,
 						}}
 						style={{
 							position: "absolute",
-							left: `${Math.random() * 100}%`,
+							left: `${particle.left}%`,
 							bottom: "0",
 							width: "8px",
 							height: "8px",
 							borderRadius: "50%",
-							backgroundColor: [
-								"#ff6b6b",
-								"#4ecdc4",
-								"#45b7d1",
-								"#96ceb4",
-								"#ffeaa7",
-							][Math.floor(Math.random() * 5)],
+							backgroundColor: particle.color,
 							pointerEvents: "none",
 						}}
 					/>

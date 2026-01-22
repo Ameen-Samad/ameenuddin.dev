@@ -1,9 +1,19 @@
-import { Badge, Button, Group, Paper, Text, Title } from "@mantine/core";
+import {
+	Accordion,
+	Badge,
+	Button,
+	Group,
+	List,
+	Paper,
+	Text,
+	Title,
+} from "@mantine/core";
 import {
 	IconBrandGithub,
 	IconExternalLink,
 	IconShare,
 } from "@tabler/icons-react";
+import { Lightbulb } from "lucide-react";
 import { motion } from "framer-motion";
 import type { Project } from "../lib/projects-data";
 import { ProjectStats } from "./ProjectStats";
@@ -143,6 +153,81 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
 							</Badge>
 						)}
 					</Group>
+
+					{(project.learnings || project.technicalHighlights) && (
+						<Accordion
+							variant="separated"
+							styles={{
+								root: { marginBottom: 16 },
+								item: {
+									background: "rgba(255, 255, 255, 0.02)",
+									border: "1px solid rgba(255, 255, 255, 0.1)",
+								},
+								control: {
+									padding: "8px 12px",
+									"&:hover": {
+										background: "rgba(255, 255, 255, 0.05)",
+									},
+								},
+								label: {
+									color: project.color,
+									fontSize: "14px",
+									fontWeight: 600,
+								},
+								content: {
+									padding: "12px",
+									fontSize: "13px",
+								},
+							}}
+						>
+							<Accordion.Item value="learnings">
+								<Accordion.Control
+									icon={<Lightbulb size={16} color={project.color} />}
+								>
+									What I Learned
+								</Accordion.Control>
+								<Accordion.Panel>
+									{project.learnings && project.learnings.length > 0 && (
+										<>
+											<Text size="xs" c="dimmed" mb="xs" fw={600}>
+												Key Learnings:
+											</Text>
+											<List
+												spacing="xs"
+												size="sm"
+												styles={{
+													item: { color: "rgba(255, 255, 255, 0.8)" },
+												}}
+											>
+												{project.learnings.map((learning, idx) => (
+													<List.Item key={idx}>{learning}</List.Item>
+												))}
+											</List>
+										</>
+									)}
+									{project.technicalHighlights &&
+										project.technicalHighlights.length > 0 && (
+											<>
+												<Text size="xs" c="dimmed" mb="xs" fw={600} mt="md">
+													Technical Highlights:
+												</Text>
+												<List
+													spacing="xs"
+													size="sm"
+													styles={{
+														item: { color: "rgba(255, 255, 255, 0.8)" },
+													}}
+												>
+													{project.technicalHighlights.map((highlight, idx) => (
+														<List.Item key={idx}>{highlight}</List.Item>
+													))}
+												</List>
+											</>
+										)}
+								</Accordion.Panel>
+							</Accordion.Item>
+						</Accordion>
+					)}
 
 					<Group gap="sm">
 						{project.link && (

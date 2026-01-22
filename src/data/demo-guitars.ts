@@ -10,6 +10,7 @@ export interface Guitar {
   type: GuitarType
   tags: string[]
   features: string[]
+  designHighlights?: string[]
 }
 
 const guitars: Array<Guitar> = [
@@ -25,6 +26,11 @@ const guitars: Array<Guitar> = [
     type: 'ukulele',
     tags: ['warm', 'mellow', 'tropical', 'beginner-friendly', 'island', 'folk', 'acoustic'],
     features: ['Koa-wood body', 'Palm tree inlay', 'Concert size', 'Branded headstock'],
+    designHighlights: [
+      'Koa wood provides naturally warm, balanced tones ideal for Hawaiian music',
+      'Concert size offers fuller sound than soprano while staying portable',
+      'Palm tree inlay and branding make this a unique collector\'s piece',
+    ],
   },
   {
     id: 2,
@@ -38,6 +44,11 @@ const guitars: Array<Guitar> = [
     type: 'electric',
     tags: ['gaming', 'modern', 'fun', 'comfortable', 'unique', 'pop', 'rock'],
     features: ['High-gloss finish', 'Ergonomic body', 'Fast neck profile', 'Video game artwork'],
+    designHighlights: [
+      'Ergonomic contours reduce fatigue during marathon gaming sessions',
+      'Fast neck profile enables quick transitions between complex chord progressions',
+      'High-gloss finish protects the unique artwork while adding visual pop',
+    ],
   },
   {
     id: 3,
@@ -51,6 +62,11 @@ const guitars: Array<Guitar> = [
     type: 'electric',
     tags: ['powerful', 'aggressive', 'rock', 'metal', 'high-energy', 'stage', 'bold'],
     features: ['Powerful pickups', 'High-gloss black finish', 'Ergonomic body', 'Superhero logo'],
+    designHighlights: [
+      'Powerful pickups deliver aggressive tones perfect for rock and metal',
+      'High-gloss black finish provides striking stage presence',
+      'Superhero logo adds bold character while maintaining professional aesthetics',
+    ],
   },
   {
     id: 4,
@@ -64,6 +80,11 @@ const guitars: Array<Guitar> = [
     type: 'electric',
     tags: ['tech', 'futuristic', 'electronic', 'modern', 'unique', 'experimental', 'digital'],
     features: ['LED lights', 'Binary code inlays', 'Custom-wound pickups', 'Circuit-inspired design'],
+    designHighlights: [
+      'LED lights pulse with playing intensity creating a dynamic visual performance',
+      'Binary code inlays glow under UV stage lighting for futuristic aesthetics',
+      'Custom-wound pickups produce both clean digital tones and glitched distortion',
+    ],
   },
   {
     id: 5,
@@ -77,6 +98,11 @@ const guitars: Array<Guitar> = [
     type: 'electric',
     tags: ['fast', 'precision', 'lightweight', 'performance', 'speed', 'shred', 'metal'],
     features: ['Lightweight body', 'Low-action setup', 'Racing stripes', 'Checkered flag inlays'],
+    designHighlights: [
+      'Lightweight construction reduces fatigue during extended shredding sessions',
+      'Low-action setup enables lightning-fast fretwork and technical playing',
+      'Racing-inspired aesthetics and hardware create unique motorsport character',
+    ],
   },
   {
     id: 6,
@@ -90,6 +116,11 @@ const guitars: Array<Guitar> = [
     type: 'electric',
     tags: ['vintage', 'warm', 'jazz', 'blues', 'mellow', 'classic', 'travel'],
     features: ['Semi-hollow body', 'Brass hardware', 'World map inlay', 'Reclaimed wood'],
+    designHighlights: [
+      'Reclaimed antique luggage wood brings unique tonal character and sustainability',
+      'Semi-hollow construction provides warm, resonant jazz and blues tones',
+      'World map inlay tells a story of global adventure and travel',
+    ],
   },
   {
     id: 7,
@@ -103,6 +134,11 @@ const guitars: Array<Guitar> = [
     type: 'acoustic',
     tags: ['travel', 'folk', 'singer-songwriter', 'warm', 'storytelling', 'vintage', 'acoustic'],
     features: ['Vintage postcard artwork', 'Rich resonant tones', 'Comfortable neck', 'Travel-inspired design'],
+    designHighlights: [
+      'Vintage postcards from around the world create a unique piece of functional art',
+      'Rich, resonant acoustic tones perfect for intimate storytelling performances',
+      'Comfortable neck profile enables extended playing sessions on the road',
+    ],
   },
   {
     id: 8,
@@ -116,6 +152,11 @@ const guitars: Array<Guitar> = [
     type: 'acoustic',
     tags: ['warm', 'romantic', 'folk', 'soft', 'intimate', 'nature', 'artistic'],
     features: ['Hand-painted florals', 'Warm resonant tones', 'Artistic body', 'Nature-inspired design'],
+    designHighlights: [
+      'Hand-painted florals make each guitar a one-of-a-kind work of art',
+      'Warm acoustic tones create intimate, romantic atmosphere',
+      'Nature-inspired design brings organic beauty to performance',
+    ],
   },
 ]
 

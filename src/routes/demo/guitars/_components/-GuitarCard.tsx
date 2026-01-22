@@ -9,7 +9,8 @@ import {
   canAddToCompare,
 } from '@/stores/compare-store'
 import { useHydratedStore } from '@/hooks/useHydratedStore'
-import { ShoppingCart, Check, GitCompare } from 'lucide-react'
+import { ShoppingCart, Check, GitCompare, Lightbulb } from 'lucide-react'
+import { Accordion, List } from '@mantine/core'
 
 interface GuitarCardProps {
   guitar: Guitar
@@ -161,6 +162,55 @@ export function GuitarCard({ guitar }: GuitarCardProps) {
             {inCart ? 'Added' : 'Add to Cart'}
           </button>
         </div>
+
+        {/* Design Details Accordion */}
+        {guitar.designHighlights && guitar.designHighlights.length > 0 && (
+          <Accordion
+            variant="separated"
+            onClick={(e) => e.stopPropagation()}
+            styles={{
+              root: { marginTop: 16 },
+              item: {
+                background: 'rgba(255, 255, 255, 0.02)',
+                border: '1px solid rgba(255, 255, 255, 0.1)',
+              },
+              control: {
+                padding: '8px 12px',
+                '&:hover': {
+                  background: 'rgba(255, 255, 255, 0.05)',
+                },
+              },
+              label: {
+                color: '#10b981',
+                fontSize: '14px',
+                fontWeight: 600,
+              },
+              content: {
+                padding: '12px',
+                fontSize: '13px',
+              },
+            }}
+          >
+            <Accordion.Item value="design">
+              <Accordion.Control icon={<Lightbulb size={16} color="#10b981" />}>
+                Design Details
+              </Accordion.Control>
+              <Accordion.Panel>
+                <List
+                  spacing="xs"
+                  size="sm"
+                  styles={{
+                    item: { color: 'rgba(255, 255, 255, 0.8)' },
+                  }}
+                >
+                  {guitar.designHighlights.map((highlight, idx) => (
+                    <List.Item key={idx}>{highlight}</List.Item>
+                  ))}
+                </List>
+              </Accordion.Panel>
+            </Accordion.Item>
+          </Accordion>
+        )}
       </div>
     </div>
   )

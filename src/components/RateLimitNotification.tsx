@@ -1,21 +1,37 @@
 import { type NotificationData, notifications } from "@mantine/notifications";
+import { useState, useEffect } from "react";
 
 export function CoinAnimation() {
-	const coinIds = Array.from({ length: 12 }).map(() =>
-		Math.random().toString(36).substring(7),
-	);
+	const [coins, setCoins] = useState<
+		Array<{
+			id: number;
+			left: number;
+			duration: number;
+		}>
+	>([]);
+
+	useEffect(() => {
+		const coinData = Array.from({ length: 12 }).map((_, i) => ({
+			id: i,
+			left: Math.random() * 100,
+			duration: 1.5 + Math.random(),
+		}));
+		setCoins(coinData);
+	}, []);
+
+	if (coins.length === 0) return null;
 
 	return (
 		<div className="fixed inset-0 pointer-events-none z-[10000]">
-			{coinIds.map((id, i) => (
+			{coins.map((coin, i) => (
 				<div
-					key={id}
+					key={coin.id}
 					className="absolute text-4xl animate-fall"
 					style={{
-						left: `${Math.random() * 100}%`,
+						left: `${coin.left}%`,
 						top: "-50px",
 						animationDelay: `${i * 0.1}s`,
-						animationDuration: `${1.5 + Math.random()}s`,
+						animationDuration: `${coin.duration}s`,
 					}}
 				>
 					💰
