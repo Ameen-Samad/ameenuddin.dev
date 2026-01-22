@@ -119,8 +119,9 @@ ws.onclose = () => {
       console.log('[WS-TRANS] Initializing Deepgram Flux WebSocket connection');
 
       // Create a WebSocket pair for the client connection
-      const webSocketPair = new WebSocketPair();
-      const [client, server] = Object.values(webSocketPair);
+      const pair = new WebSocketPair();
+      const client = pair[0];
+      const server = pair[1];
 
       // Accept the client WebSocket connection
       server.accept();
@@ -142,21 +143,31 @@ ws.onclose = () => {
       // Get the AI WebSocket from the response
       const aiWebSocket = (aiResponse as any).webSocket;
       if (!aiWebSocket) {
-        server.send(
-          JSON.stringify({
-            type: 'error',
-            error: 'Failed to establish AI connection',
-          })
-        );
+        if (server.readyState === 1) {
+          server.send(
+            JSON.stringify({
+              type: 'error',
+              error: 'Failed to establish AI connection',
+            })
+          );
+        }
         server.close(1011, 'AI connection failed');
         return new Response('AI connection failed', { status: 500 });
       }
 
-      // IMPORTANT: Do NOT call aiWebSocket.accept() here!
-      // The AI WebSocket is already connected when returned from env.AI.run()
-      // Only call .accept() on server-side WebSockets from WebSocketPair
+      // Accept the AI WebSocket if it has an accept method
+      // Note: AI WebSockets from env.AI.run() might need explicit accept() call
+      if (typeof aiWebSocket.accept === 'function') {
+        try {
+          aiWebSocket.accept();
+          console.log('[WS-TRANS] AI WebSocket accepted');
+        } catch (error) {
+          console.log('[WS-TRANS] AI WebSocket accept() not needed or already accepted:', error);
+        }
+      }
 
       // Forward messages from client to AI
+      let audioChunkCount = 0;
       server.addEventListener('message', (event: MessageEvent) => {
         try {
           // Forward audio data from client to AI
@@ -164,26 +175,37 @@ ws.onclose = () => {
             event.data instanceof ArrayBuffer ||
             event.data instanceof Uint8Array
           ) {
+            audioChunkCount++;
+            const byteLength = event.data instanceof ArrayBuffer ? event.data.byteLength : event.data.length;
+            console.log(`[WS-TRANS] Forwarding audio chunk #${audioChunkCount}, size: ${byteLength} bytes`);
             aiWebSocket.send(event.data);
           } else if (typeof event.data === 'string') {
             // Handle text messages (control messages, etc.)
+            console.log('[WS-TRANS] Forwarding text message:', event.data);
             aiWebSocket.send(event.data);
           }
         } catch (error) {
           console.error('[WS-TRANS] Error forwarding to AI:', error);
-          server.send(
-            JSON.stringify({
-              type: 'error',
-              error: 'Failed to forward audio data',
-              details: error instanceof Error ? error.message : 'Unknown error',
-            })
-          );
+          if (server.readyState === 1) {
+            server.send(
+              JSON.stringify({
+                type: 'error',
+                error: 'Failed to forward audio data',
+                details: error instanceof Error ? error.message : 'Unknown error',
+              })
+            );
+          }
         }
       });
 
       // Forward transcription results from AI to client
       aiWebSocket.addEventListener('message', (event: MessageEvent) => {
         try {
+          // Check if server WebSocket is still open
+          if (server.readyState !== 1) return;
+
+          console.log('[WS-TRANS] Received message from AI:', typeof event.data, event.data);
+
           // Forward transcription results from AI to client
           if (typeof event.data === 'string') {
             // Parse and validate the transcription result
@@ -212,27 +234,33 @@ ws.onclose = () => {
           }
         } catch (error) {
           console.error('[WS-TRANS] Error forwarding from AI:', error);
-          server.send(
-            JSON.stringify({
-              type: 'error',
-              error: 'Failed to forward transcription',
-              details: error instanceof Error ? error.message : 'Unknown error',
-            })
-          );
+          if (server.readyState === 1) {
+            server.send(
+              JSON.stringify({
+                type: 'error',
+                error: 'Failed to forward transcription',
+                details: error instanceof Error ? error.message : 'Unknown error',
+              })
+            );
+          }
         }
       });
 
       // Handle AI WebSocket errors
       aiWebSocket.addEventListener('error', (event: ErrorEvent) => {
         console.error('[WS-TRANS] AI WebSocket error:', event);
-        server.send(
-          JSON.stringify({
-            type: 'error',
-            error: 'AI connection error',
-            message: event.message || 'Unknown error',
-          })
-        );
-        server.close(1011, 'AI connection error');
+        if (server.readyState === 1) {
+          server.send(
+            JSON.stringify({
+              type: 'error',
+              error: 'AI connection error',
+              message: event.message || 'Unknown error',
+            })
+          );
+        }
+        if (server.readyState === 1 || server.readyState === 0) {
+          server.close(1011, 'AI connection error');
+        }
       });
 
       // Handle AI WebSocket close
@@ -244,7 +272,9 @@ ws.onclose = () => {
         );
         // 1006 is reserved and cannot be used in close() - use 1011 (internal error) instead
         const closeCode = event.code === 1006 || event.code === 1005 || event.code === 1015 ? 1011 : event.code;
-        server.close(closeCode, event.reason || 'AI connection closed');
+        if (server.readyState === 1 || server.readyState === 0) {
+          server.close(closeCode, event.reason || 'AI connection closed');
+        }
       });
 
       // Handle client WebSocket close
@@ -256,32 +286,42 @@ ws.onclose = () => {
         );
         // 1006 is reserved and cannot be used in close() - use 1011 (internal error) instead
         const closeCode = event.code === 1006 || event.code === 1005 || event.code === 1015 ? 1011 : event.code;
-        aiWebSocket.close(closeCode, event.reason || 'Client disconnected');
+        if (aiWebSocket.readyState === 1 || aiWebSocket.readyState === 0) {
+          aiWebSocket.close(closeCode, event.reason || 'Client disconnected');
+        }
       });
 
       // Handle client WebSocket errors
       server.addEventListener('error', (event: ErrorEvent) => {
         console.error('[WS-TRANS] Client WebSocket error:', event);
-        aiWebSocket.close(1011, 'Client connection error');
+        if (aiWebSocket.readyState === 1 || aiWebSocket.readyState === 0) {
+          aiWebSocket.close(1011, 'Client connection error');
+        }
       });
-
-      // Send connection confirmation to client
-      server.send(
-        JSON.stringify({
-          type: 'connected',
-          message: 'Connected to Deepgram Flux voice agent',
-          config: {
-            encoding: 'linear16',
-            sampleRate: 16000,
-            model: '@cf/deepgram/flux',
-          },
-          timestamp: Date.now(),
-        })
-      );
 
       console.log('[WS-TRANS] WebSocket proxy established');
 
+      // Send connection confirmation after the response is returned
+      // Use queueMicrotask to ensure the WebSocket upgrade completes first
+      queueMicrotask(() => {
+        if (server.readyState === 1) {
+          server.send(
+            JSON.stringify({
+              type: 'connected',
+              message: 'Connected to Deepgram Flux voice agent',
+              config: {
+                encoding: 'linear16',
+                sampleRate: 16000,
+                model: '@cf/deepgram/flux',
+              },
+              timestamp: Date.now(),
+            })
+          );
+        }
+      });
+
       // Return the WebSocket response to upgrade the connection
+      // This MUST be returned before sending any messages
       return new Response(null, {
         status: 101,
         webSocket: client,

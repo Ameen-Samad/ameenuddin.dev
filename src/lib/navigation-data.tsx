@@ -99,7 +99,7 @@ export const navItems: NavItem[] = [
 						id: "demo-ai-chat",
 						label: "AI Chat",
 						icon: <IconRobot size={16} />,
-						path: "/demo/ai-chat",
+						path: "/demo/ai-portfolio",
 					},
 					{
 						id: "demo-ai-structured",

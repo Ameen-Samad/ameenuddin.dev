@@ -1,9 +1,9 @@
 /**
- * AMEENUDDIN PORTFOLIO CHAT API - Resume/Background Assistant
+ * AMEENUDDIN PORTFOLIO CHAT API - RAG-Powered Resume/Background Assistant
  *
  * IMPORTANT: This is NOT the guitar chat!
- * - This chat is for answering questions about Ameen Uddin's background, skills, and projects
- * - It has NO guitar tools or guitar-related functionality
+ * - This chat uses RAG (Retrieval Augmented Generation) for accurate, grounded responses
+ * - It has tools for recommending projects, explaining skills, and retrieving experience
  * - For guitar recommendations, use /demo/api/ai/guitars/chat instead
  *
  * Route: /demo/api/ai/portfolio
@@ -12,29 +12,10 @@
 
 import { env } from "cloudflare:workers";
 import { createFileRoute } from "@tanstack/react-router";
-
-const SYSTEM_PROMPT = `You are an AI assistant helping visitors learn about Ameen Uddin, a software engineer specializing in AI-native applications.
-
-Your role:
-- Answer questions about Ameen's background, skills, and experience
-- Provide insights into his projects and technical expertise
-- Help visitors understand his capabilities in AI/ML, full-stack development, and cloud infrastructure
-- Be professional, helpful, and conversational
-
-Key areas of expertise you can discuss:
-- AI/ML: LLM integration, RAG systems, vector databases, embeddings
-- Full-Stack: React, TypeScript, TanStack ecosystem, Node.js
-- Cloud: Cloudflare Workers, D1, KV, AI bindings
-- Specializations: AI-powered applications, semantic search, real-time systems
-
-IMPORTANT: You are NOT a guitar recommendation bot. If users ask about guitars, politely redirect them:
-"I'm here to discuss Ameen's professional background and technical expertise. For guitar recommendations, please use the Guitar Concierge at /demo/guitars."
-
-When you don't have specific information about Ameen, acknowledge it honestly and suggest what might be helpful instead.
-`;
-
-// NO TOOLS - this is a simple Q&A chat about Ameen's background
-const TOOLS: never[] = [];
+import { getPortfolioDocuments } from "@/lib/portfolio-documents";
+import { findRelevantDocuments, formatContextForPrompt } from "@/lib/portfolio-rag";
+import { PORTFOLIO_TOOLS, executePortfolioTool } from "@/lib/portfolio-tools";
+import { PORTFOLIO_SYSTEM_PROMPT } from "@/lib/portfolio-prompt";
 
 export const Route = createFileRoute("/demo/api/ai/portfolio")({
 	server: {
@@ -50,41 +31,70 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 					const body = await request.json();
 					const { messages } = body;
 
-					const aiMessages = [
-						{ role: "system", content: SYSTEM_PROMPT },
-						...messages.map((m: any) => ({
-							role: m.role,
-							content: m.content,
-						})),
-					]
+					if (!messages || !Array.isArray(messages)) {
+						return new Response(
+							JSON.stringify({ error: "Messages array is required" }),
+							{ status: 400, headers: { "Content-Type": "application/json" } },
+						)
+					}
 
 					if (!env?.AI) {
 						return new Response(
-							JSON.stringify({
-								error: "Cloudflare AI binding not available",
-							}),
-							{
-								status: 500,
-								headers: { "Content-Type": "application/json" },
-							},
+							JSON.stringify({ error: "Cloudflare AI binding not available" }),
+							{ status: 500, headers: { "Content-Type": "application/json" } },
 						)
 					}
+
+					// Get user's latest query for RAG
+					const userQuery = messages[messages.length - 1]?.content || "";
 
 					// Create SSE stream
 					const encoder = new TextEncoder();
 					const stream = new ReadableStream({
 						async start(controller) {
 							try {
+								// PHASE 1: RAG - Find relevant portfolio documents
+								const documents = getPortfolioDocuments();
+								const relevantDocs = await findRelevantDocuments(
+									env.AI,
+									userQuery,
+									documents,
+									5, // top 5 documents
+									0.3, // 30% similarity threshold
+								)
+
+								// Send context to frontend for display
+								controller.enqueue(
+									encoder.encode(
+										`data: ${JSON.stringify({ type: 'context', context: relevantDocs })}\n\n`,
+									),
+								)
+
+								// PHASE 2: LLM - Stream AI response with tool calling
+								const contextPrompt = formatContextForPrompt(relevantDocs);
+								const aiMessages = [
+									{
+										role: "system",
+										content: contextPrompt + PORTFOLIO_SYSTEM_PROMPT,
+									},
+									...messages.map((m: any) => ({
+										role: m.role,
+										content: m.content,
+									})),
+								]
+
+								console.log('[Portfolio Chat] Streaming AI response with tools');
+
 								const response = await env.AI.run(
 									"@cf/meta/llama-4-scout-17b-16e-instruct",
 									{
 										messages: aiMessages,
-										tools: TOOLS,
+										tools: PORTFOLIO_TOOLS,
 										stream: true,
 									},
 								)
 
-								// Handle both object chunks (production) and byte chunks (dev)
+								// Handle streaming response
 								const decoder = new TextDecoder();
 								let buffer = ""
 
@@ -94,63 +104,49 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 										return
 									}
 
-									// Check if chunk is a Uint8Array (dev mode returns raw bytes)
+									// Dev mode: chunks are Uint8Array (SSE format)
 									if (chunk instanceof Uint8Array) {
-										// Decode bytes and parse SSE format
 										const text = decoder.decode(chunk, { stream: true });
 										buffer += text
 
-										// Process complete SSE messages
 										const lines = buffer.split("\n\n");
-										buffer = lines.pop() || ""; // Keep incomplete message in buffer
+										buffer = lines.pop() || ""
 
 										for (const line of lines) {
 											if (line.startsWith("data: ")) {
 												const dataStr = line.slice(6)
-
-												// Skip [DONE] sentinel value
-												if (dataStr === "[DONE]") {
-													continue
-												}
+												if (dataStr === "[DONE]") continue
 
 												try {
 													const data = JSON.parse(dataStr)
 
 													// Handle content
-													if (data.response) {
+													if (data.response !== undefined) {
 														controller.enqueue(
 															encoder.encode(
-																`data: ${JSON.stringify({ type: "content", content: data.response })}\n\n`,
+																`data: ${JSON.stringify({ type: 'content', content: data.response })}\n\n`,
 															),
 														)
 													}
 
 													// Handle tool calls
-													if (data.tool_calls && data.tool_calls.length > 0) {
+													if (data.tool_calls) {
+														console.log('[Portfolio Chat] Tool calls:', JSON.stringify(data.tool_calls));
 														for (const toolCall of data.tool_calls) {
-															if (toolCall.name === "recommendGuitar") {
-																const args =
-																	typeof toolCall.arguments === "string"
-																		? JSON.parse(toolCall.arguments)
-																		: toolCall.arguments
+															const result = executePortfolioTool(
+																toolCall.name,
+																toolCall.arguments,
+															)
 
-																// Get guitar data
-																const recommendedGuitars = args.guitarIds
-																	.map((id: number) =>
-																		guitars.find((g) => g.id === id),
-																	)
-																	.filter(Boolean)
-
+															if (result && typeof result === "object" && "type" in result) {
 																controller.enqueue(
-																	encoder.encode(
-																		`data: ${JSON.stringify({ type: "tool_call", tool: "recommendGuitar", guitars: recommendedGuitars, reason: args.reason })}\n\n`,
-																	),
+																	encoder.encode(`data: ${JSON.stringify(result)}\n\n`),
 																)
 															}
 														}
 													}
 												} catch (e) {
-													// Ignore parse errors for non-JSON SSE messages
+													// Ignore parse errors
 												}
 											}
 										}
@@ -159,29 +155,23 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 										if (chunk.response !== undefined) {
 											controller.enqueue(
 												encoder.encode(
-													`data: ${JSON.stringify({ type: "content", content: chunk.response })}\n\n`,
+													`data: ${JSON.stringify({ type: 'content', content: chunk.response })}\n\n`,
 												),
 											)
 										}
 
 										// Handle tool calls in production
-										if (chunk.tool_calls && chunk.tool_calls.length > 0) {
+										if (chunk.tool_calls) {
+											console.log('[Portfolio Chat] Tool calls (prod):', JSON.stringify(chunk.tool_calls));
 											for (const toolCall of chunk.tool_calls) {
-												if (toolCall.name === "recommendGuitar") {
-													const args =
-														typeof toolCall.arguments === "string"
-															? JSON.parse(toolCall.arguments)
-															: toolCall.arguments
+												const result = executePortfolioTool(
+													toolCall.name,
+													toolCall.arguments,
+												)
 
-													// Get guitar data
-													const recommendedGuitars = args.guitarIds
-														.map((id: number) => guitars.find((g) => g.id === id))
-														.filter(Boolean)
-
+												if (result && typeof result === "object" && "type" in result) {
 													controller.enqueue(
-														encoder.encode(
-															`data: ${JSON.stringify({ type: "tool_call", tool: "recommendGuitar", guitars: recommendedGuitars, reason: args.reason })}\n\n`,
-														),
+														encoder.encode(`data: ${JSON.stringify(result)}\n\n`),
 													)
 												}
 											}
@@ -189,18 +179,18 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 									}
 								}
 
-								const finalEvent = `data: ${JSON.stringify({
-									type: "done",
-								})}\n\n`
-								controller.enqueue(encoder.encode(finalEvent));
+								// Send done event
+								controller.enqueue(
+									encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`),
+								)
 								controller.close()
 							} catch (error: any) {
-								console.error("Stream error:", error);
-								const errorEvent = `data: ${JSON.stringify({
-									type: "error",
-									error: error.message,
-								})}\n\n`
-								controller.enqueue(encoder.encode(errorEvent));
+								console.error("[Portfolio Chat] Stream error:", error);
+								controller.enqueue(
+									encoder.encode(
+										`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`,
+									),
+								)
 								controller.close()
 							}
 						},
@@ -214,13 +204,10 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 						},
 					})
 				} catch (error: any) {
-					console.error("Chat error:", error);
+					console.error("[Portfolio Chat] Error:", error);
 					return new Response(
 						JSON.stringify({ error: "Failed to process chat request" }),
-						{
-							status: 500,
-							headers: { "Content-Type": "application/json" },
-						},
+						{ status: 500, headers: { "Content-Type": "application/json" } },
 					)
 				}
 			},

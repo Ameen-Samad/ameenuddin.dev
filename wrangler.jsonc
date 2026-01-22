@@ -2,7 +2,9 @@
   "$schema": "node_modules/wrangler/config-schema.json",
   "name": "ameenuddin",
   "compatibility_date": "2025-09-02",
-  "compatibility_flags": ["nodejs_compat"],
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
   "main": "@tanstack/react-start/server-entry",
   "assets": {
     "directory": "dist/client",
@@ -37,5 +39,6 @@
       "binding": "RATE_LIMIT",
       "id": "3b6fc452a52e4906be204952436b588b"
     }
-  ]
+  ],
+  "account_id": "90183697cb6664ac7b540cb2b3d9b66d"
 }

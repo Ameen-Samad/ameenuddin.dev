@@ -220,7 +220,7 @@ const demos: Demo[] = [
 		description:
 			"Interactive chat with streaming responses and context awareness",
 		icon: <MessageSquare className="w-8 h-8" />,
-		path: "/demo/ai-chat",
+		path: "/demo/ai-portfolio",
 		badge: "Chat AI",
 		color: "#ffd43b",
 		features: ["Streaming", "Context aware", "Tool calling"],

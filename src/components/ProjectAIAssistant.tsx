@@ -108,7 +108,7 @@ export function ProjectAIAssistant({
 					whileHover={{ scale: 1.1 }}
 					whileTap={{ scale: 0.95 }}
 				>
-					<MessageCircle className="w-6 h-6" />
+					<MessageCircle className="w-8 h-8" />
 				</motion.button>
 			)}
 
@@ -126,7 +126,7 @@ export function ProjectAIAssistant({
 						<Paper className="h-full flex flex-col bg-transparent border-0 shadow-none">
 							<div className="p-4 border-b border-slate-700 flex items-center justify-between">
 								<div className="flex items-center gap-3">
-									<Sparkles className="w-5 h-5 text-cyan-500" />
+									<Sparkles className="w-8 h-8 text-cyan-500" />
 									<div>
 										<h3 className="font-semibold text-white">
 											{projectTitle} AI Assistant
@@ -143,9 +143,9 @@ export function ProjectAIAssistant({
 										onClick={() => setIsMinimized(!isMinimized)}
 									>
 										{isMinimized ? (
-											<MessageCircle className="w-4 h-4" />
+											<MessageCircle className="w-5 h-5" />
 										) : (
-											<MessageCircle className="w-4 h-4" />
+											<MessageCircle className="w-5 h-5" />
 										)}
 									</Button>
 									<Button
@@ -153,14 +153,14 @@ export function ProjectAIAssistant({
 										size="icon"
 										onClick={handleExportChat}
 									>
-										<Download className="w-4 h-4" />
+										<Download className="w-5 h-5" />
 									</Button>
 									<Button
 										variant="ghost"
 										size="icon"
 										onClick={() => setIsOpen(false)}
 									>
-										<X className="w-4 h-4" />
+										<X className="w-5 h-5" />
 									</Button>
 								</div>
 							</div>
@@ -170,7 +170,7 @@ export function ProjectAIAssistant({
 									<div className="flex-1 overflow-y-auto p-4 space-y-4">
 										{messages.length === 0 && (
 											<div className="text-center py-8 space-y-4">
-												<Sparkles className="w-12 h-12 text-cyan-500 mx-auto" />
+												<Sparkles className="w-16 h-16 text-cyan-500 mx-auto" />
 												<div>
 													<p className="text-white font-medium mb-2">
 														Get help with this project
@@ -209,7 +209,7 @@ export function ProjectAIAssistant({
 											>
 												{message.role === "assistant" && (
 													<div className="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center flex-shrink-0">
-														<Sparkles className="w-4 h-4 text-white" />
+														<Sparkles className="w-5 h-5 text-white" />
 													</div>
 												)}
 												<div
@@ -227,7 +227,7 @@ export function ProjectAIAssistant({
 															onClick={() => handleCopyMessage(message.content)}
 															className="mt-2 text-xs text-gray-400 hover:text-white flex items-center gap-1 transition-colors"
 														>
-															<Copy className="w-3 h-3" />
+															<Copy className="w-4 h-4" />
 															Copy
 														</button>
 													)}
@@ -241,7 +241,7 @@ export function ProjectAIAssistant({
 												className="flex gap-3"
 											>
 												<div className="w-8 h-8 rounded-full bg-cyan-600 flex items-center justify-center flex-shrink-0">
-													<Sparkles className="w-4 h-4 text-white" />
+													<Sparkles className="w-5 h-5 text-white" />
 												</div>
 												<div className="bg-slate-800 p-3 rounded-lg">
 													<motion.div
@@ -285,7 +285,7 @@ export function ProjectAIAssistant({
 												disabled={isLoading || !input.trim()}
 												className="bg-cyan-600 hover:bg-cyan-700"
 											>
-												<Send className="w-4 h-4" />
+												<Send className="w-5 h-5" />
 											</Button>
 										</form>
 									</div>

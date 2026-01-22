@@ -307,7 +307,7 @@ export const projects: Project[] = [
 			"Interactive chat with streaming responses, context awareness, and tool calling capabilities.",
 		longDescription:
 			"A full-featured AI chat interface with streaming responses via Server-Sent Events. Includes context management for multi-turn conversations, real-time typing indicators, and tool calling support.",
-		link: "/demo/ai-chat",
+		link: "/demo/ai-portfolio",
 		category: "ai-ml",
 		color: "#ffd43b",
 		icon: <IconMessage size={32} />,

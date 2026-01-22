@@ -70,7 +70,15 @@ export function GuitarChat({ onClose }: GuitarChatProps) {
       })
 
       if (!response.ok) {
-        throw new Error('Failed to get response')
+        const errorText = await response.text()
+        console.error('[Guitar Chat] API error:', response.status, errorText)
+        
+        // Check if it's an AI binding error
+        if (errorText.includes('AI binding not available')) {
+          throw new Error('AI is not available. Please run "npm run dev:worker" instead of "npm run dev" to enable Cloudflare Workers AI.')
+        }
+        
+        throw new Error(`API returned ${response.status}: ${errorText}`)
       }
 
       // Handle streaming response
@@ -95,12 +103,14 @@ export function GuitarChat({ onClose }: GuitarChatProps) {
         if (done) break
 
         const chunk = decoder.decode(value)
+        console.log('[Guitar Chat] Received chunk:', chunk)
         const lines = chunk.split('\n')
 
         for (const line of lines) {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6))
+              console.log('[Guitar Chat] Parsed data:', data)
               if (data.type === 'content') {
                 fullContent += data.content
                 setMessages((prev) =>
@@ -122,6 +132,14 @@ export function GuitarChat({ onClose }: GuitarChatProps) {
                       : m
                   )
                 )
+              } else if (data.type === 'done') {
+                console.log('[Guitar Chat] Stream complete. Full content:', fullContent)
+                if (!fullContent.trim()) {
+                  console.warn('[Guitar Chat] No content received from AI!')
+                }
+              } else if (data.type === 'error') {
+                console.error('[Guitar Chat] Stream error:', data.content)
+                throw new Error(data.content || 'AI stream error')
               }
             } catch {
               // Ignore parse errors
@@ -131,13 +149,13 @@ export function GuitarChat({ onClose }: GuitarChatProps) {
       }
     } catch (error) {
       console.error('Chat error:', error)
+      const errorMessage = error instanceof Error ? error.message : "I'm having trouble connecting right now."
       setMessages((prev) => [
         ...prev,
         {
           id: Date.now().toString(),
           role: 'assistant',
-          content:
-            "I apologize, but I'm having trouble connecting right now. Please try again in a moment.",
+          content: `I apologize, but I encountered an error: ${errorMessage}. Please try again in a moment.`,
         },
       ])
     } finally {

@@ -22,13 +22,6 @@ import {
   updateConversationTitle,
   updateConversationMessagesSimple,
 } from '@/lib/demo-ai-hook'
-import {
-  ContextSources,
-  ProjectRecommendations,
-  QuickActions,
-  type ContextSource,
-  type ProjectRecommendation,
-} from '@/components/portfolio-chat'
 
 /**
  * AMEENUDDIN PORTFOLIO CHAT - Resume/Background Assistant
@@ -48,11 +41,6 @@ export const Route = createFileRoute('/demo/ai-portfolio')({
 interface Message {
   role: 'user' | 'assistant'
   content: string
-  context?: ContextSource[]
-  toolResults?: Array<{
-    type: 'project_recommendation' | 'skill_detail' | 'experience_detail'
-    data: any
-  }>
 }
 
 function AmeenuddinPortfolioChat() {
@@ -114,8 +102,6 @@ function AmeenuddinPortfolioChat() {
 
       const decoder = new TextDecoder()
       let fullContent = ''
-      let contextData: ContextSource[] = []
-      let toolResults: any[] = []
 
       while (true) {
         const { done, value } = await reader.read()
@@ -128,42 +114,18 @@ function AmeenuddinPortfolioChat() {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6))
-              
               if (data.type === 'content') {
                 fullContent += data.content
                 setStreamingContent(fullContent)
-              } 
-              else if (data.type === 'context') {
-                // RAG context sources
-                contextData = data.context
-              }
-              else if (data.type === 'project_recommendation') {
-                // Tool result: project recommendations
-                toolResults.push(data)
-              }
-              else if (data.type === 'skill_detail') {
-                // Tool result: skill details
-                toolResults.push(data)
-              }
-              else if (data.type === 'experience_detail') {
-                // Tool result: experience details
-                toolResults.push(data)
-              }
-              else if (data.type === 'done') {
+              } else if (data.type === 'done') {
                 const finalMessages: Message[] = [
                   ...newMessages,
-                  {
-                    role: 'assistant',
-                    content: fullContent,
-                    context: contextData.length > 0 ? contextData : undefined,
-                    toolResults: toolResults.length > 0 ? toolResults : undefined,
-                  }
+                  { role: 'assistant', content: fullContent }
                 ]
                 updateConversationMessagesSimple(currentConversationId, finalMessages)
                 setStreamingContent('')
                 setIsStreaming(false)
-              } 
-              else if (data.type === 'error') {
+              } else if (data.type === 'error') {
                 throw new Error(data.error || 'Unknown error')
               }
             } catch (e) {
@@ -367,25 +329,6 @@ function AmeenuddinPortfolioChat() {
                     <p className="whitespace-pre-wrap">{message.content}</p>
                   )}
                 </div>
-                
-                {/* RAG Context Sources */}
-                {message.role === 'assistant' && message.context && (
-                  <ContextSources sources={message.context} />
-                )}
-                
-                {/* Tool Results - Project Recommendations */}
-                {message.role === 'assistant' && message.toolResults?.map((result, toolIdx) => {
-                  if (result.type === 'project_recommendation') {
-                    return (
-                      <ProjectRecommendations
-                        key={toolIdx}
-                        recommendation={result}
-                      />
-                    )
-                  }
-                  // TODO: Add handlers for skill_detail and experience_detail
-                  return null
-                })}
               </div>
             </div>
           ))}
@@ -404,12 +347,6 @@ function AmeenuddinPortfolioChat() {
         {/* Input */}
         <div className="sticky bottom-0 bg-gray-900/80 backdrop-blur-sm border-t border-gray-800 p-4">
           <div className="max-w-3xl mx-auto">
-            {/* Quick Action Buttons */}
-            <QuickActions
-              onSelectQuestion={(question) => setInput(question)}
-              isVisible={messages.length === 0 && !isStreaming}
-            />
-            
             <div className="flex items-center gap-2">
               <input
                 type="text"

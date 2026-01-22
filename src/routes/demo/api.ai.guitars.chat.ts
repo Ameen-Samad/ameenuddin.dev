@@ -77,6 +77,12 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 	server: {
 		handlers: {
 			POST: async ({ request }) => {
+				const requestSignal = request.signal;
+
+				if (requestSignal.aborted) {
+					return new Response(null, { status: 499 });
+				}
+
 				try {
 					// Rate limiting
 					const rateLimitResult = await checkRateLimit(
@@ -105,6 +111,20 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 						...messages,
 					];
 
+					// Check if AI binding is available - FAIL FAST, NO FALLBACK
+					if (!env?.AI) {
+						console.error('[Guitar Chat] Cloudflare AI binding is not available. Run "npm run dev:worker" to enable it.');
+						return new Response(
+							JSON.stringify({ 
+								error: "Cloudflare Workers AI is not available. You must run 'npm run build && npm run dev:worker' to use this feature." 
+							}),
+							{ 
+								status: 503, 
+								headers: { "Content-Type": "application/json" } 
+							}
+						);
+					}
+
 					// Create SSE streaming response
 					const encoder = new TextEncoder();
 					const stream = new ReadableStream({
@@ -125,6 +145,11 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 								let fullResponse = "";
 
 								for await (const chunk of response) {
+									if (requestSignal.aborted) {
+										controller.close();
+										return;
+									}
+
 									// Check if chunk is a Uint8Array (dev mode returns raw bytes)
 									if (chunk instanceof Uint8Array) {
 										// Decode bytes and parse SSE format

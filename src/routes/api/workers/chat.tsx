@@ -3,7 +3,7 @@ import { projects } from "@/lib/projects-data";
 
 export const Route = createFileRoute("/api/workers/chat")({
 	GET: async () => {
-		return new Response("Method not allowed", { status: 405 });
+		return new Response("Method not allowed", { status: 405, headers: { "Content-Type": "text/plain" } });
 	},
 	POST: async ({ request }) => {
 		try {
@@ -18,7 +18,7 @@ export const Route = createFileRoute("/api/workers/chat")({
 			const project = projects.find((p) => p.id === projectId);
 
 			if (!project) {
-				return new Response("Project not found", { status: 404 });
+				return new Response("Project not found", { status: 404, headers: { "Content-Type": "text/plain" } });
 			}
 
 			const responses = {
@@ -62,10 +62,10 @@ export const Route = createFileRoute("/api/workers/chat")({
 				response = responses.contribute;
 			}
 
-			return new Response(JSON.stringify({ response }));
+			return new Response(JSON.stringify({ response }), { headers: { "Content-Type": "application/json" } });
 		} catch (error) {
 			console.error("Chat error:", error);
-			return new Response("Internal server error", { status: 500 });
+			return new Response("Internal server error", { status: 500, headers: { "Content-Type": "text/plain" } });
 		}
 	},
 });
