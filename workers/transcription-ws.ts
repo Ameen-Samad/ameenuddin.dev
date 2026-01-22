@@ -1,7 +1,7 @@
 /**
  * Standalone WebSocket Worker for Real-Time Voice Transcription
  *
- * Uses Cloudflare AI Gateway with Deepgram Flux for real-time speech-to-text.
+ * Uses Cloudflare Workers AI with Deepgram Flux for real-time speech-to-text.
  *
  * Deployed to: /demo/api/ai/transcription
  *
@@ -10,16 +10,30 @@
  * const ws = new WebSocket('wss://ameenuddin.dev/demo/api/ai/transcription');
  *
  * ws.onopen = () => {
- *   // Send audio data (linear16, 16kHz)
- *   const audioData = getAudioFromMicrophone();
- *   ws.send(audioData);
+ *   console.log('Connected to Deepgram Flux');
+ *   // Send audio data (Int16Array, linear16, 16kHz, mono)
+ *   const audioData = new Int16Array(audioBuffer);
+ *   ws.send(audioData.buffer);
  * };
  *
  * ws.onmessage = (event) => {
- *   const transcription = JSON.parse(event.data);
- *   console.log('Transcription:', transcription);
+ *   // Transcription results from Deepgram Flux
+ *   console.log('Transcription:', event.data);
+ * };
+ *
+ * ws.onerror = (error) => {
+ *   console.error('WebSocket error:', error);
+ * };
+ *
+ * ws.onclose = () => {
+ *   console.log('WebSocket closed');
  * };
  * ```
+ *
+ * Audio Format:
+ * - Encoding: linear16 (Int16Array)
+ * - Sample Rate: 16000 Hz
+ * - Channels: 1 (mono)
  */
 
 interface Env {
@@ -41,13 +55,14 @@ export default {
         JSON.stringify({
           error: 'This endpoint requires a WebSocket connection',
           info: 'Deepgram Flux requires WebSocket for real-time transcription',
-          usage: 'Connect via WebSocket and send audio data (linear16, 16kHz)',
+          usage: 'Connect via WebSocket and send audio data (Int16Array, linear16, 16kHz, mono)',
           websocketUrl: wsUrl,
           model: '@cf/deepgram/flux',
           audioFormat: {
             encoding: 'linear16',
             sampleRate: 16000,
             channels: 1,
+            dataType: 'Int16Array',
           },
           example: {
             javascript: `
@@ -61,10 +76,16 @@ ws.onopen = () => {
 };
 
 ws.onmessage = (event) => {
-  const result = JSON.parse(event.data);
-  if (result.type === 'transcription') {
-    console.log('Text:', result.text);
-  }
+  // Transcription results from Deepgram Flux
+  console.log('Transcription:', event.data);
+};
+
+ws.onerror = (error) => {
+  console.error('WebSocket error:', error);
+};
+
+ws.onclose = () => {
+  console.log('WebSocket closed');
 };
             `.trim(),
           },

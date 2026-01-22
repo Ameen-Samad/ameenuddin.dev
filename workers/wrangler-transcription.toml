@@ -1,5 +1,5 @@
 # Wrangler configuration for Transcription WebSocket Worker
-# Real-time speech-to-text using Deepgram Flux via AI Gateway
+# Real-time speech-to-text using Deepgram Flux via Workers AI
 
 name = "ameenuddin-transcription-ws"
 main = "transcription-ws.ts"
@@ -11,13 +11,9 @@ compatibility_flags = ["nodejs_compat"]
 pattern = "ameenuddin.dev/demo/api/ai/transcription"
 zone_name = "ameenuddin.dev"
 
-# Environment variables (non-sensitive)
-[vars]
-CLOUDFLARE_ACCOUNT_ID = "90183697cb6664ac7b540cb2b3d9b66d"
-CLOUDFLARE_GATEWAY_ID = "ameenuddin-ai-gateway"
-
-# Secrets (set via `wrangler secret put CLOUDFLARE_API_TOKEN`)
-# Run: npx wrangler secret put CLOUDFLARE_API_TOKEN --config workers/wrangler-transcription.toml
+# AI binding for Workers AI models
+[ai]
+binding = "AI"
 
 # Observability
 [observability]
