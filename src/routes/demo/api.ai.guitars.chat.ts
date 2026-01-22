@@ -157,7 +157,7 @@ export const Route = createFileRoute('/demo/api/ai/guitars/chat')({
         'Content-Type': 'text/event-stream',
         'Cache-Control': 'no-cache',
         Connection: 'keep-alive',
-        'X-RateLimit-Remaining': rateLimitResult.remaining?.toString() || '',
+        'X-RateLimit-Remaining': rateLimitResult.remaining.toString(),
       },
     })
   } catch (error) {

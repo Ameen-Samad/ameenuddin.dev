@@ -1,12 +1,12 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { Guitar, MessageSquare, Sparkles } from "lucide-react";
 import { useState } from "react";
-import { CartDrawer } from "./_components/CartDrawer";
-import { CartIcon } from "./_components/CartIcon";
-import { CompareBar } from "./_components/CompareBar";
-import { GuitarChat } from "./_components/GuitarChat";
-import { GuitarGrid } from "./_components/GuitarGrid";
-import { SemanticSearch } from "./_components/SemanticSearch";
+import { CartDrawer } from "./_components/-CartDrawer";
+import { CartIcon } from "./_components/-CartIcon";
+import { CompareBar } from "./_components/-CompareBar";
+import { GuitarChat } from "./_components/-GuitarChat";
+import { GuitarGrid } from "./_components/-GuitarGrid";
+import { SemanticSearch } from "./_components/-SemanticSearch";
 
 export const Route = createFileRoute("/demo/guitars/")({
 	component: GuitarsIndex,

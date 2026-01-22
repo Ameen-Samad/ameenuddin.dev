@@ -1,6 +1,6 @@
 import { createFileRoute } from '@tanstack/react-router'
 import { env } from 'cloudflare:workers'
-import { checkRateLimit } from '@/lib/rate-limit'
+import { checkRateLimit, RATE_LIMITS, rateLimitResponse } from '@/lib/rate-limit'
 import guitars from '@/data/demo-guitars'
 
 // Pre-computed text representations for each guitar (for embedding)
@@ -15,22 +15,15 @@ export const Route = createFileRoute('/demo/api/ai/guitars/search')({
       POST: async ({ request }) => {
   try {
     // Rate limiting
-    const clientIP = request.headers.get('cf-connecting-ip') || 'unknown'
     const rateLimitResult = await checkRateLimit(
-      env.RATE_LIMIT,
-      `guitar-search:${clientIP}`,
-      30,
-      60
+      request,
+      'guitar-search',
+      RATE_LIMITS.SEARCH,
+      env.RATE_LIMIT
     )
 
-    if (!rateLimitResult.allowed) {
-      return new Response(
-        JSON.stringify({ error: 'Rate limit exceeded' }),
-        {
-          status: 429,
-          headers: { 'Content-Type': 'application/json' },
-        }
-      )
+    if (!rateLimitResult.success) {
+      return rateLimitResponse(rateLimitResult)
     }
 
     const { query } = await request.json()
