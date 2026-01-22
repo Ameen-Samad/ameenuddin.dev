@@ -2,6 +2,15 @@ import { env } from "cloudflare:workers";
 import { createFileRoute } from "@tanstack/react-router";
 import { z } from "zod";
 
+// Simple hash function for cache keys
+async function hashKey(recipeName: string, mode: string): Promise<string> {
+	const encoder = new TextEncoder();
+	const data = encoder.encode(`${mode}:${recipeName.toLowerCase().trim()}`);
+	const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
+	return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 // Schema for structured recipe output
 const RecipeSchema = z.object({
 	name: z.string().describe("The name of the recipe"),
@@ -168,6 +177,29 @@ export const Route = createFileRoute("/demo/api/ai/structured")({
 				}
 
 				try {
+					// Check cache first
+					const cacheKey = `recipe:${await hashKey(recipeName, mode)}`;
+					const cache = env.PROJECT_CACHE;
+
+					if (cache) {
+						const cached = await cache.get(cacheKey, "json");
+						if (cached) {
+							console.log(`Cache hit for recipe: ${recipeName} (${mode})`);
+							return new Response(
+								JSON.stringify({
+									...cached,
+									cached: true,
+								}),
+								{
+									status: 200,
+									headers: { "Content-Type": "application/json" },
+								},
+							);
+						}
+					}
+
+					let responseData;
+
 					if (mode === "structured") {
 						const prompt = `Generate a complete recipe for: ${recipeName}.
 
@@ -213,18 +245,12 @@ Include all ingredients with amounts, step-by-step instructions, prep/cook times
 							);
 						}
 
-						return new Response(
-							JSON.stringify({
-								mode: "structured",
-								recipe: recipeData,
-								provider: "cloudflare",
-								model: "@cf/meta/llama-4-scout-17b-16e-instruct",
-							}),
-							{
-								status: 200,
-								headers: { "Content-Type": "application/json" },
-							},
-						);
+						responseData = {
+							mode: "structured",
+							recipe: recipeData,
+							provider: "cloudflare",
+							model: "@cf/meta/llama-4-scout-17b-16e-instruct",
+						};
 					} else {
 						const markdownPrompt = `Generate a complete recipe for: ${recipeName}.
 
@@ -256,19 +282,36 @@ Make it detailed and easy to follow.`;
 
 						const markdown = aiResponse.response || JSON.stringify(aiResponse);
 
-						return new Response(
-							JSON.stringify({
-								mode: "oneshot",
-								markdown,
-								provider: "cloudflare",
-								model: "@cf/meta/llama-4-scout-17b-16e-instruct",
-							}),
-							{
-								status: 200,
-								headers: { "Content-Type": "application/json" },
-							},
-						);
+						responseData = {
+							mode: "oneshot",
+							markdown,
+							provider: "cloudflare",
+							model: "@cf/meta/llama-4-scout-17b-16e-instruct",
+						};
 					}
+
+					// Cache the response (7 days TTL)
+					if (cache) {
+						try {
+							await cache.put(cacheKey, JSON.stringify(responseData), {
+								expirationTtl: 60 * 60 * 24 * 7, // 7 days
+							});
+							console.log(`Cached recipe: ${recipeName} (${mode})`);
+						} catch (error) {
+							console.error("Cache error:", error);
+						}
+					}
+
+					return new Response(
+						JSON.stringify({
+							...responseData,
+							cached: false,
+						}),
+						{
+							status: 200,
+							headers: { "Content-Type": "application/json" },
+						},
+					);
 				} catch (error: any) {
 					console.error("Recipe generation error:", error);
 					return new Response(

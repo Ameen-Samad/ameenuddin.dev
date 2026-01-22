@@ -1,5 +1,5 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { ChefHat, Clock, Gauge, Users } from "lucide-react";
+import { Check, ChefHat, Clock, Code, Gauge, Users, X } from "lucide-react";
 import { useState } from "react";
 import { Streamdown } from "streamdown";
 
@@ -147,9 +147,12 @@ function StructuredPage() {
 		markdown?: string;
 		provider: string;
 		model: string;
+		cached?: boolean;
 	} | null>(null);
 	const [isLoading, setIsLoading] = useState(false);
 	const [error, setError] = useState<string | null>(null);
+	const [isDrawerOpen, setIsDrawerOpen] = useState(false);
+	const [copied, setCopied] = useState(false);
 
 	const handleGenerate = async (mode: Mode) => {
 		if (!recipeName.trim()) return;
@@ -176,6 +179,14 @@ function StructuredPage() {
 			setError(err.message);
 		} finally {
 			setIsLoading(false);
+		}
+	};
+
+	const handleCopy = () => {
+		if (result?.recipe) {
+			navigator.clipboard.writeText(JSON.stringify(result.recipe, null, 2));
+			setCopied(true);
+			setTimeout(() => setCopied(false), 2000);
 		}
 	};
 
@@ -262,17 +273,38 @@ function StructuredPage() {
 						<h2 className="text-lg font-semibold text-white">
 							Generated Recipe
 						</h2>
-						{result && (
-							<span
-								className={`px-2 py-1 rounded text-xs font-medium ${
-									result.mode === "structured"
-										? "bg-purple-500/20 text-purple-400"
-										: "bg-blue-500/20 text-blue-400"
-								}`}
-							>
-								{result.mode === "structured" ? "Structured JSON" : "Markdown"}
-							</span>
-						)}
+						<div className="flex items-center gap-3">
+							{result && (
+								<>
+									<span
+										className={`px-2 py-1 rounded text-xs font-medium ${
+											result.mode === "structured"
+												? "bg-purple-500/20 text-purple-400"
+												: "bg-blue-500/20 text-blue-400"
+										}`}
+									>
+										{result.mode === "structured"
+											? "Structured JSON"
+											: "Markdown"}
+									</span>
+									{result.cached && (
+										<span className="px-2 py-1 rounded text-xs font-medium bg-green-500/20 text-green-400">
+											Cached
+										</span>
+									)}
+								</>
+							)}
+							{result && result.mode === "structured" && (
+								<button
+									onClick={() => setIsDrawerOpen(true)}
+									type="button"
+									className="flex items-center gap-2 px-3 py-1.5 text-sm bg-gray-700 hover:bg-gray-600 text-gray-300 rounded-lg transition-colors"
+								>
+									<Code className="w-4 h-4" />
+									View Raw JSON
+								</button>
+							)}
+						</div>
 					</div>
 
 					{error && (
@@ -300,6 +332,47 @@ function StructuredPage() {
 						</div>
 					) : null}
 				</div>
+
+				{/* Raw JSON Drawer */}
+				{isDrawerOpen && result && result.recipe && (
+					<div className="fixed inset-0 z-50 flex">
+						<div
+							className="absolute inset-0 bg-black/50"
+							onClick={() => setIsDrawerOpen(false)}
+						></div>
+						<div className="relative ml-auto w-full max-w-2xl h-full bg-gray-800 shadow-xl flex flex-col">
+							<div className="flex items-center justify-between p-4 border-b border-gray-700">
+								<h2 className="text-lg font-semibold text-white">Raw JSON</h2>
+								<button
+									onClick={() => setIsDrawerOpen(false)}
+									type="button"
+									className="p-1 hover:bg-gray-700 rounded-lg transition-colors"
+								>
+									<X className="w-5 h-5 text-gray-400" />
+								</button>
+							</div>
+							<div className="flex-1 overflow-auto p-4">
+								<pre className="text-sm text-gray-300 whitespace-pre-wrap break-all">
+									{JSON.stringify(result.recipe, null, 2)}
+								</pre>
+							</div>
+							<div className="p-4 border-t border-gray-700 flex justify-end">
+								<button
+									onClick={handleCopy}
+									type="button"
+									className="flex items-center gap-2 px-4 py-2 bg-orange-500 hover:bg-orange-600 text-white rounded-lg transition-colors"
+								>
+									{copied ? (
+										<Check className="w-4 h-4" />
+									) : (
+										<Code className="w-4 h-4" />
+									)}
+									{copied ? "Copied!" : "Copy JSON"}
+								</button>
+							</div>
+						</div>
+					</div>
+				)}
 
 				{/* How It Works */}
 				<div className="mt-6 bg-gray-800 rounded-lg p-6 border border-blue-500/20">
