@@ -150,7 +150,16 @@ export function executePortfolioTool(
 function handleRecommendProject(
 	input: Record<string, unknown>,
 ): ProjectRecommendation | { error: string } {
-	const projectIds = (input.projectIds || input.project_ids) as string[]
+	let projectIds = (input.projectIds || input.project_ids) as string[] | string
+
+	// Handle case where projectIds is a JSON string
+	if (typeof projectIds === 'string') {
+		try {
+			projectIds = JSON.parse(projectIds)
+		} catch {
+			return { error: 'projectIds must be a valid JSON array' }
+		}
+	}
 
 	if (!projectIds || !Array.isArray(projectIds)) {
 		return { error: 'projectIds must be an array' }
