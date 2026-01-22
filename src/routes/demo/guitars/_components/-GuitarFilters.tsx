@@ -1,7 +1,7 @@
 import { useDebouncedCallback } from '@tanstack/react-pacer/debouncer'
 import type { GuitarType } from '@/data/demo-guitars'
 import { getPriceRange } from '@/data/demo-guitars'
-import { Search, X, SlidersHorizontal } from 'lucide-react'
+import { Search, X, SlidersHorizontal, Zap } from 'lucide-react'
 
 export interface FilterState {
   search: string
@@ -70,20 +70,34 @@ export function GuitarFilters({ filters, onFilterChange }: GuitarFiltersProps) {
   return (
     <div className="bg-gray-900/60 backdrop-blur-md rounded-xl border border-gray-800/50 p-4 space-y-4">
       {/* Header */}
-      <div className="flex items-center justify-between">
-        <h3 className="text-white font-medium flex items-center gap-2">
-          <SlidersHorizontal className="w-4 h-4" />
-          Filters
-        </h3>
-        {hasActiveFilters && (
-          <button
-            onClick={clearFilters}
-            className="text-gray-400 hover:text-white text-sm flex items-center gap-1"
-          >
-            <X className="w-4 h-4" />
-            Clear
-          </button>
-        )}
+      <div className="space-y-2">
+        <div className="flex items-center justify-between">
+          <h3 className="text-white font-medium flex items-center gap-2">
+            <SlidersHorizontal className="w-4 h-4" />
+            Filters
+          </h3>
+          {hasActiveFilters && (
+            <button
+              onClick={clearFilters}
+              className="text-gray-400 hover:text-white text-sm flex items-center gap-1"
+            >
+              <X className="w-4 h-4" />
+              Clear
+            </button>
+          )}
+        </div>
+        <div className="flex items-center gap-2 flex-wrap">
+          <span className="inline-flex items-center gap-1 px-2 py-1 bg-blue-500/20 text-blue-400 rounded-lg text-xs font-medium">
+            <Zap className="w-3 h-3" />
+            Real-Time Filter
+          </span>
+          <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded-lg text-xs font-medium">
+            TanStack Pacer
+          </span>
+          <span className="px-2 py-1 bg-gray-800 text-gray-400 rounded-lg text-xs font-medium">
+            TanStack Table
+          </span>
+        </div>
       </div>
 
       {/* Search */}

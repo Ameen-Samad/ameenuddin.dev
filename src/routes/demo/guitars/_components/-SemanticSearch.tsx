@@ -2,7 +2,7 @@ import { useState, useRef } from 'react'
 import { Link } from '@tanstack/react-router'
 import { useDebouncedCallback } from '@tanstack/react-pacer/debouncer'
 import { useStore } from '@tanstack/react-store'
-import { Search, Sparkles, Loader2, X, ShoppingCart, Check } from 'lucide-react'
+import { Search, Sparkles, Loader2, X, ShoppingCart, Check, MessageSquare } from 'lucide-react'
 import type { Guitar } from '@/data/demo-guitars'
 import { cartStore, addToCart, isInCart } from '@/stores/cart-store'
 
@@ -12,7 +12,12 @@ interface SearchResult {
   relevance: string
 }
 
-export function SemanticSearch() {
+interface SemanticSearchProps {
+  isChatOpen: boolean
+  onChatToggle: () => void
+}
+
+export function SemanticSearch({ isChatOpen, onChatToggle }: SemanticSearchProps) {
   const [query, setQuery] = useState('')
   const [results, setResults] = useState<SearchResult[]>([])
   const [isLoading, setIsLoading] = useState(false)
@@ -39,7 +44,9 @@ export function SemanticSearch() {
         })
 
         if (!response.ok) {
-          throw new Error('Search failed')
+          const errorData = await response.json().catch(() => ({}))
+          console.error('Search API error:', response.status, errorData)
+          throw new Error(errorData.message || errorData.error || 'Search failed')
         }
 
         const data = await response.json()
@@ -47,7 +54,7 @@ export function SemanticSearch() {
         setIsOpen(true)
       } catch (err) {
         console.error('Search error:', err)
-        setError('Search temporarily unavailable')
+        setError('Search temporarily unavailable. Please try again.')
         setResults([])
       } finally {
         setIsLoading(false)
@@ -74,38 +81,55 @@ export function SemanticSearch() {
   }
 
   return (
-    <div className="relative w-full max-w-xl mx-auto">
-      {/* Search Input */}
-      <div className="relative">
-        <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
-          {isLoading ? (
-            <Loader2 className="w-5 h-5 text-emerald-400 animate-spin" />
-          ) : (
-            <Search className="w-5 h-5 text-gray-400" />
-          )}
-        </div>
-        <input
-          ref={inputRef}
-          type="text"
-          value={query}
-          onChange={handleInputChange}
-          onFocus={() => results.length > 0 && setIsOpen(true)}
-          placeholder='Try: "warm vintage jazz tone" or "beginner friendly acoustic"'
-          className="w-full pl-12 pr-24 py-3 bg-gray-800/80 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-all"
-        />
-        <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
-          {query && (
-            <button
-              onClick={clearSearch}
-              className="p-1 text-gray-400 hover:text-white transition-colors"
-            >
-              <X className="w-4 h-4" />
-            </button>
-          )}
-          <span className="flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-medium">
-            <Sparkles className="w-3 h-3" />
-            AI
-          </span>
+    <div className="relative w-full max-w-4xl mx-auto">
+      {/* Search Row */}
+      <div className="flex items-center gap-3">
+        {/* Ask AI Button */}
+        <button
+          onClick={onChatToggle}
+          className={`flex items-center gap-2 px-4 py-3 rounded-xl font-medium transition-colors flex-shrink-0 ${
+            isChatOpen
+              ? "bg-emerald-600 text-white"
+              : "bg-gray-800 text-gray-300 hover:bg-gray-700 border border-gray-700"
+          }`}
+        >
+          <MessageSquare className="w-5 h-5" />
+          <span className="hidden sm:inline">Ask AI</span>
+          {!isChatOpen && <Sparkles className="w-4 h-4 text-emerald-400" />}
+        </button>
+
+        {/* Search Input */}
+        <div className="relative flex-1">
+          <div className="absolute left-4 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            {isLoading ? (
+              <Loader2 className="w-5 h-5 text-emerald-400 animate-spin" />
+            ) : (
+              <Search className="w-5 h-5 text-gray-400" />
+            )}
+          </div>
+          <input
+            ref={inputRef}
+            type="text"
+            value={query}
+            onChange={handleInputChange}
+            onFocus={() => results.length > 0 && setIsOpen(true)}
+            placeholder='Try: "warm vintage jazz tone" or "beginner friendly acoustic"'
+            className="w-full pl-12 pr-40 py-3 bg-gray-800/80 border border-gray-700 rounded-xl text-white placeholder-gray-500 focus:outline-none focus:border-emerald-500 focus:ring-1 focus:ring-emerald-500/50 transition-all"
+          />
+          <div className="absolute right-3 top-1/2 -translate-y-1/2 flex items-center gap-2">
+            {query && (
+              <button
+                onClick={clearSearch}
+                className="p-1 text-gray-400 hover:text-white transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            )}
+            <span className="flex items-center gap-1 px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded-lg text-xs font-medium whitespace-nowrap">
+              <Sparkles className="w-3 h-3" />
+              AI Semantic Search
+            </span>
+          </div>
         </div>
       </div>
 

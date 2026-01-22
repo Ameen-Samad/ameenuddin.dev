@@ -1,9 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { Guitar, MessageSquare, Sparkles } from "lucide-react";
+import { Guitar } from "lucide-react";
 import { useState } from "react";
+import { CompareDrawer } from "@/components/CompareDrawer";
 import { CartDrawer } from "./_components/-CartDrawer";
 import { CartIcon } from "./_components/-CartIcon";
-import { CompareBar } from "./_components/-CompareBar";
 import { GuitarChat } from "./_components/-GuitarChat";
 import { GuitarGrid } from "./_components/-GuitarGrid";
 import { SemanticSearch } from "./_components/-SemanticSearch";
@@ -32,20 +32,6 @@ function GuitarsIndex() {
 					</div>
 
 					<div className="flex items-center gap-3">
-						{/* AI Chat Toggle */}
-						<button
-							onClick={() => setIsChatOpen(!isChatOpen)}
-							className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
-								isChatOpen
-									? "bg-emerald-600 text-white"
-									: "bg-gray-800 text-gray-300 hover:bg-gray-700"
-							}`}
-						>
-							<MessageSquare className="w-5 h-5" />
-							<span className="hidden sm:inline">Ask AI</span>
-							{!isChatOpen && <Sparkles className="w-4 h-4 text-emerald-400" />}
-						</button>
-
 						{/* Cart Icon */}
 						<CartIcon onClick={() => setIsCartOpen(true)} />
 					</div>
@@ -66,7 +52,10 @@ function GuitarsIndex() {
 							</p>
 
 							{/* Semantic Search */}
-							<SemanticSearch />
+							<SemanticSearch
+								isChatOpen={isChatOpen}
+								onChatToggle={() => setIsChatOpen(!isChatOpen)}
+							/>
 						</div>
 
 						<GuitarGrid />
@@ -81,8 +70,8 @@ function GuitarsIndex() {
 				</div>
 			</main>
 
-			{/* Compare Bar (fixed at bottom when items selected) */}
-			<CompareBar />
+			{/* Compare Drawer */}
+			<CompareDrawer />
 
 			{/* Cart Drawer */}
 			<CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />

@@ -155,13 +155,15 @@ export async function checkRateLimit(
 	}
 
 	// Increment counter
+	// Ensure TTL is at least 60 seconds (KV minimum)
+	const ttl = Math.max(60, Math.ceil((resetAt - now) / 1000));
 	await kv.put(
 		key,
 		JSON.stringify({
 			count: count + cost,
 			resetAt,
 		}),
-		{ expirationTtl: Math.ceil((resetAt - now) / 1000) },
+		{ expirationTtl: ttl },
 	);
 
 	return {

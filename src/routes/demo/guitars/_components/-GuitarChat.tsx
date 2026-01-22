@@ -101,7 +101,7 @@ export function GuitarChat({ onClose }: GuitarChatProps) {
           if (line.startsWith('data: ')) {
             try {
               const data = JSON.parse(line.slice(6))
-              if (data.type === 'text') {
+              if (data.type === 'content') {
                 fullContent += data.content
                 setMessages((prev) =>
                   prev.map((m) =>

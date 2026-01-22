@@ -10,8 +10,8 @@ import {
 } from '@tanstack/react-table'
 import guitars, { type Guitar } from '@/data/demo-guitars'
 import { cartStore, addToCart, isInCart } from '@/stores/cart-store'
-import { GuitarCard } from './GuitarCard'
-import { GuitarFilters, getDefaultFilters, type FilterState } from './GuitarFilters'
+import { GuitarCard } from './-GuitarCard'
+import { GuitarFilters, getDefaultFilters, type FilterState } from './-GuitarFilters'
 import { ArrowUpDown, ArrowUp, ArrowDown, LayoutGrid, List, ShoppingCart, Check } from 'lucide-react'
 
 type ViewMode = 'grid' | 'list'

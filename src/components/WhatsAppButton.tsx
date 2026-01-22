@@ -1,10 +1,21 @@
-import { Tooltip } from "@mantine/core";
-import { IconBrandWhatsapp } from "@tabler/icons-react";
+import { IconBrandWhatsapp, IconX } from "@tabler/icons-react";
+import { useLocation } from "@tanstack/react-router";
 import { AnimatePresence, motion } from "framer-motion";
 import { useEffect, useState } from "react";
 
 export function WhatsAppButton() {
 	const [isVisible, setIsVisible] = useState(false);
+	const [isDismissed, setIsDismissed] = useState(false);
+	const location = useLocation();
+
+	// Reset dismissed state when route changes
+	useEffect(() => {
+		setIsDismissed(false);
+	}, [location.pathname]);
+
+	const handleDismiss = () => {
+		setIsDismissed(true);
+	};
 
 	useEffect(() => {
 		// Show button after 1 second
@@ -22,7 +33,7 @@ export function WhatsAppButton() {
 
 	return (
 		<AnimatePresence>
-			{isVisible && (
+			{isVisible && !isDismissed && (
 				<motion.div
 					initial={{ scale: 0, opacity: 0, y: 20 }}
 					animate={{ scale: 1, opacity: 1, y: 0 }}
@@ -37,41 +48,59 @@ export function WhatsAppButton() {
 						bottom: "24px",
 						right: "24px",
 						zIndex: 9999,
+						display: "flex",
+						alignItems: "flex-start",
+						gap: "8px",
 					}}
 				>
-					<Tooltip
-						label="Click to start a conversation on WhatsApp"
-						position="left"
+					<button
+						type="button"
+						onClick={handleWhatsAppClick}
+						style={{
+							display: "flex",
+							alignItems: "center",
+							gap: "12px",
+							background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
+							padding: "12px 20px",
+							borderRadius: "50px",
+							boxShadow: "0 4px 20px rgba(37, 211, 102, 0.4)",
+							cursor: "pointer",
+							border: "none",
+						}}
 					>
-						<button
-							type="button"
-							onClick={handleWhatsAppClick}
+						<IconBrandWhatsapp size={24} color="white" />
+						<span
 							style={{
-								position: "relative",
-								display: "flex",
-								alignItems: "center",
-								gap: "12px",
-								background: "linear-gradient(135deg, #25D366 0%, #128C7E 100%)",
-								padding: "12px 20px",
-								borderRadius: "50px",
-								boxShadow: "0 4px 20px rgba(37, 211, 102, 0.4)",
-								cursor: "pointer",
-								border: "none",
+								color: "white",
+								fontSize: "14px",
+								fontWeight: 600,
+								whiteSpace: "nowrap",
 							}}
 						>
-							<IconBrandWhatsapp size={24} color="white" />
-							<span
-								style={{
-									color: "white",
-									fontSize: "14px",
-									fontWeight: 600,
-									whiteSpace: "nowrap",
-								}}
-							>
-								Chat on WhatsApp
-							</span>
-						</button>
-					</Tooltip>
+							Chat on WhatsApp
+						</span>
+					</button>
+					<button
+						type="button"
+						onClick={handleDismiss}
+						aria-label="Dismiss"
+						style={{
+							background: "#25D366",
+							borderRadius: "50%",
+							width: "24px",
+							height: "24px",
+							minWidth: "24px",
+							padding: 0,
+							display: "flex",
+							alignItems: "center",
+							justifyContent: "center",
+							cursor: "pointer",
+							border: "none",
+							boxShadow: "0 2px 8px rgba(0,0,0,0.2)",
+						}}
+					>
+						<IconX size={14} color="white" />
+					</button>
 				</motion.div>
 			)}
 		</AnimatePresence>
