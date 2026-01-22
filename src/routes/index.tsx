@@ -10,16 +10,10 @@ import {
 	Text,
 	Title,
 } from "@mantine/core";
-import {
-	IconArrowDown,
-	IconBrandGithub,
-	IconBrandLinkedin,
-	IconMail,
-	IconPhone,
-} from "@tabler/icons-react";
+import { IconArrowDown } from "@tabler/icons-react";
 import { useQuery } from "@tanstack/react-query";
 import { createFileRoute } from "@tanstack/react-router";
-import { motion } from "framer-motion";
+import { motion } from "motion/react";
 import { useEffect } from "react";
 import { ContactSection } from "../components/ContactSection";
 import { DemosSection } from "../components/DemosSection";
@@ -43,12 +37,6 @@ interface GitHubStats {
 
 export const Route = createFileRoute("/")({
 	component: Home,
-	onEnter: () => {
-		restoreScrollPosition();
-	},
-	onLeave: () => {
-		saveScrollPosition();
-	},
 });
 
 function Home() {
@@ -90,28 +78,10 @@ function Hero({ commits }: { commits: number }) {
 	return (
 		<section
 			id="hero"
-			style={{
-				minHeight: "100vh",
-				display: "flex",
-				alignItems: "center",
-				position: "relative",
-				overflow: "hidden",
-				padding: "2rem 1rem", // Mobile padding
-			}}
+			className="flex items-center relative overflow-hidden p-8 md:p-16 min-h-dvh"
 		>
-			<div
-				style={{
-					position: "absolute",
-					top: 0,
-					left: 0,
-					right: 0,
-					bottom: 0,
-					background:
-						"radial-gradient(circle at 50% 50%, rgba(0, 243, 255, 0.15) 0%, transparent 70%)",
-					pointerEvents: "none",
-				}}
-			/>
-			<Container size="xl" style={{ width: "100%" }}>
+			<div className="absolute inset-0 pointer-events-none bg-blue-500/5" />
+			<Container size="xl" className="w-full">
 				<motion.div
 					initial={{ opacity: 0, y: 50 }}
 					animate={{ opacity: 1, y: 0 }}
@@ -124,17 +94,13 @@ function Hero({ commits }: { commits: number }) {
 						order={1}
 						c="white"
 						mb="md"
-						style={{
-							lineHeight: 1.1,
-							fontSize: "clamp(2rem, 8vw, 4rem)", // Responsive font size
-							wordWrap: "break-word",
-						}}
+						className="text-balance leading-tight"
 					>
 						<motion.span
 							initial={{ opacity: 0 }}
 							animate={{ opacity: 1 }}
 							transition={{ duration: 0.5, delay: 0.2 }}
-							style={{ color: "#00f3ff" }}
+							className="text-blue-400"
 						>
 							Fast Learner
 						</motion.span>{" "}
@@ -143,41 +109,25 @@ function Hero({ commits }: { commits: number }) {
 					<Text
 						c="dimmed"
 						mb="xl"
-						style={{
-							fontSize: "clamp(1rem, 3vw, 1.25rem)", // Responsive text
-							lineHeight: 1.6,
-							maxWidth: "100%",
-						}}
+						className="text-pretty text-lg md:text-xl leading-relaxed max-w-full"
 					>
 						Not an expert—I show{" "}
-						<motion.span
-							style={{ color: "#ff00ff", fontWeight: 700 }}
-							animate={{ scale: [1, 1.1, 1] }}
-							transition={{ duration: 2, repeat: Infinity }}
-						>
+						<span className="text-purple-400 font-bold">
 							proof through code
-						</motion.span>
+						</span>
 						. This portfolio contains{" "}
-						<motion.span
-							style={{ color: "#00f3ff", fontWeight: 600 }}
-							animate={{ opacity: [1, 0.7, 1] }}
-							transition={{ duration: 2, repeat: Infinity }}
-						>
+						<span className="text-blue-400 font-semibold">
 							15+ working demos
-						</motion.span>{" "}
+						</span>{" "}
 						and a git history of {commits}+ commits showing real problem-solving
 					</Text>
-					<Group gap="md" style={{ flexWrap: "wrap" }}>
+					<Group gap="md" className="flex-wrap">
 						<Button
 							component="a"
 							href="#demos"
 							size="lg"
 							variant="filled"
-							style={{
-								background: "linear-gradient(45deg, #00f3ff, #0066ff)",
-								border: "none",
-								fontSize: "clamp(0.875rem, 2vw, 1rem)", // Responsive button text
-							}}
+							className="bg-blue-500 border-none text-base md:text-lg"
 						>
 							View Projects
 						</Button>
@@ -186,11 +136,7 @@ function Hero({ commits }: { commits: number }) {
 							href="#contact"
 							size="lg"
 							variant="outline"
-							style={{
-								borderColor: "#ff00ff",
-								color: "#ff00ff",
-								fontSize: "clamp(0.875rem, 2vw, 1rem)",
-							}}
+							className="border-purple-500 text-purple-500 text-base md:text-lg"
 						>
 							Get In Touch
 						</Button>
@@ -199,14 +145,9 @@ function Hero({ commits }: { commits: number }) {
 					<motion.div
 						animate={{ y: [0, 10, 0] }}
 						transition={{ duration: 2, repeat: Infinity, ease: "easeInOut" }}
-						style={{
-							position: "absolute",
-							bottom: -100,
-							left: "50%",
-							transform: "translateX(-50%)",
-						}}
+						className="absolute bottom-0 left-1/2 -translate-x-1/2"
 					>
-						<Anchor href="#about" style={{ color: "#00f3ff" }}>
+						<Anchor href="#about" className="text-blue-400">
 							<motion.div
 								animate={{ rotate: 360 }}
 								transition={{ duration: 2, repeat: Infinity, ease: "linear" }}
@@ -223,8 +164,8 @@ function Hero({ commits }: { commits: number }) {
 
 function About({ commits }: { commits: number }) {
 	return (
-		<section id="about" style={{ padding: "100px 1rem" }}>
-			<Container size="xl" style={{ maxWidth: "100%", padding: "0 1rem" }}>
+		<section id="about" className="py-24 px-4">
+			<Container size="xl" className="max-w-full px-4">
 				<motion.div
 					initial={{ opacity: 0, y: 50 }}
 					whileInView={{ opacity: 1, y: 0 }}
@@ -235,23 +176,10 @@ function About({ commits }: { commits: number }) {
 						order={2}
 						c="white"
 						mb="xl"
-						style={{
-							position: "relative",
-							display: "inline-block",
-							fontSize: "clamp(1.75rem, 5vw, 2.5rem)",
-						}}
+						className="relative inline-block text-balance"
 					>
 						About Me
-						<div
-							style={{
-								position: "absolute",
-								bottom: "-8px",
-								left: 0,
-								width: "100px",
-								height: "4px",
-								background: "linear-gradient(90deg, #00f3ff, transparent)",
-							}}
-						/>
+						<div className="absolute -bottom-2 left-0 w-[100px] h-1 bg-gradient-to-r from-blue-400 to-transparent" />
 					</Title>
 					<SimpleGrid cols={{ base: 1, md: 2 }} spacing="xl">
 						<Paper
@@ -420,8 +348,8 @@ function About({ commits }: { commits: number }) {
 									>
 										<b>Iterate Until It Works</b> - My git history has{" "}
 										{Math.floor(commits * 0.2)}+ "Fix X" commits. That's not
-										failure—that's learning. I debug, refactor, and improve until
-										it's production-ready.
+										failure—that's learning. I debug, refactor, and improve
+										until it's production-ready.
 									</Text>
 								</Group>
 								<Group

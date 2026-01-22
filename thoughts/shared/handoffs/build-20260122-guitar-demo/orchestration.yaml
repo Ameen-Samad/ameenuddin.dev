@@ -1,0 +1,25 @@
+session: build-20260122-guitar-demo
+mode: brownfield
+description: "AI-powered guitar demo with chat recommendations, semantic search, shopping cart, comparison tool, and advanced filtering"
+started: $(date -u +"%Y-%m-%dT%H:%M:%SZ")
+chain:
+  - discovery-interview
+  - plan-agent
+  - validate-agent
+  - implement_plan
+  - commit
+  - describe_pr
+current_phase: 0
+phases:
+  - skill: discovery-interview
+    status: pending
+  - skill: plan-agent
+    status: pending
+  - skill: validate-agent
+    status: pending
+  - skill: implement_plan
+    status: pending
+  - skill: commit
+    status: pending
+  - skill: describe_pr
+    status: pending

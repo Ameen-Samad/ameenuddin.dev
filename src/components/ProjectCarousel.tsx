@@ -6,7 +6,7 @@ import {
 	useAnimation,
 	useMotionValue,
 } from "framer-motion";
-import { useEffect, useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import type { Project } from "../lib/projects-data";
 import { projects } from "../lib/projects-data";
 
@@ -16,6 +16,7 @@ export function ProjectCarousel() {
 	const controls = useAnimation();
 	const [isDragging, setIsDragging] = useState(false);
 	const [dragDistance, setDragDistance] = useState(0);
+	const currentOffset = useRef(0);
 
 	const duplicatedProjects = [...projects, ...projects, ...projects];
 
@@ -33,18 +34,27 @@ export function ProjectCarousel() {
 		setIsDragging(true);
 		setDragDistance(0);
 		controls.stop();
+		currentOffset.current = x.get();
 	};
 
 	const handleDrag = (_: any, info: PanInfo) => {
 		setDragDistance(info.offset.x);
-		x.set(info.offset.x);
+		x.set(currentOffset.current + info.offset.x);
 	};
 
-	const handleDragEnd = () => {
+	const handleDragEnd = (_: any, info: PanInfo) => {
 		setIsDragging(false);
 		setDragDistance(0);
+
+		const singleSetWidth = 33.333;
+		const dragOffset = info.offset.x;
+		const currentPos = currentOffset.current + dragOffset;
+
+		const startPosition = currentPos % singleSetWidth;
+		const endPosition = startPosition - singleSetWidth;
+
 		controls.start({
-			x: ["0%", "-33.333%"],
+			x: [`${startPosition}%`, `${endPosition}%`],
 			transition: {
 				x: {
 					repeat: Infinity,
@@ -54,6 +64,8 @@ export function ProjectCarousel() {
 				},
 			},
 		});
+
+		currentOffset.current = endPosition;
 	};
 
 	useEffect(() => {
