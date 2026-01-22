@@ -745,18 +745,20 @@ function GamePanel({
 							<Text size="lg" c="white">
 								Score: {score}
 							</Text>
-							<TextInput
-								placeholder="Enter your name"
-								value={playerName}
-								onChange={(e) => setPlayerName(e.currentTarget.value)}
-								style={{
-									background: "rgba(255, 255, 255, 0.1)",
-									borderColor: "rgba(0, 243, 255, 0.3)",
-									color: "white",
-									width: "250px",
-								}}
-								maxLength={20}
-							/>
+							<div suppressHydrationWarning>
+								<TextInput
+									placeholder="Enter your name"
+									value={playerName}
+									onChange={(e) => setPlayerName(e.currentTarget.value)}
+									style={{
+										background: "rgba(255, 255, 255, 0.1)",
+										borderColor: "rgba(0, 243, 255, 0.3)",
+										color: "white",
+										width: "250px",
+									}}
+									maxLength={20}
+								/>
+							</div>
 							<Button
 								onClick={onSaveScore}
 								disabled={!playerName.trim()}

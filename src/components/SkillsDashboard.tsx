@@ -9,14 +9,14 @@ import {
 	Title,
 } from "@mantine/core";
 import { IconSearch } from "@tabler/icons-react";
+import { rankItem } from "@tanstack/match-sorter-utils";
 import { useStore } from "@tanstack/react-store";
 import {
 	type ColumnDef,
+	type FilterFn,
 	getCoreRowModel,
 	useReactTable,
-	type FilterFn,
 } from "@tanstack/react-table";
-import { rankItem } from "@tanstack/match-sorter-utils";
 import { motion } from "framer-motion";
 import type { SkillLevel } from "../lib/skills-data";
 import {
@@ -103,22 +103,24 @@ export function SkillsDashboard() {
 
 					{/* Search and Filter */}
 					<Stack gap="md" mb="xl">
-						<TextInput
-							placeholder="Search skills..."
-							leftSection={<IconSearch size={20} color="#6b7280" />}
-							size="lg"
-							value={searchQuery}
-							onChange={(event) =>
-								skillsActions.setSearchQuery(event.currentTarget.value)
-							}
-							style={{
-								maxWidth: 400,
-								margin: "0 auto",
-								background: "rgba(26, 26, 26, 0.8)",
-								border: "1px solid rgba(255, 255, 255, 0.1)",
-								borderRadius: "8px",
-							}}
-						/>
+						<div suppressHydrationWarning>
+							<TextInput
+								placeholder="Search skills..."
+								leftSection={<IconSearch size={20} color="#6b7280" />}
+								size="lg"
+								value={searchQuery}
+								onChange={(event) =>
+									skillsActions.setSearchQuery(event.currentTarget.value)
+								}
+								style={{
+									maxWidth: 400,
+									margin: "0 auto",
+									background: "rgba(26, 26, 26, 0.8)",
+									border: "1px solid rgba(255, 255, 255, 0.1)",
+									borderRadius: "8px",
+								}}
+							/>
+						</div>
 
 						<Group justify="center" gap="sm">
 							{levelFilters.map((filter) => (

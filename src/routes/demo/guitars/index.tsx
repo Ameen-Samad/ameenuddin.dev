@@ -1,55 +1,96 @@
-import { Link, createFileRoute } from '@tanstack/react-router'
+import { useState } from 'react'
+import { createFileRoute } from '@tanstack/react-router'
+import { Guitar, MessageSquare, Sparkles } from 'lucide-react'
 
-import guitars from '@/data/demo-guitars'
+import { GuitarGrid } from './_components/GuitarGrid'
+import { GuitarChat } from './_components/GuitarChat'
+import { SemanticSearch } from './_components/SemanticSearch'
+import { CartIcon } from './_components/CartIcon'
+import { CartDrawer } from './_components/CartDrawer'
+import { CompareBar } from './_components/CompareBar'
 
 export const Route = createFileRoute('/demo/guitars/')({
   component: GuitarsIndex,
 })
 
 function GuitarsIndex() {
+  const [isCartOpen, setIsCartOpen] = useState(false)
+  const [isChatOpen, setIsChatOpen] = useState(false)
+
   return (
-    <div className="bg-black text-white p-5">
-      <h1 className="text-3xl font-bold mb-8 text-center">Featured Guitars</h1>
-      <div className="flex flex-wrap gap-12 justify-center">
-        {guitars.map((guitar) => (
-          <div
-            key={guitar.id}
-            className="w-full md:w-[calc(50%-1.5rem)] xl:w-[calc(33.333%-2rem)] relative mb-24"
-          >
-            <Link
-              to="/example/guitars/$guitarId"
-              params={{
-                guitarId: guitar.id.toString(),
-              }}
-            >
-              <div className="relative z-0 w-full aspect-square mb-8">
-                <div className="w-full h-full overflow-hidden rounded-2xl border-4 border-gray-800 shadow-2xl">
-                  <img
-                    src={guitar.image}
-                    alt={guitar.name}
-                    className="w-full h-full object-cover guitar-image group-hover:scale-105 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/40 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-300"></div>
-                </div>
-
-                <div className="absolute bottom-4 left-1/2 transform -translate-x-1/2 bg-emerald-500/80 text-white px-4 py-2 rounded-full text-sm font-medium opacity-0 group-hover:opacity-100 transition-opacity duration-300 backdrop-blur-sm">
-                  View Details
-                </div>
-              </div>
-
-              <div className="absolute bottom-0 right-0 z-10 w-[80%] bg-gray-900/60 backdrop-blur-md rounded-2xl p-5 border border-gray-800/50 shadow-xl transform translate-y-[40%]">
-                <h2 className="text-xl font-bold mb-2">{guitar.name}</h2>
-                <p className="text-gray-300 mb-3 line-clamp-2">
-                  {guitar.shortDescription}
-                </p>
-                <div className="text-xl font-bold text-emerald-400">
-                  ${guitar.price}
-                </div>
-              </div>
-            </Link>
+    <div className="min-h-screen bg-black text-white">
+      {/* Header */}
+      <header className="sticky top-0 z-20 bg-black/80 backdrop-blur-md border-b border-gray-800">
+        <div className="max-w-7xl mx-auto px-4 py-4 flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <Guitar className="w-8 h-8 text-emerald-400" />
+            <div>
+              <h1 className="text-2xl font-bold">AI Guitar Concierge</h1>
+              <p className="text-gray-400 text-sm">
+                Find your perfect guitar with AI assistance
+              </p>
+            </div>
           </div>
-        ))}
-      </div>
+
+          <div className="flex items-center gap-3">
+            {/* AI Chat Toggle */}
+            <button
+              onClick={() => setIsChatOpen(!isChatOpen)}
+              className={`flex items-center gap-2 px-4 py-2 rounded-lg font-medium transition-colors ${
+                isChatOpen
+                  ? 'bg-emerald-600 text-white'
+                  : 'bg-gray-800 text-gray-300 hover:bg-gray-700'
+              }`}
+            >
+              <MessageSquare className="w-5 h-5" />
+              <span className="hidden sm:inline">Ask AI</span>
+              {!isChatOpen && (
+                <Sparkles className="w-4 h-4 text-emerald-400" />
+              )}
+            </button>
+
+            {/* Cart Icon */}
+            <CartIcon onClick={() => setIsCartOpen(true)} />
+          </div>
+        </div>
+      </header>
+
+      {/* Main Content */}
+      <main className="max-w-7xl mx-auto px-4 py-8">
+        <div className="flex gap-6">
+          {/* Guitar Grid (main content) */}
+          <div className={`flex-1 ${isChatOpen ? 'lg:mr-96' : ''}`}>
+            {/* Hero Section */}
+            <div className="mb-8 text-center">
+              <h2 className="text-3xl font-bold mb-3">
+                Discover Your Sound
+              </h2>
+              <p className="text-gray-400 max-w-2xl mx-auto mb-6">
+                Browse our collection of unique guitars or chat with our AI
+                concierge to find the perfect instrument for your style.
+              </p>
+
+              {/* Semantic Search */}
+              <SemanticSearch />
+            </div>
+
+            <GuitarGrid />
+          </div>
+
+          {/* AI Chat Panel (collapsible) */}
+          {isChatOpen && (
+            <aside className="hidden lg:block fixed right-0 top-[73px] bottom-0 w-96 bg-gray-900/95 backdrop-blur-md border-l border-gray-800 z-10">
+              <GuitarChat onClose={() => setIsChatOpen(false)} />
+            </aside>
+          )}
+        </div>
+      </main>
+
+      {/* Compare Bar (fixed at bottom when items selected) */}
+      <CompareBar />
+
+      {/* Cart Drawer */}
+      <CartDrawer isOpen={isCartOpen} onClose={() => setIsCartOpen(false)} />
     </div>
   )
 }

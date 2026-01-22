@@ -23,12 +23,8 @@
  */
 
 interface Env {
-  // Environment variables (set in wrangler.toml)
-  CLOUDFLARE_ACCOUNT_ID: string;
-  CLOUDFLARE_GATEWAY_ID: string;
-
-  // Secret (set via `wrangler secret put CLOUDFLARE_API_TOKEN`)
-  CLOUDFLARE_API_TOKEN: string;
+  // AI binding (set in wrangler.toml)
+  AI: Ai;
 }
 
 export default {
@@ -83,13 +79,13 @@ ws.onmessage = (event) => {
       );
     }
 
-    // Check required environment variables
-    if (!env.CLOUDFLARE_ACCOUNT_ID || !env.CLOUDFLARE_GATEWAY_ID || !env.CLOUDFLARE_API_TOKEN) {
+    // Check required AI binding
+    if (!env.AI) {
       return new Response(
         JSON.stringify({
           error: 'Configuration error',
-          details: 'Required environment variables not set. See AI-GATEWAY-SETUP.md',
-          required: ['CLOUDFLARE_ACCOUNT_ID', 'CLOUDFLARE_GATEWAY_ID', 'CLOUDFLARE_API_TOKEN'],
+          details: 'AI binding not available. Check wrangler.toml configuration.',
+          required: ['AI binding in wrangler.toml'],
         }),
         {
           status: 500,
@@ -99,168 +95,33 @@ ws.onmessage = (event) => {
     }
 
     try {
-      // Create client-side WebSocket pair
-      const webSocketPair = new WebSocketPair();
-      const [client, server] = Object.values(webSocketPair);
+      console.log('Initializing Deepgram Flux WebSocket connection');
 
-      // Accept the client connection
-      server.accept();
-
-      // Build AI Gateway WebSocket URL
-      const aiGatewayUrl = `wss://gateway.ai.cloudflare.com/v1/${env.CLOUDFLARE_ACCOUNT_ID}/${env.CLOUDFLARE_GATEWAY_ID}/workers-ai?model=@cf/deepgram/flux&encoding=linear16&sample_rate=16000&interim_results=true`;
-
-      console.log('Connecting to AI Gateway:', aiGatewayUrl);
-
-      // In Cloudflare Workers, use fetch() with WebSocket upgrade headers for authentication
-      // The AI Gateway expects header-based auth when connecting from Workers (not browser subprotocol)
-      const upgradeResponse = await fetch(aiGatewayUrl, {
-        headers: {
-          'Upgrade': 'websocket',
-          'cf-aig-authorization': `Bearer ${env.CLOUDFLARE_API_TOKEN}`,
+      // Use Workers AI with WebSocket mode
+      // This creates a WebSocket connection that streams audio in and text out
+      const response = await env.AI.run(
+        '@cf/deepgram/flux',
+        {
+          encoding: 'linear16',
+          sample_rate: '16000',
         },
-      });
-
-      if (!upgradeResponse.webSocket) {
-        throw new Error(`WebSocket upgrade failed: HTTP ${upgradeResponse.status}`);
-      }
-
-      const aiWebSocket = upgradeResponse.webSocket;
-      aiWebSocket.accept();
-
-      // Track connection state
-      let aiConnected = false;
-
-      // Handle AI WebSocket open
-      aiWebSocket.addEventListener('open', () => {
-        aiConnected = true;
-        console.log('AI Gateway connection established');
-
-        server.send(JSON.stringify({
-          type: 'connected',
-          message: 'Connected to Deepgram Flux',
-          model: '@cf/deepgram/flux',
-          config: {
-            encoding: 'linear16',
-            sampleRate: 16000,
-            interimResults: true,
-          },
-          timestamp: Date.now(),
-        }));
-      });
-
-      // Forward audio from client to AI
-      server.addEventListener('message', (event: MessageEvent) => {
-        if (!aiConnected) {
-          server.send(JSON.stringify({
-            type: 'error',
-            error: 'AI connection not ready',
-            timestamp: Date.now(),
-          }));
-          return;
+        {
+          websocket: true, // Enable WebSocket mode
         }
+      );
 
-        try {
-          // Forward audio data to AI Gateway
-          if (event.data instanceof ArrayBuffer || event.data instanceof Uint8Array) {
-            aiWebSocket.send(event.data);
-          } else if (typeof event.data === 'string') {
-            // Handle text control messages if needed
-            aiWebSocket.send(event.data);
-          }
-        } catch (error) {
-          console.error('Error forwarding to AI:', error);
-          server.send(JSON.stringify({
-            type: 'error',
-            error: 'Failed to forward audio data',
-            details: error instanceof Error ? error.message : 'Unknown error',
-            timestamp: Date.now(),
-          }));
-        }
-      });
+      console.log('Deepgram Flux WebSocket initialized');
 
-      // Forward transcription results from AI to client
-      aiWebSocket.addEventListener('message', (event: MessageEvent) => {
-        try {
-          if (typeof event.data === 'string') {
-            // Parse AI response
-            const data = JSON.parse(event.data);
-
-            // Forward transcription result to client
-            server.send(JSON.stringify({
-              type: 'transcription',
-              data,
-              timestamp: Date.now(),
-            }));
-          } else {
-            // Binary data (unlikely from Flux, but handle it)
-            server.send(event.data);
-          }
-        } catch (error) {
-          console.error('Error forwarding from AI:', error);
-          server.send(JSON.stringify({
-            type: 'error',
-            error: 'Failed to process transcription',
-            details: error instanceof Error ? error.message : 'Unknown error',
-            timestamp: Date.now(),
-          }));
-        }
-      });
-
-      // Handle AI WebSocket errors
-      aiWebSocket.addEventListener('error', (event: any) => {
-        console.error('AI WebSocket error:', event);
-        server.send(JSON.stringify({
-          type: 'error',
-          error: 'AI connection error',
-          message: event.message || 'Unknown error',
-          timestamp: Date.now(),
-        }));
-        server.close(1011, 'AI connection error');
-      });
-
-      // Handle AI WebSocket close
-      aiWebSocket.addEventListener('close', (event: CloseEvent) => {
-        console.log('AI WebSocket closed:', event.code, event.reason);
-        aiConnected = false;
-
-        server.send(JSON.stringify({
-          type: 'disconnected',
-          reason: event.reason || 'AI connection closed',
-          code: event.code,
-          timestamp: Date.now(),
-        }));
-
-        server.close(event.code, event.reason || 'AI connection closed');
-      });
-
-      // Handle client WebSocket close
-      server.addEventListener('close', (event: CloseEvent) => {
-        console.log('Client WebSocket closed:', event.code, event.reason);
-        if (aiConnected) {
-          aiWebSocket.close(event.code, event.reason || 'Client disconnected');
-        }
-      });
-
-      // Handle client WebSocket errors
-      server.addEventListener('error', (event: any) => {
-        console.error('Client WebSocket error:', event);
-        if (aiConnected) {
-          aiWebSocket.close(1011, 'Client connection error');
-        }
-      });
-
-      // Return the WebSocket response to upgrade the connection
-      return new Response(null, {
-        status: 101,
-        webSocket: client,
-      });
+      // Return the WebSocket response
+      // The client will connect directly to this worker's WebSocket
+      return response;
     } catch (error: any) {
       console.error('WebSocket setup error:', error);
       return new Response(
         JSON.stringify({
           error: 'Failed to establish WebSocket connection',
           details: error.message || 'Unknown error',
-          hint: 'Check AI-GATEWAY-SETUP.md for configuration instructions',
+          hint: 'Ensure AI binding is configured in wrangler.toml',
         }),
         {
           status: 500,

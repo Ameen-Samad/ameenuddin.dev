@@ -1,7 +1,12 @@
-import { type NotificationData, notifications } from "@mantine/notifications";
+import { notifications } from "@mantine/notifications";
 import { createFileRoute } from "@tanstack/react-router";
 import { Download, ImageIcon, Loader2 } from "lucide-react";
 import { useId, useState } from "react";
+import {
+	CoinAnimation,
+	showPoorStudentRateLimit,
+	showRateLimitNotification,
+} from "@/components/RateLimitNotification";
 
 const SIZES = ["1024x1024", "1536x1024", "1024x1536", "auto"];
 
@@ -20,39 +25,6 @@ interface RateLimitInfo {
 interface ImageGenerationResponse {
 	images: Array<GeneratedImage>;
 	rateLimit?: RateLimitInfo;
-}
-
-function CoinAnimation() {
-	const coinIds = Array.from({ length: 12 }).map(() =>
-		Math.random().toString(36).substring(7),
-	);
-
-	return (
-		<div className="fixed inset-0 pointer-events-none z-[10000]">
-			{coinIds.map((id, i) => (
-				<div
-					key={id}
-					className="absolute text-4xl animate-fall"
-					style={{
-						left: `${Math.random() * 100}%`,
-						top: "-50px",
-						animationDelay: `${i * 0.1}s`,
-						animationDuration: `${1.5 + Math.random()}s`,
-					}}
-				>
-					💰
-				</div>
-			))}
-		</div>
-	);
-}
-
-function showRateLimitNotification(data: NotificationData) {
-	notifications.show({
-		...data,
-		withCloseButton: true,
-		autoClose: 5000,
-	});
 }
 
 function ImagePage() {
@@ -90,12 +62,7 @@ function ImagePage() {
 				if (response.status === 429) {
 					setShowCoins(true);
 					setTimeout(() => setShowCoins(false), 2000);
-					showRateLimitNotification({
-						title: "Rate Limit Exceeded! 🚫",
-						message:
-							"Hey, I'm just a poor student trying to keep costs down! Please don't spam my API. You've used up your daily allowance of 6 image generations. Come back tomorrow!",
-						color: "yellow",
-					});
+					showPoorStudentRateLimit();
 					throw new Error("Rate limit exceeded");
 				}
 				throw new Error((data as any).error || "Failed to generate image");
@@ -116,7 +83,6 @@ function ImagePage() {
 			setIsLoading(false);
 		}
 	};
-
 
 	const getImageSrc = (image: GeneratedImage) => {
 		if (image.url) return image.url;

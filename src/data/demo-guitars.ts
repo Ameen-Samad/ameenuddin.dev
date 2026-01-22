@@ -1,3 +1,5 @@
+export type GuitarType = 'acoustic' | 'electric' | 'ukulele'
+
 export interface Guitar {
   id: number
   name: string
@@ -5,6 +7,9 @@ export interface Guitar {
   description: string
   shortDescription: string
   price: number
+  type: GuitarType
+  tags: string[]
+  features: string[]
 }
 
 const guitars: Array<Guitar> = [
@@ -17,6 +22,9 @@ const guitars: Array<Guitar> = [
     shortDescription:
       'Premium koa-wood ukulele featuring exclusive TanStack branding, perfect for beach vibes and island-inspired melodies.',
     price: 299,
+    type: 'ukulele',
+    tags: ['warm', 'mellow', 'tropical', 'beginner-friendly', 'island', 'folk', 'acoustic'],
+    features: ['Koa-wood body', 'Palm tree inlay', 'Concert size', 'Branded headstock'],
   },
   {
     id: 2,
@@ -27,6 +35,9 @@ const guitars: Array<Guitar> = [
     shortDescription:
       'A unique electric guitar with a video game design, high-gloss finish, and comfortable playability.',
     price: 699,
+    type: 'electric',
+    tags: ['gaming', 'modern', 'fun', 'comfortable', 'unique', 'pop', 'rock'],
+    features: ['High-gloss finish', 'Ergonomic body', 'Fast neck profile', 'Video game artwork'],
   },
   {
     id: 3,
@@ -37,6 +48,9 @@ const guitars: Array<Guitar> = [
     shortDescription:
       'A bold black electric guitar with a unique superhero logo, high-gloss finish, and powerful pickups.',
     price: 699,
+    type: 'electric',
+    tags: ['powerful', 'aggressive', 'rock', 'metal', 'high-energy', 'stage', 'bold'],
+    features: ['Powerful pickups', 'High-gloss black finish', 'Ergonomic body', 'Superhero logo'],
   },
   {
     id: 4,
@@ -47,6 +61,9 @@ const guitars: Array<Guitar> = [
     shortDescription:
       'A tech-inspired electric guitar featuring LED lights and binary code inlays that glow under stage lights.',
     price: 649,
+    type: 'electric',
+    tags: ['tech', 'futuristic', 'electronic', 'modern', 'unique', 'experimental', 'digital'],
+    features: ['LED lights', 'Binary code inlays', 'Custom-wound pickups', 'Circuit-inspired design'],
   },
   {
     id: 5,
@@ -57,6 +74,9 @@ const guitars: Array<Guitar> = [
     shortDescription:
       'A lightweight, aerodynamic guitar with racing stripes and a low-action setup designed for speed and precision.',
     price: 679,
+    type: 'electric',
+    tags: ['fast', 'precision', 'lightweight', 'performance', 'speed', 'shred', 'metal'],
+    features: ['Lightweight body', 'Low-action setup', 'Racing stripes', 'Checkered flag inlays'],
   },
   {
     id: 6,
@@ -67,6 +87,9 @@ const guitars: Array<Guitar> = [
     shortDescription:
       'A semi-hollow body guitar with brass hardware and a world map inlay, crafted from reclaimed antique luggage wood.',
     price: 629,
+    type: 'electric',
+    tags: ['vintage', 'warm', 'jazz', 'blues', 'mellow', 'classic', 'travel'],
+    features: ['Semi-hollow body', 'Brass hardware', 'World map inlay', 'Reclaimed wood'],
   },
   {
     id: 7,
@@ -77,6 +100,9 @@ const guitars: Array<Guitar> = [
     shortDescription:
       'An acoustic guitar with vintage postcards, rich tones, and comfortable playability.',
     price: 499,
+    type: 'acoustic',
+    tags: ['travel', 'folk', 'singer-songwriter', 'warm', 'storytelling', 'vintage', 'acoustic'],
+    features: ['Vintage postcard artwork', 'Rich resonant tones', 'Comfortable neck', 'Travel-inspired design'],
   },
   {
     id: 8,
@@ -87,7 +113,33 @@ const guitars: Array<Guitar> = [
     shortDescription:
       'An acoustic guitar with hand-painted floral designs and warm, resonant tones.',
     price: 599,
+    type: 'acoustic',
+    tags: ['warm', 'romantic', 'folk', 'soft', 'intimate', 'nature', 'artistic'],
+    features: ['Hand-painted florals', 'Warm resonant tones', 'Artistic body', 'Nature-inspired design'],
   },
 ]
 
 export default guitars
+
+// Helper function to get guitar by ID
+export function getGuitarById(id: number): Guitar | undefined {
+  return guitars.find((g) => g.id === id)
+}
+
+// Helper function to get guitars by type
+export function getGuitarsByType(type: GuitarType): Guitar[] {
+  return guitars.filter((g) => g.type === type)
+}
+
+// Helper function to get price range
+export function getPriceRange(): { min: number; max: number } {
+  const prices = guitars.map((g) => g.price)
+  return { min: Math.min(...prices), max: Math.max(...prices) }
+}
+
+// Get all unique tags
+export function getAllTags(): string[] {
+  const tags = new Set<string>()
+  guitars.forEach((g) => g.tags.forEach((t) => tags.add(t)))
+  return Array.from(tags).sort()
+}

@@ -17,6 +17,11 @@ export function ContactInput({
 }: ContactInputProps) {
 	const [isFocused, setIsFocused] = useState(false);
 	const controls = useAnimation();
+	const [mounted, setMounted] = useState(false);
+
+	useEffect(() => {
+		setMounted(true);
+	}, []);
 
 	useEffect(() => {
 		if (error) {
@@ -37,12 +42,21 @@ export function ContactInput({
 		onBlur?.();
 	};
 
+	if (!mounted) {
+		return (
+			<div style={{ opacity: 0 }} suppressHydrationWarning>
+				<TextInput {...props} disabled />
+			</div>
+		);
+	}
+
 	return (
-		<motion.div animate={controls}>
+		<motion.div animate={controls} suppressHydrationWarning>
 			<TextInput
 				{...props}
 				onFocus={handleFocus}
 				onBlur={handleBlur}
+				suppressHydrationWarning
 				styles={{
 					input: {
 						background: "rgba(26, 26, 26, 0.6)",

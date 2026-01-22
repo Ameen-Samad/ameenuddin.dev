@@ -1,7 +1,7 @@
 import { Badge, Button, Paper } from "@mantine/core";
 import { AnimatePresence, motion } from "framer-motion";
 import { Sparkles, Star, TrendingUp } from "lucide-react";
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { PacerAI } from "@/lib/pacer-ai-utils";
 import type { Project } from "@/lib/projects-data";
 
@@ -23,6 +23,12 @@ export function AIRecommendations({
 	const [recommendations, setRecommendations] = useState<Project[]>([]);
 	const [isLoading, setIsLoading] = useState(false);
 	const [explanations, setExplanations] = useState<Record<string, string>>({});
+
+	// Use join(",") to stabilize array reference - prevents infinite loop
+	const stableUserInterests = useMemo(
+		() => userInterests,
+		[userInterests.join(",")],
+	);
 
 	useEffect(() => {
 		async function loadRecommendations() {
@@ -65,10 +71,10 @@ export function AIRecommendations({
 							{} as Record<string, string>,
 						),
 					});
-				} else if (type === "personalized" && userInterests.length > 0) {
+				} else if (type === "personalized" && stableUserInterests.length > 0) {
 					const results = await PacerAI.recommendations(
 						"",
-						userInterests,
+						stableUserInterests,
 						limit,
 					);
 					const recIds = results?.map((r) => r.id) || [];
@@ -77,7 +83,7 @@ export function AIRecommendations({
 						...recs.reduce(
 							(acc, p) => {
 								acc[p.id] =
-									`Based on your interest in ${userInterests.join(", ")}`;
+									`Based on your interest in ${stableUserInterests.join(", ")}`;
 								return acc;
 							},
 							{} as Record<string, string>,
@@ -95,7 +101,7 @@ export function AIRecommendations({
 
 		loadRecommendations();
 		// eslint-disable-next-line react-hooks/exhaustive-deps
-	}, [type, projectId, userInterests, limit]);
+	}, [type, projectId, stableUserInterests, limit]);
 
 	if (isLoading) {
 		return (

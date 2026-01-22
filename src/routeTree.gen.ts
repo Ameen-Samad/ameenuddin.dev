@@ -34,6 +34,7 @@ import { Route as ApiChatRouteImport } from './routes/api/chat'
 import { Route as DemoGuitarsIndexRouteImport } from './routes/demo/guitars/index'
 import { Route as DemoStartServerFuncsRouteImport } from './routes/demo/start.server-funcs'
 import { Route as DemoStartApiRequestRouteImport } from './routes/demo/start.api-request'
+import { Route as DemoGuitarsCompareRouteImport } from './routes/demo/guitars/compare'
 import { Route as DemoGuitarsGuitarIdRouteImport } from './routes/demo/guitars/$guitarId'
 import { Route as DemoFormSimpleRouteImport } from './routes/demo/form.simple'
 import { Route as DemoFormAddressRouteImport } from './routes/demo/form.address'
@@ -64,6 +65,9 @@ import { Route as DemoApiAiImageRouteImport } from './routes/demo/api/ai/image'
 import { Route as DemoApiAiChatRouteImport } from './routes/demo/api.ai.chat'
 import { Route as ApiWorkersEmbeddingsProtectedExampleRouteImport } from './routes/api/workers/embeddings-protected.example'
 import { Route as ApiTetrisLeaderboardHistoryRouteImport } from './routes/api/tetris/leaderboard/history'
+import { Route as DemoApiAiGuitarsSearchRouteImport } from './routes/demo/api.ai.guitars.search'
+import { Route as DemoApiAiGuitarsCompareRouteImport } from './routes/demo/api.ai.guitars.compare'
+import { Route as DemoApiAiGuitarsChatRouteImport } from './routes/demo/api.ai.guitars.chat'
 
 const TetrisRoute = TetrisRouteImport.update({
   id: '/tetris',
@@ -188,6 +192,11 @@ const DemoStartServerFuncsRoute = DemoStartServerFuncsRouteImport.update({
 const DemoStartApiRequestRoute = DemoStartApiRequestRouteImport.update({
   id: '/demo/start/api-request',
   path: '/demo/start/api-request',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoGuitarsCompareRoute = DemoGuitarsCompareRouteImport.update({
+  id: '/demo/guitars/compare',
+  path: '/demo/guitars/compare',
   getParentRoute: () => rootRouteImport,
 } as any)
 const DemoGuitarsGuitarIdRoute = DemoGuitarsGuitarIdRouteImport.update({
@@ -343,6 +352,21 @@ const ApiTetrisLeaderboardHistoryRoute =
     path: '/history',
     getParentRoute: () => ApiTetrisLeaderboardRoute,
   } as any)
+const DemoApiAiGuitarsSearchRoute = DemoApiAiGuitarsSearchRouteImport.update({
+  id: '/demo/api/ai/guitars/search',
+  path: '/demo/api/ai/guitars/search',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoApiAiGuitarsCompareRoute = DemoApiAiGuitarsCompareRouteImport.update({
+  id: '/demo/api/ai/guitars/compare',
+  path: '/demo/api/ai/guitars/compare',
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DemoApiAiGuitarsChatRoute = DemoApiAiGuitarsChatRouteImport.update({
+  id: '/demo/api/ai/guitars/chat',
+  path: '/demo/api/ai/guitars/chat',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -384,6 +408,7 @@ export interface FileRoutesByFullPath {
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
   '/demo/guitars/$guitarId': typeof DemoGuitarsGuitarIdRoute
+  '/demo/guitars/compare': typeof DemoGuitarsCompareRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/guitars/': typeof DemoGuitarsIndexRoute
@@ -400,6 +425,9 @@ export interface FileRoutesByFullPath {
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
   '/demo/start/ssr/': typeof DemoStartSsrIndexRoute
+  '/demo/api/ai/guitars/chat': typeof DemoApiAiGuitarsChatRoute
+  '/demo/api/ai/guitars/compare': typeof DemoApiAiGuitarsCompareRoute
+  '/demo/api/ai/guitars/search': typeof DemoApiAiGuitarsSearchRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -441,6 +469,7 @@ export interface FileRoutesByTo {
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
   '/demo/guitars/$guitarId': typeof DemoGuitarsGuitarIdRoute
+  '/demo/guitars/compare': typeof DemoGuitarsCompareRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/guitars': typeof DemoGuitarsIndexRoute
@@ -457,6 +486,9 @@ export interface FileRoutesByTo {
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
   '/demo/start/ssr': typeof DemoStartSsrIndexRoute
+  '/demo/api/ai/guitars/chat': typeof DemoApiAiGuitarsChatRoute
+  '/demo/api/ai/guitars/compare': typeof DemoApiAiGuitarsCompareRoute
+  '/demo/api/ai/guitars/search': typeof DemoApiAiGuitarsSearchRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -499,6 +531,7 @@ export interface FileRoutesById {
   '/demo/form/address': typeof DemoFormAddressRoute
   '/demo/form/simple': typeof DemoFormSimpleRoute
   '/demo/guitars/$guitarId': typeof DemoGuitarsGuitarIdRoute
+  '/demo/guitars/compare': typeof DemoGuitarsCompareRoute
   '/demo/start/api-request': typeof DemoStartApiRequestRoute
   '/demo/start/server-funcs': typeof DemoStartServerFuncsRoute
   '/demo/guitars/': typeof DemoGuitarsIndexRoute
@@ -515,6 +548,9 @@ export interface FileRoutesById {
   '/demo/start/ssr/full-ssr': typeof DemoStartSsrFullSsrRoute
   '/demo/start/ssr/spa-mode': typeof DemoStartSsrSpaModeRoute
   '/demo/start/ssr/': typeof DemoStartSsrIndexRoute
+  '/demo/api/ai/guitars/chat': typeof DemoApiAiGuitarsChatRoute
+  '/demo/api/ai/guitars/compare': typeof DemoApiAiGuitarsCompareRoute
+  '/demo/api/ai/guitars/search': typeof DemoApiAiGuitarsSearchRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -558,6 +594,7 @@ export interface FileRouteTypes {
     | '/demo/form/address'
     | '/demo/form/simple'
     | '/demo/guitars/$guitarId'
+    | '/demo/guitars/compare'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
     | '/demo/guitars/'
@@ -574,6 +611,9 @@ export interface FileRouteTypes {
     | '/demo/start/ssr/full-ssr'
     | '/demo/start/ssr/spa-mode'
     | '/demo/start/ssr/'
+    | '/demo/api/ai/guitars/chat'
+    | '/demo/api/ai/guitars/compare'
+    | '/demo/api/ai/guitars/search'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -615,6 +655,7 @@ export interface FileRouteTypes {
     | '/demo/form/address'
     | '/demo/form/simple'
     | '/demo/guitars/$guitarId'
+    | '/demo/guitars/compare'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
     | '/demo/guitars'
@@ -631,6 +672,9 @@ export interface FileRouteTypes {
     | '/demo/start/ssr/full-ssr'
     | '/demo/start/ssr/spa-mode'
     | '/demo/start/ssr'
+    | '/demo/api/ai/guitars/chat'
+    | '/demo/api/ai/guitars/compare'
+    | '/demo/api/ai/guitars/search'
   id:
     | '__root__'
     | '/'
@@ -672,6 +716,7 @@ export interface FileRouteTypes {
     | '/demo/form/address'
     | '/demo/form/simple'
     | '/demo/guitars/$guitarId'
+    | '/demo/guitars/compare'
     | '/demo/start/api-request'
     | '/demo/start/server-funcs'
     | '/demo/guitars/'
@@ -688,6 +733,9 @@ export interface FileRouteTypes {
     | '/demo/start/ssr/full-ssr'
     | '/demo/start/ssr/spa-mode'
     | '/demo/start/ssr/'
+    | '/demo/api/ai/guitars/chat'
+    | '/demo/api/ai/guitars/compare'
+    | '/demo/api/ai/guitars/search'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -729,6 +777,7 @@ export interface RootRouteChildren {
   DemoFormAddressRoute: typeof DemoFormAddressRoute
   DemoFormSimpleRoute: typeof DemoFormSimpleRoute
   DemoGuitarsGuitarIdRoute: typeof DemoGuitarsGuitarIdRoute
+  DemoGuitarsCompareRoute: typeof DemoGuitarsCompareRoute
   DemoStartApiRequestRoute: typeof DemoStartApiRequestRoute
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
   DemoGuitarsIndexRoute: typeof DemoGuitarsIndexRoute
@@ -744,6 +793,9 @@ export interface RootRouteChildren {
   DemoStartSsrFullSsrRoute: typeof DemoStartSsrFullSsrRoute
   DemoStartSsrSpaModeRoute: typeof DemoStartSsrSpaModeRoute
   DemoStartSsrIndexRoute: typeof DemoStartSsrIndexRoute
+  DemoApiAiGuitarsChatRoute: typeof DemoApiAiGuitarsChatRoute
+  DemoApiAiGuitarsCompareRoute: typeof DemoApiAiGuitarsCompareRoute
+  DemoApiAiGuitarsSearchRoute: typeof DemoApiAiGuitarsSearchRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -921,6 +973,13 @@ declare module '@tanstack/react-router' {
       path: '/demo/start/api-request'
       fullPath: '/demo/start/api-request'
       preLoaderRoute: typeof DemoStartApiRequestRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/guitars/compare': {
+      id: '/demo/guitars/compare'
+      path: '/demo/guitars/compare'
+      fullPath: '/demo/guitars/compare'
+      preLoaderRoute: typeof DemoGuitarsCompareRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/demo/guitars/$guitarId': {
@@ -1133,6 +1192,27 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiTetrisLeaderboardHistoryRouteImport
       parentRoute: typeof ApiTetrisLeaderboardRoute
     }
+    '/demo/api/ai/guitars/search': {
+      id: '/demo/api/ai/guitars/search'
+      path: '/demo/api/ai/guitars/search'
+      fullPath: '/demo/api/ai/guitars/search'
+      preLoaderRoute: typeof DemoApiAiGuitarsSearchRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/api/ai/guitars/compare': {
+      id: '/demo/api/ai/guitars/compare'
+      path: '/demo/api/ai/guitars/compare'
+      fullPath: '/demo/api/ai/guitars/compare'
+      preLoaderRoute: typeof DemoApiAiGuitarsCompareRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    '/demo/api/ai/guitars/chat': {
+      id: '/demo/api/ai/guitars/chat'
+      path: '/demo/api/ai/guitars/chat'
+      fullPath: '/demo/api/ai/guitars/chat'
+      preLoaderRoute: typeof DemoApiAiGuitarsChatRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -1198,6 +1278,7 @@ const rootRouteChildren: RootRouteChildren = {
   DemoFormAddressRoute: DemoFormAddressRoute,
   DemoFormSimpleRoute: DemoFormSimpleRoute,
   DemoGuitarsGuitarIdRoute: DemoGuitarsGuitarIdRoute,
+  DemoGuitarsCompareRoute: DemoGuitarsCompareRoute,
   DemoStartApiRequestRoute: DemoStartApiRequestRoute,
   DemoStartServerFuncsRoute: DemoStartServerFuncsRoute,
   DemoGuitarsIndexRoute: DemoGuitarsIndexRoute,
@@ -1214,6 +1295,9 @@ const rootRouteChildren: RootRouteChildren = {
   DemoStartSsrFullSsrRoute: DemoStartSsrFullSsrRoute,
   DemoStartSsrSpaModeRoute: DemoStartSsrSpaModeRoute,
   DemoStartSsrIndexRoute: DemoStartSsrIndexRoute,
+  DemoApiAiGuitarsChatRoute: DemoApiAiGuitarsChatRoute,
+  DemoApiAiGuitarsCompareRoute: DemoApiAiGuitarsCompareRoute,
+  DemoApiAiGuitarsSearchRoute: DemoApiAiGuitarsSearchRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)

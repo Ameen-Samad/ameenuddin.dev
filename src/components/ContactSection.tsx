@@ -65,6 +65,7 @@ export function ContactSection() {
 						maxWidth: "800px",
 						margin: "0 auto",
 					}}
+					suppressHydrationWarning
 				>
 					{isSuccess ? (
 						<ContactSuccess onReset={handleReset} />

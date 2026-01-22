@@ -23,6 +23,10 @@ import {
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { motion } from "framer-motion";
 import { useEffect, useState } from "react";
+import {
+	CoinAnimation,
+	showPoorStudentRateLimit,
+} from "@/components/RateLimitNotification";
 import { ThreeScene } from "@/components/ThreeScene";
 
 export const Route = createFileRoute("/builder")({
@@ -41,6 +45,7 @@ function Builder() {
 	const [isGenerating, setIsGenerating] = useState(false);
 	const [currentCode, setCurrentCode] = useState<string | null>(null);
 	const [history, setHistory] = useState<Generation[]>([]);
+	const [showCoins, setShowCoins] = useState(false);
 
 	useEffect(() => {
 		const savedHistory = localStorage.getItem("builder-history");
@@ -63,6 +68,13 @@ function Builder() {
 			});
 
 			if (!response.ok) {
+				if (response.status === 429) {
+					setShowCoins(true);
+					setTimeout(() => setShowCoins(false), 2000);
+					showPoorStudentRateLimit();
+					setIsGenerating(false);
+					return;
+				}
 				throw new Error("Failed to generate 3D scene");
 			}
 
@@ -81,7 +93,6 @@ function Builder() {
 			localStorage.setItem("builder-history", JSON.stringify(updatedHistory));
 		} catch (error) {
 			console.error("Generation error:", error);
-			alert("Failed to generate 3D scene. Please try again.");
 		} finally {
 			setIsGenerating(false);
 		}
@@ -121,6 +132,7 @@ function Builder() {
 
 	return (
 		<>
+			{showCoins && <CoinAnimation />}
 			<style>{`
 				.builder-grid {
 					grid-template-columns: 350px 1fr;
@@ -137,6 +149,21 @@ function Builder() {
 					.builder-paper {
 						padding: 0.75rem !important;
 					}
+				}
+				@keyframes fall {
+					0% {
+						transform: translateY(0) rotate(0deg);
+						opacity: 1;
+					}
+					100% {
+						transform: translateY(100vh) rotate(720deg);
+						opacity: 0;
+					}
+				}
+				.animate-fall {
+					animation-name: fall;
+					animation-timing-function: ease-in;
+					animation-fill-mode: forwards;
 				}
 			`}</style>
 			<div

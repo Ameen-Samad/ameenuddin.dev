@@ -8,9 +8,9 @@ import {
 	Title,
 } from "@mantine/core";
 import { IconSend, IconX } from "@tabler/icons-react";
+import { useDebouncedCallback } from "@tanstack/react-pacer/debouncer";
 import { useStore } from "@tanstack/react-store";
 import { motion } from "framer-motion";
-import { useDebouncedCallback } from "@tanstack/react-pacer/debouncer";
 import {
 	type ContactErrors,
 	type ContactFormData,
@@ -168,6 +168,7 @@ export function ContactForm({ onSubmit, isSubmitting }: ContactFormProps) {
 			transition={{ duration: 0.5, ease: "easeOut" }}
 			onSubmit={handleSubmit}
 			style={{ width: "100%" }}
+			suppressHydrationWarning
 		>
 			<Stack gap="lg">
 				<Title
