@@ -66,10 +66,16 @@ function AmeenuddinPortfolioChat() {
   const messagesEndRef = useRef<HTMLDivElement>(null)
 
   // Convert TanStack AI messages to simple format for display
-  const messages: Message[] = conversation?.messages?.map(m => ({
-    role: m.role as 'user' | 'assistant',
-    content: m.parts?.[0]?.type === 'text' ? m.parts[0].content : ''
-  })) || []
+  const messages: Message[] = conversation?.messages?.map(m => {
+    const msg = {
+      role: m.role as 'user' | 'assistant',
+      content: m.parts?.[0]?.type === 'text' ? m.parts[0].content : ''
+    };
+    console.log('[Portfolio Chat] Rendering message:', msg.role, 'content length:', msg.content?.length || 0);
+    return msg;
+  }) || []
+
+  console.log('[Portfolio Chat] Total messages:', messages.length, 'Streaming:', isStreaming, 'Streaming content length:', streamingContent.length);
 
   useEffect(() => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' })
@@ -159,6 +165,8 @@ function AmeenuddinPortfolioChat() {
                     toolResults: toolResults.length > 0 ? toolResults : undefined,
                   }
                 ]
+                console.log('[Portfolio Chat] Stream done. Full content length:', fullContent.length);
+                console.log('[Portfolio Chat] Final messages:', finalMessages.map(m => ({ role: m.role, contentLength: m.content?.length })));
                 updateConversationMessagesSimple(currentConversationId, finalMessages)
                 setStreamingContent('')
                 setIsStreaming(false)
@@ -364,7 +372,12 @@ function AmeenuddinPortfolioChat() {
                     }`}
                   >
                     {message.role === 'assistant' ? (
-                      <Streamdown content={message.content} />
+                      <>
+                        {/* Temporarily use plain text instead of Streamdown to debug */}
+                        <p className="whitespace-pre-wrap text-gray-100">{message.content}</p>
+                        {/* <Streamdown content={message.content} /> */}
+                        {!message.content && <p className="text-red-400">Empty content!</p>}
+                      </>
                     ) : (
                       <p className="whitespace-pre-wrap">{message.content}</p>
                     )}
@@ -396,7 +409,9 @@ function AmeenuddinPortfolioChat() {
           {streamingContent && (
             <div className="mb-4 text-left">
               <div className="inline-block max-w-[80%] p-4 rounded-2xl bg-gray-800 text-gray-100">
-                <Streamdown content={streamingContent} />
+                {/* Temporarily use plain text instead of Streamdown */}
+                <p className="whitespace-pre-wrap text-gray-100">{streamingContent}</p>
+                {/* <Streamdown content={streamingContent} /> */}
               </div>
             </div>
           )}
