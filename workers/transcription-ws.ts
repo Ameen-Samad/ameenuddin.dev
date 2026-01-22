@@ -152,7 +152,9 @@ ws.onclose = () => {
         return new Response('AI connection failed', { status: 500 });
       }
 
-      aiWebSocket.accept();
+      // IMPORTANT: Do NOT call aiWebSocket.accept() here!
+      // The AI WebSocket is already connected when returned from env.AI.run()
+      // Only call .accept() on server-side WebSockets from WebSocketPair
 
       // Forward messages from client to AI
       server.addEventListener('message', (event: MessageEvent) => {

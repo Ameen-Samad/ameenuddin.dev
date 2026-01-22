@@ -23,8 +23,8 @@ import { Route as DemoPacerRouteImport } from './routes/demo/pacer'
 import { Route as DemoAiVoiceRouteImport } from './routes/demo/ai-voice'
 import { Route as DemoAiTtsRouteImport } from './routes/demo/ai-tts'
 import { Route as DemoAiStructuredRouteImport } from './routes/demo/ai-structured'
+import { Route as DemoAiPortfolioRouteImport } from './routes/demo/ai-portfolio'
 import { Route as DemoAiImageRouteImport } from './routes/demo/ai-image'
-import { Route as DemoAiChatRouteImport } from './routes/demo/ai-chat'
 import { Route as ApiResumeChatStreamRouteImport } from './routes/api.resume-chat-stream'
 import { Route as ApiResumeChatRouteImport } from './routes/api.resume-chat'
 import { Route as ApiLeaderboardRouteImport } from './routes/api/leaderboard'
@@ -61,8 +61,8 @@ import { Route as DemoApiAiTtsRouteImport } from './routes/demo/api.ai.tts'
 import { Route as DemoApiAiTranscriptionRouteImport } from './routes/demo/api.ai.transcription'
 import { Route as DemoApiAiStructuredRouteImport } from './routes/demo/api.ai.structured'
 import { Route as DemoApiAiSpeechRouteImport } from './routes/demo/api.ai.speech'
+import { Route as DemoApiAiPortfolioRouteImport } from './routes/demo/api.ai.portfolio'
 import { Route as DemoApiAiImageRouteImport } from './routes/demo/api/ai/image'
-import { Route as DemoApiAiChatRouteImport } from './routes/demo/api.ai.chat'
 import { Route as ApiWorkersEmbeddingsProtectedExampleRouteImport } from './routes/api/workers/embeddings-protected.example'
 import { Route as ApiTetrisLeaderboardHistoryRouteImport } from './routes/api/tetris/leaderboard/history'
 import { Route as DemoApiAiGuitarsSearchRouteImport } from './routes/demo/api.ai.guitars.search'
@@ -139,14 +139,14 @@ const DemoAiStructuredRoute = DemoAiStructuredRouteImport.update({
   path: '/demo/ai-structured',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoAiPortfolioRoute = DemoAiPortfolioRouteImport.update({
+  id: '/demo/ai-portfolio',
+  path: '/demo/ai-portfolio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoAiImageRoute = DemoAiImageRouteImport.update({
   id: '/demo/ai-image',
   path: '/demo/ai-image',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoAiChatRoute = DemoAiChatRouteImport.update({
-  id: '/demo/ai-chat',
-  path: '/demo/ai-chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiResumeChatStreamRoute = ApiResumeChatStreamRouteImport.update({
@@ -330,14 +330,14 @@ const DemoApiAiSpeechRoute = DemoApiAiSpeechRouteImport.update({
   path: '/demo/api/ai/speech',
   getParentRoute: () => rootRouteImport,
 } as any)
+const DemoApiAiPortfolioRoute = DemoApiAiPortfolioRouteImport.update({
+  id: '/demo/api/ai/portfolio',
+  path: '/demo/api/ai/portfolio',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const DemoApiAiImageRoute = DemoApiAiImageRouteImport.update({
   id: '/demo/api/ai/image',
   path: '/demo/api/ai/image',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DemoApiAiChatRoute = DemoApiAiChatRouteImport.update({
-  id: '/demo/api/ai/chat',
-  path: '/demo/api/ai/chat',
   getParentRoute: () => rootRouteImport,
 } as any)
 const ApiWorkersEmbeddingsProtectedExampleRoute =
@@ -381,8 +381,8 @@ export interface FileRoutesByFullPath {
   '/api/leaderboard': typeof ApiLeaderboardRouteWithChildren
   '/api/resume-chat': typeof ApiResumeChatRoute
   '/api/resume-chat-stream': typeof ApiResumeChatStreamRoute
-  '/demo/ai-chat': typeof DemoAiChatRoute
   '/demo/ai-image': typeof DemoAiImageRoute
+  '/demo/ai-portfolio': typeof DemoAiPortfolioRoute
   '/demo/ai-structured': typeof DemoAiStructuredRoute
   '/demo/ai-tts': typeof DemoAiTtsRoute
   '/demo/ai-voice': typeof DemoAiVoiceRoute
@@ -414,8 +414,8 @@ export interface FileRoutesByFullPath {
   '/demo/guitars/': typeof DemoGuitarsIndexRoute
   '/api/tetris/leaderboard/history': typeof ApiTetrisLeaderboardHistoryRoute
   '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
-  '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
+  '/demo/api/ai/portfolio': typeof DemoApiAiPortfolioRoute
   '/demo/api/ai/speech': typeof DemoApiAiSpeechRoute
   '/demo/api/ai/structured': typeof DemoApiAiStructuredRoute
   '/demo/api/ai/transcription': typeof DemoApiAiTranscriptionRoute
@@ -442,8 +442,8 @@ export interface FileRoutesByTo {
   '/api/leaderboard': typeof ApiLeaderboardRouteWithChildren
   '/api/resume-chat': typeof ApiResumeChatRoute
   '/api/resume-chat-stream': typeof ApiResumeChatStreamRoute
-  '/demo/ai-chat': typeof DemoAiChatRoute
   '/demo/ai-image': typeof DemoAiImageRoute
+  '/demo/ai-portfolio': typeof DemoAiPortfolioRoute
   '/demo/ai-structured': typeof DemoAiStructuredRoute
   '/demo/ai-tts': typeof DemoAiTtsRoute
   '/demo/ai-voice': typeof DemoAiVoiceRoute
@@ -475,8 +475,8 @@ export interface FileRoutesByTo {
   '/demo/guitars': typeof DemoGuitarsIndexRoute
   '/api/tetris/leaderboard/history': typeof ApiTetrisLeaderboardHistoryRoute
   '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
-  '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
+  '/demo/api/ai/portfolio': typeof DemoApiAiPortfolioRoute
   '/demo/api/ai/speech': typeof DemoApiAiSpeechRoute
   '/demo/api/ai/structured': typeof DemoApiAiStructuredRoute
   '/demo/api/ai/transcription': typeof DemoApiAiTranscriptionRoute
@@ -504,8 +504,8 @@ export interface FileRoutesById {
   '/api/leaderboard': typeof ApiLeaderboardRouteWithChildren
   '/api/resume-chat': typeof ApiResumeChatRoute
   '/api/resume-chat-stream': typeof ApiResumeChatStreamRoute
-  '/demo/ai-chat': typeof DemoAiChatRoute
   '/demo/ai-image': typeof DemoAiImageRoute
+  '/demo/ai-portfolio': typeof DemoAiPortfolioRoute
   '/demo/ai-structured': typeof DemoAiStructuredRoute
   '/demo/ai-tts': typeof DemoAiTtsRoute
   '/demo/ai-voice': typeof DemoAiVoiceRoute
@@ -537,8 +537,8 @@ export interface FileRoutesById {
   '/demo/guitars/': typeof DemoGuitarsIndexRoute
   '/api/tetris/leaderboard/history': typeof ApiTetrisLeaderboardHistoryRoute
   '/api/workers/embeddings-protected/example': typeof ApiWorkersEmbeddingsProtectedExampleRoute
-  '/demo/api/ai/chat': typeof DemoApiAiChatRoute
   '/demo/api/ai/image': typeof DemoApiAiImageRoute
+  '/demo/api/ai/portfolio': typeof DemoApiAiPortfolioRoute
   '/demo/api/ai/speech': typeof DemoApiAiSpeechRoute
   '/demo/api/ai/structured': typeof DemoApiAiStructuredRoute
   '/demo/api/ai/transcription': typeof DemoApiAiTranscriptionRoute
@@ -567,8 +567,8 @@ export interface FileRouteTypes {
     | '/api/leaderboard'
     | '/api/resume-chat'
     | '/api/resume-chat-stream'
-    | '/demo/ai-chat'
     | '/demo/ai-image'
+    | '/demo/ai-portfolio'
     | '/demo/ai-structured'
     | '/demo/ai-tts'
     | '/demo/ai-voice'
@@ -600,8 +600,8 @@ export interface FileRouteTypes {
     | '/demo/guitars/'
     | '/api/tetris/leaderboard/history'
     | '/api/workers/embeddings-protected/example'
-    | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
+    | '/demo/api/ai/portfolio'
     | '/demo/api/ai/speech'
     | '/demo/api/ai/structured'
     | '/demo/api/ai/transcription'
@@ -628,8 +628,8 @@ export interface FileRouteTypes {
     | '/api/leaderboard'
     | '/api/resume-chat'
     | '/api/resume-chat-stream'
-    | '/demo/ai-chat'
     | '/demo/ai-image'
+    | '/demo/ai-portfolio'
     | '/demo/ai-structured'
     | '/demo/ai-tts'
     | '/demo/ai-voice'
@@ -661,8 +661,8 @@ export interface FileRouteTypes {
     | '/demo/guitars'
     | '/api/tetris/leaderboard/history'
     | '/api/workers/embeddings-protected/example'
-    | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
+    | '/demo/api/ai/portfolio'
     | '/demo/api/ai/speech'
     | '/demo/api/ai/structured'
     | '/demo/api/ai/transcription'
@@ -689,8 +689,8 @@ export interface FileRouteTypes {
     | '/api/leaderboard'
     | '/api/resume-chat'
     | '/api/resume-chat-stream'
-    | '/demo/ai-chat'
     | '/demo/ai-image'
+    | '/demo/ai-portfolio'
     | '/demo/ai-structured'
     | '/demo/ai-tts'
     | '/demo/ai-voice'
@@ -722,8 +722,8 @@ export interface FileRouteTypes {
     | '/demo/guitars/'
     | '/api/tetris/leaderboard/history'
     | '/api/workers/embeddings-protected/example'
-    | '/demo/api/ai/chat'
     | '/demo/api/ai/image'
+    | '/demo/api/ai/portfolio'
     | '/demo/api/ai/speech'
     | '/demo/api/ai/structured'
     | '/demo/api/ai/transcription'
@@ -751,8 +751,8 @@ export interface RootRouteChildren {
   ApiLeaderboardRoute: typeof ApiLeaderboardRouteWithChildren
   ApiResumeChatRoute: typeof ApiResumeChatRoute
   ApiResumeChatStreamRoute: typeof ApiResumeChatStreamRoute
-  DemoAiChatRoute: typeof DemoAiChatRoute
   DemoAiImageRoute: typeof DemoAiImageRoute
+  DemoAiPortfolioRoute: typeof DemoAiPortfolioRoute
   DemoAiStructuredRoute: typeof DemoAiStructuredRoute
   DemoAiTtsRoute: typeof DemoAiTtsRoute
   DemoAiVoiceRoute: typeof DemoAiVoiceRoute
@@ -782,8 +782,8 @@ export interface RootRouteChildren {
   DemoStartServerFuncsRoute: typeof DemoStartServerFuncsRoute
   DemoGuitarsIndexRoute: typeof DemoGuitarsIndexRoute
   ApiWorkersEmbeddingsProtectedExampleRoute: typeof ApiWorkersEmbeddingsProtectedExampleRoute
-  DemoApiAiChatRoute: typeof DemoApiAiChatRoute
   DemoApiAiImageRoute: typeof DemoApiAiImageRoute
+  DemoApiAiPortfolioRoute: typeof DemoApiAiPortfolioRoute
   DemoApiAiSpeechRoute: typeof DemoApiAiSpeechRoute
   DemoApiAiStructuredRoute: typeof DemoApiAiStructuredRoute
   DemoApiAiTranscriptionRoute: typeof DemoApiAiTranscriptionRoute
@@ -898,18 +898,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoAiStructuredRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/ai-portfolio': {
+      id: '/demo/ai-portfolio'
+      path: '/demo/ai-portfolio'
+      fullPath: '/demo/ai-portfolio'
+      preLoaderRoute: typeof DemoAiPortfolioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/ai-image': {
       id: '/demo/ai-image'
       path: '/demo/ai-image'
       fullPath: '/demo/ai-image'
       preLoaderRoute: typeof DemoAiImageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/demo/ai-chat': {
-      id: '/demo/ai-chat'
-      path: '/demo/ai-chat'
-      fullPath: '/demo/ai-chat'
-      preLoaderRoute: typeof DemoAiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/resume-chat-stream': {
@@ -1164,18 +1164,18 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof DemoApiAiSpeechRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/demo/api/ai/portfolio': {
+      id: '/demo/api/ai/portfolio'
+      path: '/demo/api/ai/portfolio'
+      fullPath: '/demo/api/ai/portfolio'
+      preLoaderRoute: typeof DemoApiAiPortfolioRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/demo/api/ai/image': {
       id: '/demo/api/ai/image'
       path: '/demo/api/ai/image'
       fullPath: '/demo/api/ai/image'
       preLoaderRoute: typeof DemoApiAiImageRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/demo/api/ai/chat': {
-      id: '/demo/api/ai/chat'
-      path: '/demo/api/ai/chat'
-      fullPath: '/demo/api/ai/chat'
-      preLoaderRoute: typeof DemoApiAiChatRouteImport
       parentRoute: typeof rootRouteImport
     }
     '/api/workers/embeddings-protected/example': {
@@ -1252,8 +1252,8 @@ const rootRouteChildren: RootRouteChildren = {
   ApiLeaderboardRoute: ApiLeaderboardRouteWithChildren,
   ApiResumeChatRoute: ApiResumeChatRoute,
   ApiResumeChatStreamRoute: ApiResumeChatStreamRoute,
-  DemoAiChatRoute: DemoAiChatRoute,
   DemoAiImageRoute: DemoAiImageRoute,
+  DemoAiPortfolioRoute: DemoAiPortfolioRoute,
   DemoAiStructuredRoute: DemoAiStructuredRoute,
   DemoAiTtsRoute: DemoAiTtsRoute,
   DemoAiVoiceRoute: DemoAiVoiceRoute,
@@ -1284,8 +1284,8 @@ const rootRouteChildren: RootRouteChildren = {
   DemoGuitarsIndexRoute: DemoGuitarsIndexRoute,
   ApiWorkersEmbeddingsProtectedExampleRoute:
     ApiWorkersEmbeddingsProtectedExampleRoute,
-  DemoApiAiChatRoute: DemoApiAiChatRoute,
   DemoApiAiImageRoute: DemoApiAiImageRoute,
+  DemoApiAiPortfolioRoute: DemoApiAiPortfolioRoute,
   DemoApiAiSpeechRoute: DemoApiAiSpeechRoute,
   DemoApiAiStructuredRoute: DemoApiAiStructuredRoute,
   DemoApiAiTranscriptionRoute: DemoApiAiTranscriptionRoute,

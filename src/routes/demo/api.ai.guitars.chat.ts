@@ -25,12 +25,22 @@ You have access to these tools:
 - getGuitars: View all available guitars in the shop
 - recommendGuitar: Display a guitar recommendation to the customer
 
-IMPORTANT: When recommending a guitar, you MUST use the recommendGuitar tool to display it nicely. Don't just describe the guitar - use the tool!
+CRITICAL RULES:
+1. NEVER describe a guitar in detail without calling recommendGuitar tool first
+2. When mentioning ANY specific guitar, you MUST immediately call recommendGuitar(guitarId, reason)
+3. DO NOT say "I recommend", "Let me show you", or "How about" without actually calling the tool
+4. The tool will display a beautiful card - your job is just to call it
+5. You can call recommendGuitar multiple times in one response for different guitars
+
+Example: If user asks about folk guitars, call recommendGuitar(8, "Perfect for folk with warm resonant tones")
+
+WRONG: "I recommend the Flowerly Love Guitar. It has warm tones..." ❌
+RIGHT: [Call recommendGuitar(8, "Warm tones perfect for folk")] ✓
 
 Current inventory:
 ${guitars.map((g) => `- ID ${g.id}: ${g.name} ($${g.price}) - ${g.type} - ${g.shortDescription} - Tags: ${g.tags.join(", ")}`).join("\n")}
 
-Keep responses conversational but concise. You're helpful, not pushy.`;
+Keep responses conversational but concise. After understanding their needs, use the recommendGuitar tool to show specific guitars.`;
 
 const TOOLS = [
 	{
@@ -101,7 +111,7 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 						async start(controller) {
 							try {
 								const response = await env.AI.run(
-									"@hf/nousresearch/hermes-2-pro-mistral-7b",
+									"@cf/meta/llama-4-scout-17b-16e-instruct",
 									{
 										messages: fullMessages,
 										tools: TOOLS,
@@ -146,17 +156,21 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 													}
 													if (data.tool_calls) {
 														// Handle tool calls
+														console.log('[Guitar Chat] Tool calls detected:', JSON.stringify(data.tool_calls));
 														for (const toolCall of data.tool_calls) {
+															console.log('[Guitar Chat] Executing tool:', toolCall.name, toolCall.arguments);
 															const result = executeToolCall(
 																toolCall.name,
 																toolCall.arguments,
 															);
+															console.log('[Guitar Chat] Tool result:', result);
 															if (
 																result &&
 																typeof result === "object" &&
 																"type" in result &&
 																result.type === "recommendation"
 															) {
+																console.log('[Guitar Chat] Sending recommendation:', result.guitar?.name);
 																controller.enqueue(
 																	encoder.encode(
 																		`data: ${JSON.stringify({ type: "recommendation", guitar: result.guitar, reason: result.reason })}\n\n`,
@@ -180,17 +194,21 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 										);
 									} else if (chunk.tool_calls) {
 										// Handle tool calls in production mode
+										console.log('[Guitar Chat] Tool calls detected (production):', JSON.stringify(chunk.tool_calls));
 										for (const toolCall of chunk.tool_calls) {
+											console.log('[Guitar Chat] Executing tool (production):', toolCall.name, toolCall.arguments);
 											const result = executeToolCall(
 												toolCall.name,
 												toolCall.arguments,
 											);
+											console.log('[Guitar Chat] Tool result (production):', result);
 											if (
 												result &&
 												typeof result === "object" &&
 												"type" in result &&
 												result.type === "recommendation"
 											) {
+												console.log('[Guitar Chat] Sending recommendation (production):', result.guitar?.name);
 												controller.enqueue(
 													encoder.encode(
 														`data: ${JSON.stringify({ type: "recommendation", guitar: result.guitar, reason: result.reason })}\n\n`,
@@ -286,7 +304,8 @@ function executeToolCall(
 			}));
 
 		case "recommendGuitar": {
-			const guitarId = toolInput.guitarId as number;
+			// Handle both camelCase and snake_case from different AI models
+			const guitarId = (toolInput.guitarId || toolInput.guitar_id) as number;
 			const guitar = guitars.find((g) => g.id === guitarId);
 			if (!guitar) {
 				return { error: "Guitar not found" };

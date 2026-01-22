@@ -220,6 +220,96 @@ The WebSocket worker handles the route `/demo/api/ai/transcription` separately f
 
 ---
 
+## ⚠️ CRITICAL: Two Separate Chatbots - DO NOT CONFUSE
+
+This project has **TWO COMPLETELY SEPARATE** chatbots with different purposes. **NEVER mix them up!**
+
+### 1. Guitar Chat - AI Guitar Concierge 🎸
+
+**Purpose**: Help users find and purchase guitars from the demo inventory
+
+| Property | Value |
+|----------|-------|
+| **Frontend Route** | `/demo/guitars` (embedded in guitar demo page) |
+| **API Route** | `/demo/api/ai/guitars/chat` |
+| **API File** | `src/routes/demo/api.ai.guitars.chat.ts` |
+| **Component File** | `src/routes/demo/guitars/_components/-GuitarChat.tsx` |
+| **Model** | `@cf/meta/llama-4-scout-17b-16e-instruct` |
+| **Tools** | YES - `getGuitars`, `recommendGuitar` |
+| **Imports** | `guitars` from `@/data/demo-guitars` |
+| **Features** | Tool calling, interactive guitar cards, shopping cart integration |
+
+**Example Tool Call**:
+```typescript
+// When user asks about guitars, calls this tool:
+{
+  name: "recommendGuitar",
+  arguments: {
+    guitarId: 8,
+    reason: "Perfect for folk with warm resonant tones"
+  }
+}
+```
+
+**Personality**: Warm, friendly guitar shop owner with 30 years of experience
+
+---
+
+### 2. Portfolio Chat - Ameenuddin Portfolio Assistant 💼
+
+**Purpose**: Answer questions about Ameen Uddin's professional background, skills, and projects
+
+| Property | Value |
+|----------|-------|
+| **Frontend Route** | `/demo/ai-portfolio` |
+| **API Route** | `/demo/api/ai/portfolio` |
+| **API File** | `src/routes/demo/api.ai.portfolio.ts` |
+| **Component File** | `src/routes/demo/ai-portfolio.tsx` |
+| **Model** | `@cf/meta/llama-4-scout-17b-16e-instruct` |
+| **Tools** | NO - empty array `[]` |
+| **Imports** | NO guitar imports |
+| **Features** | Simple Q&A, conversation history with TanStack Store |
+
+**Topics Covered**:
+- AI/ML expertise (LLM integration, RAG systems, embeddings)
+- Full-stack development (React, TypeScript, TanStack ecosystem)
+- Cloud infrastructure (Cloudflare Workers, D1, KV)
+- Professional projects and technical work
+
+**Personality**: Professional, helpful AI assistant for portfolio inquiries
+
+---
+
+### Key Differences Summary
+
+| Feature | Guitar Chat | Portfolio Chat |
+|---------|-------------|----------------|
+| **Purpose** | Sell guitars | Showcase Ameen's work |
+| **Has Tools?** | ✅ YES | ❌ NO |
+| **Imports `guitars`?** | ✅ YES | ❌ NO |
+| **Renders Guitar Cards?** | ✅ YES | ❌ NO |
+| **API Route** | `/demo/api/ai/guitars/chat` | `/demo/api/ai/portfolio` |
+| **Frontend Route** | `/demo/guitars` | `/demo/ai-portfolio` |
+
+---
+
+### ❌ Common Mistakes to Avoid
+
+1. **DO NOT** add guitar tools to portfolio chat
+2. **DO NOT** import `guitars` data in portfolio chat API
+3. **DO NOT** add tool calling logic to portfolio chat
+4. **DO NOT** confuse the two when debugging or making changes
+5. **DO NOT** copy code between them without understanding the differences
+
+### ✅ What To Do Instead
+
+- **Check the file name** before editing (`.guitars.chat` vs `.portfolio`)
+- **Read the header comments** in each file explaining its purpose
+- **Refer to `CHATBOT-SEPARATION.md`** for detailed documentation
+- **Keep them completely separate** - they serve different purposes
+
+---
+
 ## 🎯 How We Use Each Package
 
 ### 1. TanStack Start (Full-Stack Framework)

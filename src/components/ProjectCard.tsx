@@ -30,7 +30,8 @@ const _statusColors = {
 };
 
 export function ProjectCard({ project, index }: ProjectCardProps) {
-	const handleShare = () => {
+	const handleShare = (e: React.MouseEvent) => {
+		e.stopPropagation(); // Prevent card click
 		if (navigator.share) {
 			navigator.share({
 				title: project.title,
@@ -39,6 +40,23 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
 			});
 		} else {
 			navigator.clipboard.writeText(window.location.origin + project.link);
+		}
+	};
+
+	const handleCardClick = (e: React.MouseEvent) => {
+		// Don't navigate if clicking on interactive elements
+		const target = e.target as HTMLElement;
+		if (
+			target.closest("button") ||
+			target.closest("a") ||
+			target.closest(".mantine-Accordion-control")
+		) {
+			return;
+		}
+
+		// Open demo page in new tab
+		if (project.link) {
+			window.open(project.link, "_blank", "noopener,noreferrer");
 		}
 	};
 
@@ -58,6 +76,7 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
 					shadow="xl"
 					radius="lg"
 					p="xl"
+					onClick={handleCardClick}
 					style={{
 						height: "100%",
 						background: "rgba(26, 26, 26, 0.6)",
@@ -108,7 +127,7 @@ export function ProjectCard({ project, index }: ProjectCardProps) {
 						</div>
 						<motion.div
 							whileHover={{ scale: 1.1, rotate: 5 }}
-							onClick={handleShare}
+							onClick={(e) => handleShare(e)}
 							style={{ cursor: "pointer" }}
 						>
 							<IconShare

@@ -23,23 +23,27 @@ import {
   updateConversationMessagesSimple,
 } from '@/lib/demo-ai-hook'
 
+/**
+ * AMEENUDDIN PORTFOLIO CHAT - Resume/Background Assistant
+ *
+ * IMPORTANT: This is NOT the guitar chat!
+ * - This chat answers questions about Ameen Uddin's background, skills, and projects
+ * - It has NO guitar functionality
+ * - For guitar recommendations, users should visit /demo/guitars
+ */
+
 import './ai-chat.css'
 
-export const Route = createFileRoute('/demo/ai-chat')({
-  component: AmeenuddinChat,
+export const Route = createFileRoute('/demo/ai-portfolio')({
+  component: AmeenuddinPortfolioChat,
 })
 
 interface Message {
   role: 'user' | 'assistant'
   content: string
-  toolCall?: {
-    tool: string
-    guitars?: Guitar[]
-    reason?: string
-  }
 }
 
-function AmeenuddinChat() {
+function AmeenuddinPortfolioChat() {
   const { conversation, conversations, currentConversationId } = useCurrentConversation()
   const [input, setInput] = useState('')
   const [isStreaming, setIsStreaming] = useState(false)
@@ -83,7 +87,7 @@ function AmeenuddinChat() {
     setIsStreaming(true)
 
     try {
-      const response = await fetch('/demo/api/ai/chat', {
+      const response = await fetch('/demo/api/ai/portfolio', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
@@ -276,7 +280,6 @@ function AmeenuddinChat() {
           </div>
         </div>
       </div>
-
       {/* Overlay for mobile */}
       {isSidebarOpen && (
         <div
@@ -284,7 +287,6 @@ function AmeenuddinChat() {
           onClick={() => setIsSidebarOpen(false)}
         />
       )}
-
       {/* Main Chat Area */}
       <div className="flex-1 flex flex-col h-screen">
         {/* Header */}
@@ -297,7 +299,8 @@ function AmeenuddinChat() {
               <Menu className="w-5 h-5" />
             </button>
             <Sparkles className="w-6 h-6 text-emerald-400" />
-            <h1 className="text-xl font-bold">Ameenuddin Chat</h1>
+            <h1 className="text-xl font-bold">Portfolio Assistant</h1>
+            <span className="text-xs text-gray-500 hidden sm:inline">Ask about Ameen's background & projects</span>
           </div>
         </header>
 
@@ -308,13 +311,13 @@ function AmeenuddinChat() {
               <div className="text-center max-w-3xl mx-auto w-full">
                 <h1 className="text-6xl font-bold mb-4">
                   <span className="bg-gradient-to-r from-emerald-500 to-cyan-600 text-transparent bg-clip-text">
-                    Ameenuddin
+                    Portfolio
                   </span>{' '}
-                  <span className="text-white">Chat</span>
+                  <span className="text-white">Assistant</span>
                 </h1>
                 <p className="text-gray-400 mb-6 w-2/3 mx-auto text-lg">
-                  Ask me about Ameen's background, skills, projects, or technical expertise.
-                  I'm here to help you learn more about his work!
+                  Ask me about Ameen Uddin's background, skills, projects, or technical expertise.
+                  I'm here to help you learn more about his professional work!
                 </p>
               </div>
             </div>
@@ -325,45 +328,20 @@ function AmeenuddinChat() {
               key={idx}
               className={`mb-4 ${message.role === 'user' ? 'text-right' : 'text-left'}`}
             >
-              <div
-                className={`inline-block max-w-[80%] ${
-                  message.role === 'user'
-                    ? ''
-                    : message.toolCall
-                      ? 'max-w-full'
-                      : ''
-                }`}
-              >
-                {message.toolCall ? (
-                  // Tool call message - show text and guitar cards
-                  <div className="space-y-3">
-                    <div className="p-3 rounded-2xl bg-gray-800 text-gray-100 inline-block">
-                      <Streamdown content={message.content} />
-                    </div>
-                    {message.toolCall.guitars && message.toolCall.guitars.length > 0 && (
-                      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
-                        {message.toolCall.guitars.map((guitar) => (
-                          <ChatGuitarCard key={guitar.id} guitar={guitar} />
-                        ))}
-                      </div>
-                    )}
-                  </div>
-                ) : (
-                  // Regular message
-                  <div
-                    className={`p-4 rounded-2xl ${
-                      message.role === 'user'
-                        ? 'bg-emerald-600 text-white'
-                        : 'bg-gray-800 text-gray-100'
-                    }`}
-                  >
-                    {message.role === 'assistant' ? (
-                      <Streamdown content={message.content} />
-                    ) : (
-                      <p className="whitespace-pre-wrap">{message.content}</p>
-                    )}
-                  </div>
-                )}
+              <div className="inline-block max-w-[80%]">
+                <div
+                  className={`p-4 rounded-2xl ${
+                    message.role === 'user'
+                      ? 'bg-emerald-600 text-white'
+                      : 'bg-gray-800 text-gray-100'
+                  }`}
+                >
+                  {message.role === 'assistant' ? (
+                    <Streamdown content={message.content} />
+                  ) : (
+                    <p className="whitespace-pre-wrap">{message.content}</p>
+                  )}
+                </div>
               </div>
             </div>
           ))}
