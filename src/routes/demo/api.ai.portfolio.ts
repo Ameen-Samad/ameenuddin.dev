@@ -137,7 +137,7 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 										// Text content
 										controller.enqueue(
 											encoder.encode(
-												`data: ${JSON.stringify({ type: 'content', content: chunk.text })}\n\n`,
+												`data: ${JSON.stringify({ type: 'content', content: chunk.textDelta })}\n\n`,
 											),
 										)
 									} else if (chunk.type === "tool-call") {

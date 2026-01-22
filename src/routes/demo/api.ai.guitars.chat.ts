@@ -24,25 +24,17 @@ When helping customers:
 3. Consider their budget
 4. Ask if they prefer acoustic or electric sounds
 
-You have access to a tool:
-- recommendGuitar: Display a guitar recommendation to the customer
+You have access to a tool called "recommendGuitar" that displays guitar recommendations to customers.
 
 CRITICAL RULES:
-1. NEVER describe a guitar in detail without calling recommendGuitar tool first
-2. When mentioning ANY specific guitar, you MUST immediately call recommendGuitar(guitarId, reason)
-3. DO NOT say "I recommend", "Let me show you", or "How about" without actually calling the tool
-4. The tool will display a beautiful card - your job is just to call it
-5. You can call recommendGuitar multiple times in one response for different guitars
-
-Example: If user asks about folk guitars, call recommendGuitar(8, "Perfect for folk with warm resonant tones")
-
-WRONG: "I recommend the Flowerly Love Guitar. It has warm tones..." ❌
-RIGHT: [Call recommendGuitar(8, "Warm tones perfect for folk")] ✓
+1. When you want to show a specific guitar, you MUST call the recommendGuitar tool
+2. You can call recommendGuitar multiple times in one response for different guitars
+3. Always call the tool - don't just describe guitars without showing them
 
 Current inventory:
 ${guitars.map((g) => `- ID ${g.id}: ${g.name} ($${g.price}) - ${g.type} - ${g.shortDescription} - Tags: ${g.tags.join(", ")}`).join("\n")}
 
-Keep responses conversational but concise. After understanding their needs, use the recommendGuitar tool to show specific guitars.`;
+Keep responses conversational but concise.`;
 
 export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 	server: {
@@ -76,9 +68,9 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 						);
 					}
 
-					// Check if AI binding is available - FAIL FAST, NO FALLBACK
+					// Check if AI binding is available
 					if (!env?.AI) {
-						console.error('[Guitar Chat] Cloudflare AI binding is not available. Run "npm run dev:worker" to enable it.');
+						console.error('[Guitar Chat] Cloudflare AI binding is not available.');
 						return new Response(
 							JSON.stringify({
 								error: "Cloudflare Workers AI is not available. You must run 'npm run build && npm run dev:worker' to use this feature."
@@ -90,87 +82,92 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 						);
 					}
 
+					console.log('[Guitar Chat] Starting AI request with', messages.length, 'messages');
+
 					// Create Workers AI provider
 					const workersai = createWorkersAI({ binding: env.AI });
 					const model = workersai("@cf/meta/llama-4-scout-17b-16e-instruct");
 
-					console.log('[Guitar Chat] Streaming with AI SDK, message count:', messages.length);
+					// Define tools using AI SDK format
+					const result = await streamText({
+						model,
+						system: SYSTEM_PROMPT,
+						messages: messages.map((m: any) => ({
+							role: m.role,
+							content: m.content,
+						})),
+						tools: {
+							recommendGuitar: tool({
+								description: "Display a guitar recommendation to the customer with a nice card UI. Use this when you want to show a specific guitar to the customer.",
+								parameters: z.object({
+									guitarId: z.number().describe("The ID of the guitar to recommend"),
+									reason: z.string().describe("Why you are recommending this guitar (1-2 sentences)"),
+								}),
+								execute: async ({ guitarId, reason }) => {
+									console.log('[Guitar Chat] Tool executed:', guitarId, reason);
+									const guitar = guitars.find((g) => g.id === guitarId);
+									if (!guitar) {
+										return { error: "Guitar not found" };
+									}
+									return {
+										id: guitar.id,
+										name: guitar.name,
+										price: guitar.price,
+										image: guitar.image,
+										shortDescription: guitar.shortDescription,
+										type: guitar.type,
+										reason,
+									};
+								},
+							}),
+						},
+						maxSteps: 5, // Allow multiple tool calls
+					});
 
 					// Create SSE streaming response
 					const encoder = new TextEncoder();
 					const stream = new ReadableStream({
 						async start(controller) {
 							try {
-								// Define tools using AI SDK format
-								const result = await streamText({
-									model,
-									system: SYSTEM_PROMPT,
-									messages: messages.map((m: any) => ({
-										role: m.role,
-										content: m.content,
-									})),
-									tools: {
-										recommendGuitar: tool({
-											description: "Display a guitar recommendation to the customer with a nice card UI. Use this when you want to show a specific guitar to the customer.",
-											parameters: z.object({
-												guitarId: z.number().describe("The ID of the guitar to recommend"),
-												reason: z.string().describe("Why you are recommending this guitar (1-2 sentences)"),
-											}),
-											execute: async ({ guitarId, reason }) => {
-												console.log('[Guitar Chat] Tool executed:', guitarId, reason);
-												const guitar = guitars.find((g) => g.id === guitarId);
-												if (!guitar) {
-													return { error: "Guitar not found" };
-												}
-												return {
-													id: guitar.id,
-													name: guitar.name,
-													price: guitar.price,
-													image: guitar.image,
-													shortDescription: guitar.shortDescription,
-													type: guitar.type,
-													reason,
-												};
-											},
-										}),
-									},
-								});
-
-								// Stream the response
+								// Stream the response using AI SDK's fullStream
 								for await (const chunk of result.fullStream) {
 									if (requestSignal.aborted) {
 										controller.close();
 										return;
 									}
 
-									// Handle different chunk types
+									console.log('[Guitar Chat] Chunk type:', chunk.type);
+
+									// Handle different chunk types from AI SDK
 									if (chunk.type === "text-delta") {
 										// Text content
 										controller.enqueue(
 											encoder.encode(
-												`data: ${JSON.stringify({ type: "content", content: chunk.text })}\n\n`,
+												`data: ${JSON.stringify({ type: "content", content: chunk.textDelta })}\n\n`,
 											),
 										);
 									} else if (chunk.type === "tool-call") {
-										// Tool call started
-										console.log('[Guitar Chat] Tool call:', chunk.toolName, chunk.input);
+										// Tool call detected
+										console.log('[Guitar Chat] Tool call:', chunk.toolName, chunk.args);
 									} else if (chunk.type === "tool-result") {
-										// Tool result - send guitar recommendation
-										console.log('[Guitar Chat] Tool result:', chunk.output);
-										const output = chunk.output as any;
-										if (output && typeof output === "object" && "name" in output) {
+										// Tool execution completed - send recommendation
+										console.log('[Guitar Chat] Tool result:', chunk.result);
+										const result = chunk.result as any;
+										if (result && !result.error) {
 											controller.enqueue(
 												encoder.encode(
 													`data: ${JSON.stringify({
 														type: "recommendation",
-														guitar: output,
-														reason: output.reason
+														guitar: result,
+														reason: result.reason
 													})}\n\n`,
 												),
 											);
 										}
 									} else if (chunk.type === "error") {
 										console.error('[Guitar Chat] Stream error:', chunk.error);
+									} else if (chunk.type === "finish") {
+										console.log('[Guitar Chat] Stream finished');
 									}
 								}
 

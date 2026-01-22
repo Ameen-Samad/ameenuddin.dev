@@ -9,10 +9,10 @@ interface Message {
   id: string
   role: 'user' | 'assistant'
   content: string
-  recommendation?: {
+  recommendations?: Array<{
     guitarId: number
     reason: string
-  }
+  }>
 }
 
 interface GuitarChatProps {
@@ -119,15 +119,19 @@ export function GuitarChat({ onClose }: GuitarChatProps) {
                   )
                 )
               } else if (data.type === 'recommendation') {
+                // Add recommendation to the array
                 setMessages((prev) =>
                   prev.map((m) =>
                     m.id === assistantId
                       ? {
                           ...m,
-                          recommendation: {
-                            guitarId: data.guitar.id,
-                            reason: data.reason,
-                          },
+                          recommendations: [
+                            ...(m.recommendations || []),
+                            {
+                              guitarId: data.guitar.id,
+                              reason: data.reason,
+                            }
+                          ],
                         }
                       : m
                   )
@@ -303,12 +307,17 @@ function ChatMessage({ message }: { message: Message }) {
           <p className="text-sm whitespace-pre-wrap">{message.content}</p>
         </div>
 
-        {/* Recommendation Card */}
-        {message.recommendation && (
-          <GuitarRecommendation
-            guitarId={message.recommendation.guitarId}
-            reason={message.recommendation.reason}
-          />
+        {/* Recommendation Cards */}
+        {message.recommendations && message.recommendations.length > 0 && (
+          <div className="space-y-2">
+            {message.recommendations.map((rec, index) => (
+              <GuitarRecommendation
+                key={`${message.id}-${rec.guitarId}-${index}`}
+                guitarId={rec.guitarId}
+                reason={rec.reason}
+              />
+            ))}
+          </div>
         )}
       </div>
     </div>
