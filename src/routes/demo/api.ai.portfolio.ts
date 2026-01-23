@@ -206,8 +206,17 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 														const toolResult = executePortfolioTool('recommendProject', { projectIds, reason });
 
 														if ('projectData' in toolResult) {
+															// Send the project recommendation card
 															controller.enqueue(
 																encoder.encode(`data: ${JSON.stringify(toolResult.projectData)}\n\n`),
+															);
+															// ALSO send conversational text so the user knows what we're showing
+															const projectNames = toolResult.projects.map(p => p.title).join(' and ');
+															const conversationalText = `Here ${toolResult.projects.length === 1 ? 'is' : 'are'} ${projectNames}. ${reason}`;
+															controller.enqueue(
+																encoder.encode(
+																	`data: ${JSON.stringify({ type: 'content', content: conversationalText })}\n\n`,
+																),
 															);
 														} else {
 															console.warn('[Portfolio Chat] Tool execution failed:', toolResult.error);
@@ -273,9 +282,19 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 
 										// If tool returned structured data, send to frontend
 										if (parsedResult && parsedResult.projectData) {
+											// Send the project recommendation card
 											controller.enqueue(
 												encoder.encode(`data: ${JSON.stringify(parsedResult.projectData)}\n\n`),
 											)
+											// ALSO send conversational text
+											const projects = parsedResult.projectData.projects || [];
+											const projectNames = projects.map((p: any) => p.title).join(' and ');
+											const conversationalText = `Here ${projects.length === 1 ? 'is' : 'are'} ${projectNames}. ${parsedResult.projectData.reason || ''}`;
+											controller.enqueue(
+												encoder.encode(
+													`data: ${JSON.stringify({ type: 'content', content: conversationalText })}\n\n`,
+												),
+											);
 										}
 
 										// Clean up

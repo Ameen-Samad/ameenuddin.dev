@@ -7,26 +7,25 @@ import {
 	rateLimitResponse,
 } from "@/lib/rate-limit";
 
+// Simple hash function for cache keys
+async function hashPrompt(prompt: string, numImages: number): Promise<string> {
+	const encoder = new TextEncoder();
+	const data = encoder.encode(`${prompt.toLowerCase().trim()}:${numImages}`);
+	const hashBuffer = await crypto.subtle.digest("SHA-256", data);
+	const hashArray = Array.from(new Uint8Array(hashBuffer));
+	return hashArray.map((b) => b.toString(16).padStart(2, "0")).join("");
+}
+
 export const Route = createFileRoute("/demo/api/ai/image")({
 	server: {
 		handlers: {
 			POST: async ({ request }) => {
 				const ai = env.AI;
+				const cache = env.PROJECT_CACHE;
 				const rateLimitKV = env.RATE_LIMIT;
 
 				if (!ai) {
 					return json({ error: "AI not available" }, { status: 500 });
-				}
-
-				const rateLimitResult = await checkRateLimit(
-					request,
-					"image-generation",
-					RATE_LIMITS.IMAGE_GENERATION,
-					rateLimitKV,
-				);
-
-				if (!rateLimitResult.success) {
-					return rateLimitResponse(rateLimitResult);
 				}
 
 				try {
@@ -41,6 +40,29 @@ export const Route = createFileRoute("/demo/api/ai/image")({
 					}
 
 					const numImages = Math.min(4, Math.max(1, numberOfImages || 1));
+
+					// Check cache FIRST - before rate limiting
+					const cacheKey = `image:${await hashPrompt(prompt, numImages)}`;
+					if (cache) {
+						const cached = await cache.get(cacheKey, "json");
+						if (cached) {
+							console.log(`Cache hit for image prompt: ${prompt.slice(0, 50)}...`);
+							return json({ images: cached, cached: true });
+						}
+					}
+
+					// Only apply rate limiting on cache miss (expensive AI operation)
+					const rateLimitResult = await checkRateLimit(
+						request,
+						"image-generation",
+						RATE_LIMITS.IMAGE_GENERATION,
+						rateLimitKV,
+					);
+
+					if (!rateLimitResult.success) {
+						return rateLimitResponse(rateLimitResult);
+					}
+
 					const images = [];
 
 					for (let i = 0; i < numImages; i++) {
@@ -126,8 +148,22 @@ export const Route = createFileRoute("/demo/api/ai/image")({
 						});
 					}
 
+					// Cache the generated images (7 days TTL)
+					if (cache) {
+						try {
+							await cache.put(cacheKey, JSON.stringify(images), {
+								expirationTtl: 60 * 60 * 24 * 7, // 7 days
+							});
+							console.log(`Cached images for prompt: ${prompt.slice(0, 50)}...`);
+						} catch (error) {
+							console.error("Cache error:", error);
+							// Continue even if caching fails
+						}
+					}
+
 					return json({
 						images,
+						cached: false,
 						rateLimit: {
 							limit: rateLimitResult.limit,
 							remaining: rateLimitResult.remaining,

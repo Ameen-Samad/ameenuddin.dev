@@ -24,18 +24,6 @@ export const Route = createFileRoute("/api/generate-three")({
 					return json({ error: "AI not available" }, { status: 500 });
 				}
 
-				// Rate limiting - 3 requests per minute (expensive operation)
-				const rateLimitResult = await checkRateLimit(
-					request,
-					"generate-three",
-					RATE_LIMITS.THREE_JS,
-					rateLimitKV
-				);
-
-				if (!rateLimitResult.success) {
-					return rateLimitResponse(rateLimitResult);
-				}
-
 				try {
 					const body = await request.json();
 					const { prompt } = body as { prompt: string };
@@ -44,7 +32,7 @@ export const Route = createFileRoute("/api/generate-three")({
 						return json({ error: "Prompt is required" }, { status: 400 });
 					}
 
-					// Check cache first
+					// Check cache FIRST - before rate limiting
 					const cacheKey = `three:${await hashPrompt(prompt)}`;
 					if (cache) {
 						const cached = await cache.get(cacheKey);
@@ -52,6 +40,18 @@ export const Route = createFileRoute("/api/generate-three")({
 							console.log(`Cache hit for prompt: ${prompt.slice(0, 50)}...`);
 							return json({ code: cached, cached: true });
 						}
+					}
+
+					// Only apply rate limiting on cache miss (expensive AI operation)
+					const rateLimitResult = await checkRateLimit(
+						request,
+						"generate-three",
+						RATE_LIMITS.THREE_JS,
+						rateLimitKV
+					);
+
+					if (!rateLimitResult.success) {
+						return rateLimitResponse(rateLimitResult);
 					}
 
 					// Step 1: Classify the request using Scout model (Meta Llama 4 Scout - fast reasoning)

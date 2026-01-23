@@ -36,9 +36,9 @@ export const RATE_LIMITS = {
 	SUMMARY: { maxRequests: 5, windowSeconds: 60, cost: 3 }, // 5/min (costs 3x)
 	CHAT: { maxRequests: 10, windowSeconds: 60, cost: 2 }, // 10/min (costs 2x)
 	RECOMMENDATIONS: { maxRequests: 10, windowSeconds: 60 }, // 10/min
-	THREE_JS: { maxRequests: 3, windowSeconds: 60, cost: 5 }, // 3/min (costs 5x)
 
 	// Very expensive operations - highly restrictive
+	THREE_JS: { maxRequests: 6, windowSeconds: 86400 }, // 6/day
 	IMAGE_GENERATION: { maxRequests: 6, windowSeconds: 86400 }, // 6/day
 
 	// Per-IP global limit across all endpoints

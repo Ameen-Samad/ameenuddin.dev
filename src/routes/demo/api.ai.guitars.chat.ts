@@ -163,6 +163,7 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 														// Manually execute the tool
 														const guitar = guitars.find((g) => g.id === guitarId);
 														if (guitar) {
+															// Send the recommendation card
 															controller.enqueue(
 																encoder.encode(
 																	`data: ${JSON.stringify({
@@ -178,6 +179,13 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 																		},
 																		reason
 																	})}\n\n`,
+																),
+															);
+															// ALSO send conversational text so the user knows what we're showing
+															const conversationalText = `Here's the ${guitar.name}! ${reason}`;
+															controller.enqueue(
+																encoder.encode(
+																	`data: ${JSON.stringify({ type: "content", content: conversationalText })}\n\n`,
 																),
 															);
 															// Don't output the raw JSON text - tool call was successful
@@ -251,13 +259,22 @@ export const Route = createFileRoute("/demo/api/ai/guitars/chat")({
 
 										// If tool returned structured data, send to frontend
 										if (parsedResult && parsedResult.guitarData) {
+											const guitar = parsedResult.guitarData;
+											// Send the recommendation card
 											controller.enqueue(
 												encoder.encode(
 													`data: ${JSON.stringify({
 														type: "recommendation",
-														guitar: parsedResult.guitarData,
-														reason: parsedResult.guitarData.reason
+														guitar: guitar,
+														reason: guitar.reason
 													})}\n\n`,
+												),
+											);
+											// ALSO send conversational text
+											const conversationalText = `Here's the ${guitar.name}! ${guitar.reason}`;
+											controller.enqueue(
+												encoder.encode(
+													`data: ${JSON.stringify({ type: "content", content: conversationalText })}\n\n`,
 												),
 											);
 										}
