@@ -199,24 +199,29 @@ npm run deploy  # Deploys to Cloudflare Workers
 - The `Response(null, { status: 101, webSocket: client })` pattern is intercepted by Vite dev server / Nitro
 - Tracked in [GitHub Discussion #4576](https://github.com/TanStack/router/discussions/4576)
 
-### Workaround: Separate WebSocket Worker
+### Workaround: Separate WebSocket Worker with Durable Objects
 
-For real-time features requiring WebSocket (like voice transcription), we deploy a **separate Cloudflare Worker** that bypasses TanStack Start:
+For real-time features requiring WebSocket (like voice transcription), we deploy a **separate Cloudflare Worker with Durable Objects** that bypasses TanStack Start:
 
 | File | Purpose |
 |------|---------|
-| `workers/transcription-ws.ts` | Standalone WebSocket Worker |
-| `workers/wrangler.toml` | Worker-specific configuration |
+| `workers/transcription-ws.ts` | WebSocket Worker with Durable Objects |
+| `workers/wrangler-transcription.toml` | Worker + Durable Objects configuration |
+
+**Architecture:**
+- **Durable Objects** provide persistent, stable WebSocket connections
+- Eliminates frequent disconnections from regular Workers
+- Better reliability for long-running transcription sessions
 
 **Deployment:**
 ```bash
-npm run deploy:ws      # Deploy WebSocket worker only
-npm run deploy:all     # Deploy main app + WebSocket worker
+npm run deploy:transcription  # Deploy WebSocket worker with Durable Objects
+npm run deploy:all            # Deploy main app + WebSocket workers
 ```
 
 The WebSocket worker handles the route `/demo/api/ai/transcription` separately from the main app.
 
-**See `WEBSOCKET-DEPLOYMENT.md` for complete setup and deployment instructions.**
+**See `DURABLE-OBJECTS-MIGRATION.md` for architecture details and `WEBSOCKET-DEPLOYMENT.md` for deployment instructions.**
 
 ---
 

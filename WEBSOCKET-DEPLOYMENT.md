@@ -2,7 +2,7 @@
 
 ## Overview
 
-Due to TanStack Start's current limitations with WebSocket support, real-time AI features are deployed as **separate Cloudflare Workers** using **AI Gateway**. These workers bypass TanStack Start entirely and connect directly to Cloudflare's AI Gateway.
+Due to TanStack Start's current limitations with WebSocket support, real-time AI features are deployed as **separate Cloudflare Workers with Durable Objects**. These workers bypass TanStack Start entirely and use Durable Objects for stable, persistent WebSocket connections.
 
 ## Architecture
 
@@ -19,8 +19,9 @@ Due to TanStack Start's current limitations with WebSocket support, real-time AI
 │  Transcription Worker (WebSocket)       │
 │  ameenuddin.dev/demo/api/ai/transcription│
 │  - Speech-to-Text (Deepgram Flux)       │
-│  - AI Gateway connection                │
+│  - Durable Objects for stable connections│
 │  - WebSocket upgrade (101)              │
+│  - See DURABLE-OBJECTS-MIGRATION.md     │
 └─────────────────────────────────────────┘
 
 ┌─────────────────────────────────────────┐
@@ -32,14 +33,25 @@ Due to TanStack Start's current limitations with WebSocket support, real-time AI
 └─────────────────────────────────────────┘
 ```
 
+## 🆕 Durable Objects for Better Stability
+
+The transcription worker now uses **Cloudflare Durable Objects** for:
+- ✅ Persistent WebSocket connections (no more frequent disconnects!)
+- ✅ State preservation across Worker invocations
+- ✅ Better reliability for long-running transcription sessions
+- ✅ Automatic session management
+
+**See `DURABLE-OBJECTS-MIGRATION.md` for complete details.**
+
 ## Files
 
 | File | Purpose |
 |------|---------|
-| `workers/transcription-ws.ts` | Speech-to-Text worker (Flux) |
+| `workers/transcription-ws.ts` | Speech-to-Text worker with Durable Objects |
 | `workers/tts-ws.ts` | Text-to-Speech worker (Aura-2-EN) |
-| `workers/wrangler-transcription.toml` | Transcription worker config |
+| `workers/wrangler-transcription.toml` | Transcription worker config (with DO bindings) |
 | `workers/wrangler-tts.toml` | TTS worker config |
+| `DURABLE-OBJECTS-MIGRATION.md` | Durable Objects architecture guide |
 | `AI-GATEWAY-SETUP.md` | AI Gateway setup instructions |
 | `.env.example` | Environment variable template |
 

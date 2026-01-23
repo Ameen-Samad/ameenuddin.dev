@@ -1,5 +1,5 @@
 # Wrangler configuration for Transcription WebSocket Worker
-# Real-time speech-to-text using Deepgram Flux via Workers AI
+# Real-time speech-to-text using Deepgram Flux via Workers AI with Durable Objects
 
 name = "ameenuddin-transcription-ws"
 main = "transcription-ws.ts"
@@ -14,6 +14,17 @@ zone_name = "ameenuddin.dev"
 # AI binding for Workers AI models
 [ai]
 binding = "AI"
+
+# Durable Objects binding for stable WebSocket connections
+[[durable_objects.bindings]]
+name = "TRANSCRIPTION_DO"
+class_name = "TranscriptionDurableObject"
+script_name = "ameenuddin-transcription-ws"
+
+# Durable Objects migrations
+[[migrations]]
+tag = "v1"
+new_classes = ["TranscriptionDurableObject"]
 
 # Observability
 [observability]

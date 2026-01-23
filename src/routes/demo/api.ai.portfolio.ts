@@ -1,11 +1,6 @@
 /**
  * AMEENUDDIN PORTFOLIO CHAT API - RAG-Powered Resume/Background Assistant
  *
- * IMPORTANT: This is NOT the guitar chat!
- * - This chat uses RAG (Retrieval Augmented Generation) for accurate, grounded responses
- * - It has tools for recommending projects, explaining skills, and retrieving experience
- * - For guitar recommendations, use /demo/api/ai/guitars/chat instead
- *
  * Route: /demo/api/ai/portfolio
  * Frontend: /demo/ai-portfolio
  */
@@ -17,7 +12,7 @@ import { streamText, tool } from "ai";
 import { z } from "zod";
 import { getPortfolioDocuments } from "@/lib/portfolio-documents";
 import { findRelevantDocuments, formatContextForPrompt } from "@/lib/portfolio-rag";
-import { executePortfolioTool } from "@/lib/portfolio-tools";
+import { executePortfolioTool, type ProjectRecommendation } from "@/lib/portfolio-tools";
 import { PORTFOLIO_SYSTEM_PROMPT } from "@/lib/portfolio-prompt";
 
 export const Route = createFileRoute("/demo/api/ai/portfolio")({
@@ -62,27 +57,24 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 									env.AI,
 									userQuery,
 									documents,
-									5, // top 5 documents
-									0.3, // 30% similarity threshold
+									5,
+									0.3,
 								)
 
-								// Send context to frontend for display
+								// Send context to frontend
 								controller.enqueue(
 									encoder.encode(
-										`data: ${JSON.stringify({ type: 'context', context: relevantDocs })}\n\n`,
+										\`data: \${JSON.stringify({ type: 'context', context: relevantDocs })}\\n\\n\`,
 									),
 								)
 
-								// PHASE 2: LLM - Stream AI response with tool calling
+								// PHASE 2: LLM - Stream AI response
 								const contextPrompt = formatContextForPrompt(relevantDocs);
-
-								// Create Workers AI provider
 								const workersai = createWorkersAI({ binding: env.AI });
 								const model = workersai("@cf/meta/llama-4-scout-17b-16e-instruct");
 
 								console.log('[Portfolio Chat] Streaming with AI SDK');
 
-								// Stream AI response with tools
 								const result = await streamText({
 									model,
 									system: contextPrompt + PORTFOLIO_SYSTEM_PROMPT,
@@ -90,57 +82,52 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 										role: m.role,
 										content: m.content,
 									})),
-									maxSteps: 5, // Enable agentic workflow - model continues after tool calls
+									maxSteps: 5,
 									tools: {
 										recommendProject: tool({
-											description: 'Recommend one or more projects to showcase a specific skill or technology. This displays interactive project cards with images, descriptions, and links.',
+											description: 'Recommend projects to showcase skills',
 											parameters: z.object({
-												projectIds: z.array(z.string()).describe("Array of project IDs to recommend (e.g., ['tetris-ai', 'guitar-concierge'])"),
-												reason: z.string().describe('Why these projects demonstrate the requested skill/technology (1-2 sentences)'),
+												projectIds: z.array(z.string()).describe("Project IDs array"),
+												reason: z.string().describe('Why these projects are relevant'),
 											}),
 											execute: async ({ projectIds, reason }) => {
 												console.log('[Portfolio Chat] Tool executed: recommendProject', projectIds);
-
-												// Execute tool to validate and get structured data
 												const toolResult = executePortfolioTool('recommendProject', { projectIds, reason });
 
 												if ('error' in toolResult) {
 													return toolResult.error;
 												}
 
-												// Return both semantic + structured data
-												const projectNames = toolResult.projects.map(p => p.title).join(', ');
+												const projectRec = toolResult as ProjectRecommendation;
+												const projectNames = projectRec.projects.map(p => p.title).join(', ');
 												return JSON.stringify({
-													semantic: `Showed ${toolResult.projects.length} project(s): ${projectNames}. ${reason}`,
-													projectData: toolResult
+													semantic: \`Showed \${projectRec.projects.length} project(s): \${projectNames}. \${reason}\`,
+													projectData: projectRec
 												});
 											},
 										}),
 										explainSkill: tool({
-											description: 'Provide detailed information about a specific technical skill, including proficiency level, years of experience, and related projects',
+											description: 'Get skill details',
 											parameters: z.object({
-												skillName: z.string().describe("Name of the skill (e.g., 'React', 'Cloudflare Workers', 'TypeScript')"),
+												skillName: z.string().describe("Skill name"),
 											}),
 											execute: async ({ skillName }) => {
 												console.log('[Portfolio Chat] Tool executed: explainSkill', skillName);
-												return executePortfolioTool('explainSkill', { skillName });
+												return JSON.stringify(executePortfolioTool('explainSkill', { skillName }));
 											},
 										}),
 										getExperience: tool({
-											description: 'Retrieve work experience details, either for all companies or a specific company',
+											description: 'Get work experience',
 											parameters: z.object({
-												company: z.string().optional().describe('Company name (optional - if not provided, returns all experience)'),
+												company: z.string().optional().describe('Company name'),
 											}),
 											execute: async ({ company }) => {
 												console.log('[Portfolio Chat] Tool executed: getExperience', company);
-												return executePortfolioTool('getExperience', { company });
+												return JSON.stringify(executePortfolioTool('getExperience', { company }));
 											},
 										}),
 									},
 								});
-
-								// Track tool calls to reconstruct data for frontend
-								const pendingToolCalls = new Map<string, any>();
 
 								// Stream the response
 								for await (const chunk of result.fullStream) {
@@ -149,171 +136,139 @@ export const Route = createFileRoute("/demo/api/ai/portfolio")({
 										return
 									}
 
-									// Handle different chunk types
 									if (chunk.type === "text-delta") {
-										// Get text from chunk (workers-ai-provider uses 'text', AI SDK v3 uses 'delta')
 										const textContent = (chunk as any).text || (chunk as any).delta;
 										if (textContent) {
-											// Check if the text contains a JSON tool call (fallback for models that don't support proper tool calling)
-											// Use a more robust regex that handles nested braces and escaped quotes
-											const jsonMatch = textContent.match(/\{"name":\s*"recommendProject",\s*"parameters":\s*\{(?:[^{}]|\{[^}]*\})*\}\}/);
-
-											if (jsonMatch) {
+											// Check for text-based tool calls like: ; recommendProject(["id1", "id2"], "reason")
+											const toolCallMatch = textContent.match(/;\s*recommendProject\(\[(.*?)\],\s*"(.*?)"\)/);
+											
+											if (toolCallMatch) {
 												try {
-													let jsonString = jsonMatch[0];
+													// Extract projectIds and reason
+													const projectIdsStr = toolCallMatch[1];
+													const reason = toolCallMatch[2];
+													
+													// Parse project IDs from the string
+													const projectIds = projectIdsStr
+														.split(',')
+														.map(id => id.trim().replace(/["'\[\]]/g, ''))
+														.filter(id => id.length > 0);
 
-													// Handle escaped JSON strings in parameters (e.g., "projectIds": "[\"id1\", \"id2\"]")
-													// Replace escaped quotes with regular quotes for proper parsing
-													jsonString = jsonString.replace(/\\"/g, '"');
+													console.log('[Portfolio Chat] Detected text tool call:', projectIds, reason);
 
-													console.log('[Portfolio Chat] Matched JSON:', jsonString);
-
-													const toolCall = JSON.parse(jsonString);
-													const params = toolCall.parameters || {};
-													let projectIds = params.projectIds;
-													const reason = params.reason || "Relevant projects for your interest";
-
-													console.log('[Portfolio Chat] Detected JSON tool call. Full params:', JSON.stringify(params));
-
-													// Handle projectIds being a string instead of array (model error)
-													if (typeof projectIds === 'string') {
-														try {
-															// Try to parse as JSON array
-															const parsed = JSON.parse(projectIds);
-															if (Array.isArray(parsed)) {
-																projectIds = parsed;
-															} else {
-																throw new Error('Not an array');
-															}
-														} catch {
-															// If it's a comma-separated string, split it
-															projectIds = projectIds.split(',').map((id: string) => id.trim().replace(/["\[\]]/g, ''));
-														}
-													}
-
-													// Clean up projectIds - remove quotes, brackets, etc.
-													if (Array.isArray(projectIds)) {
-														projectIds = projectIds.map((id: any) =>
-															typeof id === 'string' ? id.trim().replace(/["\[\]]/g, '') : String(id)
-														).filter(id => id.length > 0);
-													}
-
-													console.log('[Portfolio Chat] Extracted projectIds:', projectIds, 'reason:', reason);
-
-													// Validate that we have valid projectIds
-													if (Array.isArray(projectIds) && projectIds.length > 0) {
-														// Manually execute the tool
+													if (projectIds.length > 0) {
 														const toolResult = executePortfolioTool('recommendProject', { projectIds, reason });
 
-														if ('projectData' in toolResult) {
-															// Send the project recommendation card
-															controller.enqueue(
-																encoder.encode(`data: ${JSON.stringify(toolResult.projectData)}\n\n`),
-															);
-															// ALSO send conversational text so the user knows what we're showing
-															const projectNames = toolResult.projects.map(p => p.title).join(' and ');
-															const conversationalText = `Here ${toolResult.projects.length === 1 ? 'is' : 'are'} ${projectNames}. ${reason}`;
-															controller.enqueue(
-																encoder.encode(
-																	`data: ${JSON.stringify({ type: 'content', content: conversationalText })}\n\n`,
-																),
-															);
+														if ('error' in toolResult) {
+															console.warn('[Portfolio Chat] Tool error:', toolResult.error);
 														} else {
-															console.warn('[Portfolio Chat] Tool execution failed:', toolResult.error);
-															// Output warning instead of raw JSON
+															const projectRec = toolResult as ProjectRecommendation;
+															// Send project recommendation
+															controller.enqueue(
+																encoder.encode(\`data: \${JSON.stringify(projectRec)}\\n\\n\`),
+															);
+															// Send conversational text
+															const projectNames = projectRec.projects.map(p => p.title).join(' and ');
+															const conversationalText = \`Here \${projectRec.projects.length === 1 ? 'is' : 'are'} \${projectNames}. \${reason}\`;
 															controller.enqueue(
 																encoder.encode(
-																	`data: ${JSON.stringify({ type: 'content', content: `[${toolResult.error}]` })}\n\n`,
+																	\`data: \${JSON.stringify({ type: 'content', content: conversationalText })}\\n\\n\`,
 																),
 															);
 														}
-														// Don't output the raw JSON text - skip it entirely
-													} else {
-														console.warn('[Portfolio Chat] Invalid tool call format - missing projectIds:', JSON.stringify(params));
-														// Don't output anything - skip the malformed tool call
+														// Don't output the raw tool call text
+														continue;
 													}
 												} catch (e) {
-													console.error('[Portfolio Chat] Failed to parse JSON tool call:', e);
-													// Don't output the malformed JSON - skip it
+													console.error('[Portfolio Chat] Failed to parse text tool call:', e);
 												}
-											} else {
-												// Normal text content - but filter out any remaining JSON-like patterns
-												let cleanText = textContent;
+											}
 
-												// Remove any remaining JSON tool call patterns that slipped through
-												cleanText = cleanText.replace(/\{"name":\s*"[^"]+",\s*"parameters":\s*\{[^}]*\}\}/g, '');
-												cleanText = cleanText.trim();
-
-												if (cleanText) {
+											// Check for explainSkill calls
+											const skillCallMatch = textContent.match(/;\s*explainSkill\("(.*?)"\)/);
+											if (skillCallMatch) {
+												const skillName = skillCallMatch[1];
+												console.log('[Portfolio Chat] Detected explainSkill call:', skillName);
+												const toolResult = executePortfolioTool('explainSkill', { skillName });
+												
+												if (!('error' in toolResult)) {
+													// Send skill detail
 													controller.enqueue(
-														encoder.encode(
-															`data: ${JSON.stringify({ type: 'content', content: cleanText })}\n\n`,
-														),
+														encoder.encode(\`data: \${JSON.stringify(toolResult)}\\n\\n\`),
 													);
 												}
+												// Don't output the raw tool call
+												continue;
+											}
+
+											// Filter out any remaining tool call syntax
+											let cleanText = textContent;
+											cleanText = cleanText.replace(/;\s*recommendProject\([^)]+\)/g, '');
+											cleanText = cleanText.replace(/;\s*explainSkill\([^)]+\)/g, '');
+											cleanText = cleanText.replace(/;\s*getExperience\([^)]+\)/g, '');
+											cleanText = cleanText.trim();
+
+											if (cleanText) {
+												controller.enqueue(
+													encoder.encode(
+														\`data: \${JSON.stringify({ type: 'content', content: cleanText })}\\n\\n\`,
+													),
+												);
 											}
 										}
 									} else if (chunk.type === "tool-call") {
-										// Store tool call args for later
-										const toolCallId = (chunk as any).toolCallId;
 										const toolName = (chunk as any).toolName;
 										const args = (chunk as any).args;
-
 										console.log('[Portfolio Chat] Tool call:', toolName, args);
-										pendingToolCalls.set(toolCallId, { toolName, args });
 									} else if (chunk.type === "tool-result") {
-										// Tool executed - extract project data for frontend
-										const toolCallId = (chunk as any).toolCallId;
 										const result = chunk.result as any;
+										console.log('[Portfolio Chat] Tool result:', typeof result, result);
 
-										console.log('[Portfolio Chat] Tool result:', result);
-
-										// Parse tool result (could be string or object)
+										// Parse result
 										let parsedResult;
 										if (typeof result === 'string') {
 											try {
 												parsedResult = JSON.parse(result);
-											} catch {
+											} catch (e) {
+												console.error('[Portfolio Chat] Parse error:', e);
 												parsedResult = null;
 											}
 										} else {
 											parsedResult = result;
 										}
 
-										// If tool returned structured data, send to frontend
-										if (parsedResult && parsedResult.projectData) {
-											// Send the project recommendation card
+										// Send structured data
+										if (parsedResult?.projectData) {
+											const projectData = parsedResult.projectData;
+											console.log('[Portfolio Chat] Sending projectData');
+
 											controller.enqueue(
-												encoder.encode(`data: ${JSON.stringify(parsedResult.projectData)}\n\n`),
+												encoder.encode(\`data: \${JSON.stringify(projectData)}\\n\\n\`),
 											)
-											// ALSO send conversational text
-											const projects = parsedResult.projectData.projects || [];
+
+											const projects = projectData.projects || [];
 											const projectNames = projects.map((p: any) => p.title).join(' and ');
-											const conversationalText = `Here ${projects.length === 1 ? 'is' : 'are'} ${projectNames}. ${parsedResult.projectData.reason || ''}`;
+											const conversationalText = \`Here \${projects.length === 1 ? 'is' : 'are'} \${projectNames}. \${projectData.reason || ''}\`;
 											controller.enqueue(
 												encoder.encode(
-													`data: ${JSON.stringify({ type: 'content', content: conversationalText })}\n\n`,
+													\`data: \${JSON.stringify({ type: 'content', content: conversationalText })}\\n\\n\`,
 												),
 											);
 										}
-
-										// Clean up
-										pendingToolCalls.delete(toolCallId);
 									} else if (chunk.type === "error") {
-										console.error('[Portfolio Chat] Stream error:', chunk.error);
+										console.error('[Portfolio Chat] Error:', chunk.error);
 									}
 								}
 
-								// Send done event
 								controller.enqueue(
-									encoder.encode(`data: ${JSON.stringify({ type: 'done' })}\n\n`),
+									encoder.encode(\`data: \${JSON.stringify({ type: 'done' })}\\n\\n\`),
 								)
 								controller.close()
 							} catch (error: any) {
-								console.error("[Portfolio Chat] Stream error:", error);
+								console.error("[Portfolio Chat] Error:", error);
 								controller.enqueue(
 									encoder.encode(
-										`data: ${JSON.stringify({ type: 'error', error: error.message })}\n\n`,
+										\`data: \${JSON.stringify({ type: 'error', error: error.message })}\\n\\n\`,
 									),
 								)
 								controller.close()
